@@ -18,6 +18,8 @@
     <string name="refresh">Refresh</string>
     <string name="title_activity_settings">Settings</string>
 
+    <!--calendar events-->
+    <string name="no_calendar_events_error">No event found!</string>
 
     <!--Settings-->
     <!--general-->
@@ -100,5 +102,7 @@
     <string-array name="multi_select_list_preference_default_value" />
 
     <string name="pref_title_system_sync_settings">System sync settings</string>
+    <string name="grant">Grant</string>
+    <string name="require_calendar_permission_error">This application requires access to calendar</string>
 
 </resources>
