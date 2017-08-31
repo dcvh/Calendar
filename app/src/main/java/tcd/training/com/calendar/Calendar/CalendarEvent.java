@@ -1,4 +1,4 @@
-package tcd.training.com.calendar;
+package tcd.training.com.calendar.Calendar;
 
 /**
  * Created by cpu10661-local on 8/30/17.

@@ -1,4 +1,4 @@
-package tcd.training.com.calendar;
+package tcd.training.com.calendar.ViewType.Schedule;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
@@ -9,6 +9,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+
+import tcd.training.com.calendar.R;
+import tcd.training.com.calendar.Calendar.CalendarEntry;
+import tcd.training.com.calendar.Calendar.CalendarEvent;
+import tcd.training.com.calendar.Calendar.CalendarUtils;
 
 /**
  * Created by cpu10661-local on 8/30/17.

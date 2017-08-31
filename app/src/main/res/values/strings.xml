@@ -21,6 +21,8 @@
     <!--calendar events-->
     <string name="no_calendar_events_error">No event found!</string>
 
+    <!--fragments-->
+
     <!--Settings-->
     <!--general-->
     <string name="pref_header_general">General</string>

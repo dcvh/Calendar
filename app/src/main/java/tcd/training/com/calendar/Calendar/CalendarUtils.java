@@ -1,4 +1,4 @@
-package tcd.training.com.calendar;
+package tcd.training.com.calendar.Calendar;
 
 import android.Manifest;
 import android.content.ContentResolver;
@@ -6,18 +6,18 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.provider.CalendarContract;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+
+import tcd.training.com.calendar.R;
 
 /**
  * Created by cpu10661-local on 8/30/17.
@@ -78,6 +78,33 @@ public class CalendarUtils {
         cursor.close();
 
         return eventEntries;
+    }
+
+    /**
+     *
+     * @param date must be in "yyyy/MM/dd" format
+     * @return index of the nearest (smaller) event's date in the entries, -1 if all events occur after the specified date
+     */
+    public static int findNearestDateBefore(String date, ArrayList<CalendarEntry> entries) {
+        int index = 0;
+        for (CalendarEntry entry : entries) {
+            if (date.compareTo(entry.getDate()) > 0) {
+                index++;
+                continue;
+            }
+            index--;
+            break;
+        }
+        return index;
+    }
+
+    /**
+     *
+     * @return today in "yyyy/MM/dd" format
+     */
+    public static String getToday() {
+        Calendar calendar = Calendar.getInstance();
+        return getDate(calendar.getTimeInMillis(), "yyyy/MM/dd");
     }
 
     public static String getDate(long milliSeconds, String dateFormat) {
