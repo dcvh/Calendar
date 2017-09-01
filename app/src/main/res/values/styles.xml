@@ -20,5 +20,11 @@
     <style name="PreferencesTheme" parent="Theme.AppCompat.Light">
         <item name="android:background">@android:color/white</item>
     </style>
-
+    
+    <style name="AppTheme.BigActionBar" parent="AppTheme">
+        <item name="android:actionBarSize">@dimen/big_action_bar_height</item>
+        <item name="android:gravity">bottom</item>
+        <item name="android:paddingBottom">4dp</item>
+    </style>
+    
 </resources>

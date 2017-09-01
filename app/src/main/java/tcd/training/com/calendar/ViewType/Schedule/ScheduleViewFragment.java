@@ -6,6 +6,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +14,7 @@ import android.view.ViewGroup;
 import java.util.ArrayList;
 
 import tcd.training.com.calendar.Calendar.CalendarEntry;
+import tcd.training.com.calendar.Calendar.CalendarUtils;
 import tcd.training.com.calendar.R;
 
 import static tcd.training.com.calendar.MainActivity.ARG_ENTRIES_LIST;
@@ -23,6 +25,8 @@ import static tcd.training.com.calendar.MainActivity.ARG_ENTRIES_LIST;
 
 public class ScheduleViewFragment extends Fragment {
 
+    private static final String TAG = ScheduleViewFragment.class.getSimpleName();
+
     private ArrayList<CalendarEntry> mEntriesList;
 
     private RecyclerView.LayoutManager mLayoutManager;
@@ -31,9 +35,9 @@ public class ScheduleViewFragment extends Fragment {
     public ScheduleViewFragment() {
     }
 
-    public static ScheduleViewFragment newInstance(ArrayList<CalendarEntry> entries) {
+    public static ScheduleViewFragment newInstance() {
         Bundle args = new Bundle();
-        args.putSerializable(ARG_ENTRIES_LIST, entries);
+        args.putSerializable(ARG_ENTRIES_LIST, CalendarUtils.getAllEntries());
         ScheduleViewFragment fragment = new ScheduleViewFragment();
         fragment.setArguments(args);
         return fragment;
@@ -42,9 +46,17 @@ public class ScheduleViewFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mEntriesList = getArguments() != null ?
-                (ArrayList<CalendarEntry>) getArguments().getSerializable(ARG_ENTRIES_LIST) :
-                new ArrayList<CalendarEntry>();
+//        if (getArguments() != null) {
+//            mEntriesList = (ArrayList<CalendarEntry>) getArguments().getSerializable(ARG_ENTRIES_LIST);
+//            getArguments().remove(ARG_ENTRIES_LIST);
+//        } else {
+//            mEntriesList = new ArrayList<>();
+//        }
+
+        mEntriesList = CalendarUtils.getAllEntries();
+        if (mEntriesList == null) {
+            mEntriesList = new ArrayList<>();
+        }
     }
 
     @Nullable
@@ -53,7 +65,7 @@ public class ScheduleViewFragment extends Fragment {
         View view = inflater.inflate(R.layout.content_schedule_view, container, false);
 
         // recycler view
-        RecyclerView eventsRecyclerView = (RecyclerView) view.findViewById(R.id.rv_events_list);
+        RecyclerView eventsRecyclerView = view.findViewById(R.id.rv_events_list);
         mLayoutManager = new LinearLayoutManager(view.getContext());
         eventsRecyclerView.setLayoutManager(mLayoutManager);
         eventsRecyclerView.setItemAnimator(new DefaultItemAnimator());

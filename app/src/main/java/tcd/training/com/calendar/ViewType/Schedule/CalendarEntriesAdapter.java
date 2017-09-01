@@ -33,7 +33,7 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<CalendarEntries
 
     @Override
     public CalendarViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.calendar_event_list_item, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.calendar_entry_list_item, parent, false);
         CalendarViewHolder viewHolder = new CalendarViewHolder(view);
         return viewHolder;
     }
@@ -58,6 +58,8 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<CalendarEntries
         for (CalendarEvent event : calendarDate.getEvents()) {
             addEventView(event.getTitle(), event.getDescription(), holder.mEventsLinearLayout);
         }
+
+        holder.setIsRecyclable(false);
     }
     
     private void addEventView(String title, String description, ViewGroup parent) {

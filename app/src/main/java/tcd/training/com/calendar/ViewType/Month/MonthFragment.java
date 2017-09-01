@@ -1,22 +1,28 @@
 package tcd.training.com.calendar.ViewType.Month;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
 import java.util.Calendar;
 
+import tcd.training.com.calendar.Calendar.CalendarEntry;
+import tcd.training.com.calendar.Calendar.CalendarUtils;
 import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
 
@@ -30,9 +36,10 @@ public class MonthFragment extends Fragment {
 
     public final static String ARG_DISPLAY_MONTH = "ARG_DISPLAY_MONTH";
 
-    private Calendar mMonth;
+    private Calendar mCurMonth;
     private Context mContext;
 
+    private TableLayout mCalendarTable;
     private TableRow mTableHeader;
     private TableRow mTableRow1;
     private TableRow mTableRow2;
@@ -42,7 +49,6 @@ public class MonthFragment extends Fragment {
     private TableRow mTableRow6;
 
     public static MonthFragment newInstance(Calendar date) {
-
         Bundle args = new Bundle();
         args.putSerializable(ARG_DISPLAY_MONTH, date);
         MonthFragment fragment = new MonthFragment();
@@ -54,7 +60,7 @@ public class MonthFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mMonth = (Calendar) getArguments().getSerializable(ARG_DISPLAY_MONTH);
+            mCurMonth = (Calendar) getArguments().getSerializable(ARG_DISPLAY_MONTH);
         }
     }
 
@@ -69,10 +75,12 @@ public class MonthFragment extends Fragment {
 
         createCalendarHeader();
         createCalendarDates();
+
         return view;
     }
 
     private void initializeUiComponents(View view) {
+        mCalendarTable = view.findViewById(R.id.tl_month_view);
         mTableHeader = view.findViewById(R.id.tr_header);
         mTableRow1 = view.findViewById(R.id.tr_1);
         mTableRow2 = view.findViewById(R.id.tr_2);
@@ -88,7 +96,9 @@ public class MonthFragment extends Fragment {
                 new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT, 1f);
 
         // TODO: 8/31/17 this is temporary, must be fixed in the future for better localization
-        String[] daysOfWeek = new String[] {"M", "T", "W", "T", "F", "S", "S"};
+        String[] daysOfWeek = Calendar.getInstance().getFirstDayOfWeek() == Calendar.MONDAY ?
+                new String[] {"M", "T", "W", "T", "F", "S", "S"} :
+                new String[] {"S", "M", "T", "W", "T", "F", "S"};
         for (String dayOfWeek : daysOfWeek) {
             TextView dayTextView = new TextView(mContext);
             dayTextView.setText(dayOfWeek);
@@ -104,38 +114,72 @@ public class MonthFragment extends Fragment {
 
         // TODO: 8/31/17 clean this mess
 
-        // days of the previous month
-        Calendar curMonth = (Calendar) mMonth.clone();
+        // determine number of days of the previous month will be shown
+        Calendar curMonth = (Calendar) mCurMonth.clone();
         curMonth.set(Calendar.DAY_OF_MONTH, 1);
-        int firstDayOfWeekInMonth = curMonth.get(Calendar.DAY_OF_WEEK);
-        int previousMonthDay = firstDayOfWeekInMonth - curMonth.getFirstDayOfWeek();
+        int previousMonthDay = curMonth.get(Calendar.DAY_OF_WEEK) - curMonth.getFirstDayOfWeek();
+
+        // days of previous month
         Calendar lastMonth = (Calendar) curMonth.clone();
-        lastMonth.add(Calendar.MONTH, -1);
+        assert Integer.valueOf(lastMonth.get(Calendar.DAY_OF_MONTH)) == 1;
         for (int i = previousMonthDay; i > 0; i--) {
-            TextView dateTextView = createDateTextView(Color.GRAY);
-            dateTextView.setText(String.valueOf(lastMonth.getActualMaximum(Calendar.DAY_OF_MONTH) - i + 1));
-            getRow(0).addView(dateTextView);
+            lastMonth.add(Calendar.DAY_OF_MONTH, -1);
+            getRow(0).addView(createDateView(lastMonth, Color.GRAY));
         }
 
         // days of current month
         int daysInMonth = curMonth.getActualMaximum(Calendar.DAY_OF_MONTH);
+        curMonth.set(Calendar.DAY_OF_MONTH, 1);
         for (int i = 1; i <= daysInMonth; i++) {
             TableRow row = getRow((i + previousMonthDay - 1) / 7);
-            TextView dateTextView = createDateTextView(Color.BLACK);
-            dateTextView.setText(String.valueOf(i));
-            row.addView(dateTextView);
+
+            curMonth.set(Calendar.DAY_OF_MONTH, i);
+            row.addView(createDateView(curMonth, Color.BLACK));
         }
 
         // days of the next month
+        Calendar nextMonth = (Calendar) mCurMonth.clone();
+        nextMonth.add(Calendar.MONTH, 1);
+        nextMonth.set(Calendar.DAY_OF_MONTH, 1);
         for (int i = 1; ; i++) {
             int index = (i + daysInMonth + previousMonthDay - 1) / 7;
             if (index >= 6) {
                 break;
             }
             TableRow row = getRow(index);
-            TextView dateTextView = createDateTextView(Color.GRAY);
-            dateTextView.setText(String.valueOf(i));
-            row.addView(dateTextView);
+            row.addView(createDateView(nextMonth, Color.GRAY));
+            nextMonth.add(Calendar.DAY_OF_MONTH, 1);
+        }
+
+        TextView textView = createDateTextView(Color.BLACK);
+        textView.setText(curMonth.get(Calendar.MONTH) + "/" + curMonth.get(Calendar.YEAR));
+        mCalendarTable.addView(textView);
+    }
+
+    private View createDateView(Calendar calendar, int dateColor) {
+        TextView dateTextView = createDateTextView(dateColor);
+        dateTextView.setText(String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)));
+
+        String date = CalendarUtils.getDate(calendar.getTimeInMillis(), "yyyy/MM/dd");
+        CalendarEntry entry = CalendarUtils.findEntryWithDate(date);
+
+        if (entry == null) {
+            return dateTextView;
+        } else {
+            LinearLayout layout = new LinearLayout(mContext);
+            layout.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, TableRow.LayoutParams.WRAP_CONTENT, 1f));
+            layout.setOrientation(LinearLayout.VERTICAL);
+            layout.addView(dateTextView);
+            for (int i = 0; i < entry.getEvents().size(); i++) {
+                TextView event = new TextView(mContext);
+                event.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
+                event.setTextColor(dateColor);
+                event.setText(entry.getEvents().get(i).getTitle());
+                event.setSingleLine(true);
+                event.setEllipsize(TextUtils.TruncateAt.END);
+                layout.addView(event);
+            }
+            return layout;
         }
     }
 

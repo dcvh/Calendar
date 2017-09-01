@@ -24,7 +24,10 @@
         </activity>
         <activity
             android:name=".Settings.SettingsActivity"
-            android:label="@string/title_activity_settings"></activity>
+            android:label="@string/title_activity_settings" />
+        <activity
+            android:name=".EventDetailsActivity"
+            android:theme="@style/AppTheme.BigActionBar"></activity>
     </application>
 
 </manifest>

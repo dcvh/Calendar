@@ -1,7 +1,11 @@
 package tcd.training.com.calendar;
 
 import android.Manifest;
+import android.annotation.TargetApi;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -12,9 +16,11 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -34,6 +40,7 @@ import java.util.Collections;
 import tcd.training.com.calendar.Calendar.CalendarEntry;
 import tcd.training.com.calendar.Calendar.CalendarUtils;
 import tcd.training.com.calendar.Settings.SettingsActivity;
+import tcd.training.com.calendar.ViewType.Day.DayViewFragment;
 import tcd.training.com.calendar.ViewType.Month.MonthViewFragment;
 import tcd.training.com.calendar.ViewType.Schedule.CalendarEntriesAdapter;
 import tcd.training.com.calendar.ViewType.Schedule.ScheduleViewFragment;
@@ -43,14 +50,16 @@ public class MainActivity extends AppCompatActivity
 
     private final static String TAG = MainActivity.class.getSimpleName();
 
-    public static final String ARG_ENTRIES_LIST = "EntriesList";
+    public static final String ARG_ENTRIES_LIST = "entriesList";
+    public static final String UPDATE_MONTH_ACTION = "updateMonthAction";
+    public static final String ARG_CALENDAR = "calendar";
     private static final int RC_CALENDAR_PERMISSION = 1;
 
     private DrawerLayout mDrawerLayout;
 
-    RecyclerView.LayoutManager mLayoutManager;
-    private CalendarEntriesAdapter mDatesAdapter;
     private ArrayList<CalendarEntry> mCalendarEntriesList;
+    private Fragment mCurrentFragment;
+    private BroadcastReceiver mBroadcastReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,10 +67,27 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         initializeUiComponents();
+        initializeLocalBroadcastReceiver();
 
         readCalendarEventDates();
 
-        replaceFragment(MonthViewFragment.class);
+        replaceFragment(ScheduleViewFragment.class);
+
+        Intent intent = new Intent(this, EventDetailsActivity.class);
+        intent.putExtra(EventDetailsActivity.ARG_CALENDAR_ENTRY, mCalendarEntriesList.get(0).getEvents().get(0));
+        startActivity(intent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        LocalBroadcastManager.getInstance(this).registerReceiver(mBroadcastReceiver, new IntentFilter(UPDATE_MONTH_ACTION));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
     }
 
     @Override
@@ -89,7 +115,7 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
         switch (id) {
             case R.id.action_today:
-                // TODO: 8/31/17 call ScrollToToday with current fragment
+                scrollToToday();
                 return true;
             case R.id.action_refresh:
                 readCalendarEventDates();
@@ -99,12 +125,22 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    private void scrollToToday() {
+        if (mCurrentFragment instanceof ScheduleViewFragment) {
+            ((ScheduleViewFragment) mCurrentFragment).scrollToToday();
+        } else if (mCurrentFragment instanceof  MonthViewFragment) {
+            ((MonthViewFragment) mCurrentFragment).scrollToToday();
+        } else if (mCurrentFragment instanceof  DayViewFragment) {
+            ((DayViewFragment) mCurrentFragment).scrollToToday();
+        }
+    }
+
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         switch (id) {
             case R.id.nav_schedule: replaceFragment(ScheduleViewFragment.class); break;
-            case R.id.nav_day: replaceFragment(ScheduleViewFragment.class); break;
+            case R.id.nav_day: replaceFragment(DayViewFragment.class); break;
             case R.id.nav_week: replaceFragment(ScheduleViewFragment.class); break;
             case R.id.nav_month: replaceFragment(MonthViewFragment.class); break;
             case R.id.nav_settings:
@@ -123,14 +159,15 @@ public class MainActivity extends AppCompatActivity
     private void replaceFragment(Class fragmentClass) {
         try {
             assert fragmentClass != null;
-            Fragment fragment = (Fragment) fragmentClass.newInstance();
+            mCurrentFragment = (Fragment) fragmentClass.newInstance();
 
-            Bundle args = new Bundle();
-            args.putSerializable(ARG_ENTRIES_LIST, mCalendarEntriesList);
-            fragment.setArguments(args);
+//            Bundle args = new Bundle();
+//            args.putSerializable(ARG_ENTRIES_LIST, mCalendarEntriesList);
+//            mCurrentFragment.setArguments(args);
 
             FragmentManager manager = getSupportFragmentManager();
-            manager.beginTransaction().replace(R.id.fl_content, fragment).commit();
+            manager.beginTransaction().replace(R.id.fl_content, mCurrentFragment).commit();
+
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
@@ -165,6 +202,18 @@ public class MainActivity extends AppCompatActivity
 
         // data
         mCalendarEntriesList = new ArrayList<>();
+    }
+
+    private void initializeLocalBroadcastReceiver() {
+        mBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Calendar calendar = (Calendar) intent.getSerializableExtra(ARG_CALENDAR);
+                String month = CalendarUtils.getDate(calendar.getTimeInMillis(), "MMMM");
+                getSupportActionBar().setTitle(month);
+            }
+        };
+        LocalBroadcastManager.getInstance(this).registerReceiver(mBroadcastReceiver, new IntentFilter(UPDATE_MONTH_ACTION));
     }
 
     private void readCalendarEventDates() {

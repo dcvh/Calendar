@@ -6,7 +6,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:stretchColumns="*"
-    android:background="@android:color/white"
     android:divider="?android:attr/dividerHorizontal"
     android:showDividers="middle"
     tools:context="tcd.training.com.calendar.MainActivity">
