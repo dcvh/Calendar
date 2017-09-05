@@ -10,18 +10,18 @@ import android.os.Parcelable;
 public class CalendarEvent implements Parcelable{
     private long mId;
     private String mTitle;
-    private String mOrganizer;
+    private long mCalendarId;
     private String mLocation;
     private String mDescription;
     private long mStartDate;
     private long mEndDate;
     private boolean mAllDay;
 
-    public CalendarEvent(long id, String title, String organizer, String location,
+    public CalendarEvent(long id, String title, long calendarId, String location,
                          String description, long startDate, long endDate, boolean allDay) {
         this.mId = id;
         this.mTitle = title;
-        this.mOrganizer = organizer;
+        this.mCalendarId = calendarId;
         this.mLocation = location;
         this.mDescription = description;
         this.mStartDate = startDate;
@@ -32,7 +32,7 @@ public class CalendarEvent implements Parcelable{
     protected CalendarEvent(Parcel in) {
         mId = in.readLong();
         mTitle = in.readString();
-        mOrganizer = in.readString();
+        mCalendarId = in.readLong();
         mLocation = in.readString();
         mDescription = in.readString();
         mStartDate = in.readLong();
@@ -60,8 +60,8 @@ public class CalendarEvent implements Parcelable{
         return mTitle;
     }
 
-    public String getOrganizer() {
-        return mOrganizer;
+    public long getCalendarId() {
+        return mCalendarId;
     }
 
     public String getLocation() {
@@ -93,7 +93,7 @@ public class CalendarEvent implements Parcelable{
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeLong(mId);
         parcel.writeString(mTitle);
-        parcel.writeString(mOrganizer);
+        parcel.writeLong(mCalendarId);
         parcel.writeString(mLocation);
         parcel.writeString(mDescription);
         parcel.writeLong(mStartDate);

@@ -6,6 +6,8 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.text.TextUtils;
@@ -25,6 +27,8 @@ import tcd.training.com.calendar.Calendar.CalendarEntry;
 import tcd.training.com.calendar.Calendar.CalendarUtils;
 import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
+import tcd.training.com.calendar.ViewType.Day.DayFragment;
+import tcd.training.com.calendar.ViewType.Day.DayViewFragment;
 
 /**
  * Created by cpu10661-local on 8/31/17.
@@ -161,10 +165,11 @@ public class MonthFragment extends Fragment {
         dateTextView.setText(String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)));
 
         String date = CalendarUtils.getDate(calendar.getTimeInMillis(), "yyyy/MM/dd");
-        CalendarEntry entry = CalendarUtils.findEntryWithDate(date);
+        final CalendarEntry entry = CalendarUtils.findEntryWithDate(date);
 
+        View resultView;
         if (entry == null) {
-            return dateTextView;
+            resultView = dateTextView;
         } else {
             LinearLayout layout = new LinearLayout(mContext);
             layout.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, TableRow.LayoutParams.WRAP_CONTENT, 1f));
@@ -179,8 +184,23 @@ public class MonthFragment extends Fragment {
                 event.setEllipsize(TextUtils.TruncateAt.END);
                 layout.addView(event);
             }
-            return layout;
+            resultView = layout;
         }
+
+        resultView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                DayViewFragment newFragment = DayViewFragment.newInstance(entry.getDate());
+                FragmentTransaction transaction = getParentFragment().getFragmentManager().beginTransaction();
+                transaction
+                        .addToBackStack(null)
+                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                        .replace(R.id.fl_content, newFragment)
+                        .commit();
+            }
+        });
+
+        return resultView;
     }
 
     private TableRow getRow(int index) {
@@ -210,11 +230,6 @@ public class MonthFragment extends Fragment {
         dateTextView.setTextColor(color);
 
         return dateTextView;
-    }
-
-    private int dpToPixel(int dp) {
-        final float scale = getResources().getDisplayMetrics().density;
-        return (int) (dp * scale + 0.5f);
     }
 
     @Override

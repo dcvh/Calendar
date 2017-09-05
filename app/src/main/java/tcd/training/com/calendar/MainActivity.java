@@ -1,12 +1,13 @@
 package tcd.training.com.calendar;
 
 import android.Manifest;
-import android.annotation.TargetApi;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -15,11 +16,9 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -30,7 +29,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Button;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -42,7 +40,6 @@ import tcd.training.com.calendar.Calendar.CalendarUtils;
 import tcd.training.com.calendar.Settings.SettingsActivity;
 import tcd.training.com.calendar.ViewType.Day.DayViewFragment;
 import tcd.training.com.calendar.ViewType.Month.MonthViewFragment;
-import tcd.training.com.calendar.ViewType.Schedule.CalendarEntriesAdapter;
 import tcd.training.com.calendar.ViewType.Schedule.ScheduleViewFragment;
 
 public class MainActivity extends AppCompatActivity
@@ -58,6 +55,7 @@ public class MainActivity extends AppCompatActivity
     private DrawerLayout mDrawerLayout;
 
     private ArrayList<CalendarEntry> mCalendarEntriesList;
+    private FragmentManager mFragmentManager;
     private Fragment mCurrentFragment;
     private BroadcastReceiver mBroadcastReceiver;
 
@@ -67,15 +65,9 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         initializeUiComponents();
-        initializeLocalBroadcastReceiver();
+        initializeBasicComponents();
 
-        readCalendarEventDates();
-
-        replaceFragment(ScheduleViewFragment.class);
-
-        Intent intent = new Intent(this, EventDetailsActivity.class);
-        intent.putExtra(EventDetailsActivity.ARG_CALENDAR_ENTRY, mCalendarEntriesList.get(0).getEvents().get(0));
-        startActivity(intent);
+        readCalendarEntries();
     }
 
     @Override
@@ -92,9 +84,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
             mDrawerLayout.closeDrawer(GravityCompat.START);
+        } else if (mFragmentManager.getBackStackEntryCount() > 0) {
+            mFragmentManager.popBackStack();
         } else {
             super.onBackPressed();
         }
@@ -118,7 +111,7 @@ public class MainActivity extends AppCompatActivity
                 scrollToToday();
                 return true;
             case R.id.action_refresh:
-                readCalendarEventDates();
+                readCalendarEntries();
                 return true;
         }
 
@@ -146,10 +139,15 @@ public class MainActivity extends AppCompatActivity
             case R.id.nav_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
+                break;
             case R.id.nav_help_feedback:
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown selected item: " + item.getTitle());
+        }
+
+        if (id != R.id.nav_settings && id != R.id.nav_help_feedback) {
+            mFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         }
 
         mDrawerLayout.closeDrawer(GravityCompat.START);
@@ -165,8 +163,10 @@ public class MainActivity extends AppCompatActivity
 //            args.putSerializable(ARG_ENTRIES_LIST, mCalendarEntriesList);
 //            mCurrentFragment.setArguments(args);
 
-            FragmentManager manager = getSupportFragmentManager();
-            manager.beginTransaction().replace(R.id.fl_content, mCurrentFragment).commit();
+            mFragmentManager.beginTransaction()
+                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                    .replace(R.id.fl_content, mCurrentFragment)
+                    .commit();
 
         } catch (InstantiationException e) {
             e.printStackTrace();
@@ -204,7 +204,9 @@ public class MainActivity extends AppCompatActivity
         mCalendarEntriesList = new ArrayList<>();
     }
 
-    private void initializeLocalBroadcastReceiver() {
+    private void initializeBasicComponents() {
+        mFragmentManager = getSupportFragmentManager();
+
         mBroadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -216,27 +218,44 @@ public class MainActivity extends AppCompatActivity
         LocalBroadcastManager.getInstance(this).registerReceiver(mBroadcastReceiver, new IntentFilter(UPDATE_MONTH_ACTION));
     }
 
-    private void readCalendarEventDates() {
+    private void readCalendarEntries() {
         if (!requestWriteCalendarPermission()) {
             return;
         }
 
-        ArrayList<CalendarEntry> entriesList = CalendarUtils.readCalendarEvent(this);
-        if (entriesList.size() > 0) {
-            mCalendarEntriesList.addAll(entriesList);
-            Collections.sort(mCalendarEntriesList);
-//            mDatesAdapter.notifyDataSetChanged();
-        } else {
-//            for (int i = 1; i < 5; i++) {
-//                ArrayList<CalendarEvent> events = new ArrayList<>();
-//                for (int j = 0; j < i; j++) {
-//                    events.add(new CalendarEvent(j, "Event " + j, "Event " + j, 1504080564587L, 1504080564587L));
-//                }
-//                mCalendarEntriesList.add(new CalendarEntry("2017/08/29", events));
-//            }
-//            mDatesAdapter.notifyDataSetChanged();
-            Toast.makeText(this, R.string.no_calendar_events_error, Toast.LENGTH_LONG).show();
-        }
+        new AsyncTask<Void, Void, Void>() {
+            private ProgressDialog mDialog;
+
+            @Override
+            protected void onPreExecute() {
+                mDialog = new ProgressDialog(MainActivity.this);
+                mDialog.setMessage(getString(R.string.wait_load_events_message));
+                mDialog.setCancelable(false);
+                mDialog.setInverseBackgroundForced(false);
+                mDialog.show();
+            }
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+                ArrayList<CalendarEntry> entriesList = CalendarUtils.readCalendarEntries(MainActivity.this);
+                if (entriesList.size() > 0) {
+                    mCalendarEntriesList.addAll(entriesList);
+                    Collections.sort(mCalendarEntriesList);
+                } else {
+                    Toast.makeText(MainActivity.this, R.string.no_calendar_events_error, Toast.LENGTH_LONG).show();
+                }
+                CalendarUtils.readCalendarAccounts(MainActivity.this);
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                mDialog.dismiss();
+                mDialog = null;
+                replaceFragment(ScheduleViewFragment.class);
+            }
+
+        }.execute();
     }
 
     private boolean requestWriteCalendarPermission() {
@@ -270,7 +289,7 @@ public class MainActivity extends AppCompatActivity
             case RC_CALENDAR_PERMISSION: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    readCalendarEventDates();
+                    readCalendarEntries();
                 } else {
                     requestWriteCalendarPermission();
                 }

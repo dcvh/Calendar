@@ -34,9 +34,11 @@ import static tcd.training.com.calendar.MainActivity.ARG_ENTRIES_LIST;
 public class DayViewFragment extends Fragment{
 
     private static final String TAG = DayViewFragment.class.getSimpleName();
+    private static final String ARG_SPECIFIED_DATE = "specificDate";
 
     private ArrayList<CalendarEntry> mEntriesList;
     private ArrayList<Calendar> mDays;
+    private String mSpecifiedDate;
     private Context mContext;
 
     private ViewPager mDayViewPager;
@@ -52,11 +54,22 @@ public class DayViewFragment extends Fragment{
         return fragment;
     }
 
+    public static DayViewFragment newInstance(String date) {
+        Bundle args = new Bundle();
+        args.putSerializable(ARG_ENTRIES_LIST, CalendarUtils.getAllEntries());
+        args.putString(ARG_SPECIFIED_DATE, date);
+        DayViewFragment fragment = new DayViewFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mEntriesList = (ArrayList<CalendarEntry>) getArguments().getSerializable(ARG_ENTRIES_LIST);
+            Bundle args = getArguments();
+            mEntriesList = (ArrayList<CalendarEntry>) args.getSerializable(ARG_ENTRIES_LIST);
+            mSpecifiedDate = args.getString(ARG_SPECIFIED_DATE, "");
             getArguments().remove(ARG_ENTRIES_LIST);
         } else {
             mEntriesList = new ArrayList<>();
@@ -74,14 +87,19 @@ public class DayViewFragment extends Fragment{
 
         initializeUiComponents(view);
 
-        scrollToToday();
+        // scroll to specified day (if any), otherwise scroll to today
+        if (mSpecifiedDate != null && mSpecifiedDate.length() > 0) {
+            scrollTo(mSpecifiedDate);
+        } else {
+            scrollToToday();
+        }
 
         return view;
     }
 
     private void initializeUiComponents(View view) {
         mDayViewPager = view.findViewById(R.id.vp_day_view);
-        DayPagerAdapter adapter = new DayPagerAdapter(getFragmentManager(), mDays);
+        DayPagerAdapter adapter = new DayPagerAdapter(getChildFragmentManager(), mDays);
         mDayViewPager.setAdapter(adapter);
 
         mDayViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
@@ -139,15 +157,22 @@ public class DayViewFragment extends Fragment{
         }
     }
 
-    public void scrollToToday() {
+    /**
+     *
+     * @param date must be in standard format, use CalendarUtils.getStandardDateFormat()
+     */
+    private void scrollTo(String date) {
         // TODO: 9/1/17 this is temporary, must be fixed in the future for better performance (consider switching to binary search)
-        String date = CalendarUtils.getDate(Calendar.getInstance().getTimeInMillis(), "yyyy/MM/dd");
         for (int i = 0; i < mDays.size(); i++) {
-            if (CalendarUtils.getDate(mDays.get(i).getTimeInMillis(), "yyyy/MM/dd").equals(date)) {
+            if (CalendarUtils.getDate(mDays.get(i).getTimeInMillis(), CalendarUtils.getStandardDateFormat()).equals(date)) {
                 mDayViewPager.setCurrentItem(i);
                 sendUpdateMonthAction(mContext, i);
             }
         }
     }
-    
+
+    public void scrollToToday() {
+        String date = CalendarUtils.getDate(Calendar.getInstance().getTimeInMillis(), CalendarUtils.getStandardDateFormat());
+        scrollTo(date);
+    }
 }

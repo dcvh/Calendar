@@ -18,6 +18,7 @@ import tcd.training.com.calendar.Calendar.CalendarUtils;
 import tcd.training.com.calendar.EventDetailsActivity;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.ViewType.Schedule.CalendarEntriesAdapter;
+import tcd.training.com.calendar.ViewType.ViewUtils;
 
 /**
  * Created by cpu10661-local on 9/1/17.
@@ -56,63 +57,13 @@ public class DayEventsAdapter extends RecyclerView.Adapter<DayEventsAdapter.DayE
         if (mEntry != null) {
             for (CalendarEvent event : mEntry.getEvents()) {
                 if (!event.isAllDay() && Integer.valueOf(CalendarUtils.getDate(event.getStartDate(), "HH")) == position) {
-                    addEventView(event, holder.mEventsLinearLayout);
+                    holder.mEventsLinearLayout.addView(ViewUtils.getEventTileView(event, mContext));
                     holder.mEventsLinearLayout.setVisibility(View.VISIBLE);
                     holder.setIsRecyclable(false);
                 }
             }
         }
     }
-
-    private void addEventView(final CalendarEvent event, ViewGroup parent) {
-
-        // dp to pixels
-        final float scale = mContext.getResources().getDisplayMetrics().density;
-        int dpAsPx_8 = (int) (8 * scale + 0.5f);
-
-        // prepare a linear layout for wrapping title and duration
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        layoutParams.setMargins(0, 0, 0, dpAsPx_8);
-        LinearLayout eventLayout = new LinearLayout(mContext);
-        eventLayout.setOrientation(LinearLayout.VERTICAL);
-        eventLayout.setLayoutParams(layoutParams);
-        eventLayout.setBackgroundResource(R.drawable.layout_round_corner);
-
-        // title
-        TextView titleTextView = new TextView(mContext);
-        titleTextView.setText(event.getTitle());
-        titleTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        titleTextView.setSingleLine(true);
-        titleTextView.setEllipsize(TextUtils.TruncateAt.END);
-        titleTextView.setTextColor(Color.WHITE);
-        eventLayout.addView(titleTextView);
-
-        // duration
-        TextView descriptionTextView = new TextView(mContext);
-        descriptionTextView.setPadding(0, dpAsPx_8 / 2, 0, 0);
-        String duration = CalendarUtils.getDate(event.getStartDate(), "hh:mm a") + " - "+ CalendarUtils.getDate(event.getEndDate(), "hh:mm a");
-        descriptionTextView.setText(duration);
-        descriptionTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
-        descriptionTextView.setTextColor(Color.WHITE);
-        descriptionTextView.setSingleLine(true);
-        descriptionTextView.setEllipsize(TextUtils.TruncateAt.END);
-        eventLayout.addView(descriptionTextView);
-
-        // onClick listener
-        eventLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent showEventDetails = new Intent(mContext, EventDetailsActivity.class);
-                showEventDetails.putExtra(EventDetailsActivity.ARG_CALENDAR_ENTRY, event);
-                mContext.startActivity(showEventDetails);
-            }
-        });
-
-        // add to parent
-        eventLayout.setPadding(dpAsPx_8 * 2, dpAsPx_8, dpAsPx_8 * 2, dpAsPx_8);
-        parent.addView(eventLayout);
-    }
-
 
     class DayEventViewHolder extends RecyclerView.ViewHolder {
 

@@ -1,6 +1,7 @@
 package tcd.training.com.calendar.ViewType.Day;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -23,8 +24,10 @@ import java.util.Calendar;
 import tcd.training.com.calendar.Calendar.CalendarEntry;
 import tcd.training.com.calendar.Calendar.CalendarEvent;
 import tcd.training.com.calendar.Calendar.CalendarUtils;
+import tcd.training.com.calendar.EventDetailsActivity;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.ViewType.Month.MonthFragment;
+import tcd.training.com.calendar.ViewType.ViewUtils;
 
 /**
  * Created by cpu10661-local on 9/1/17.
@@ -86,7 +89,7 @@ public class DayFragment extends Fragment {
         if (entry != null) {
             for (CalendarEvent event : entry.getEvents()) {
                 if (event.isAllDay()) {
-                    addEventView(event, false, mAllDayEventsLayout);
+                    mAllDayEventsLayout.addView(ViewUtils.getEventTileView(event, mContext));
                 }
             }
         }
@@ -97,44 +100,6 @@ public class DayFragment extends Fragment {
         eventsListRecyclerView.setItemAnimator(new DefaultItemAnimator());
         DayEventsAdapter adapter = new DayEventsAdapter(entry, mContext);
         eventsListRecyclerView.setAdapter(adapter);
-    }
-
-    private void addEventView(CalendarEvent event, boolean containDuration, ViewGroup parent) {
-
-        // dp to pixels
-        final float scale = mContext.getResources().getDisplayMetrics().density;
-        int dpAsPx_8 = (int) (8 * scale + 0.5f);
-
-        // prepare a linear layout for wrapping title and duration
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        layoutParams.setMargins(0, 0, 0, dpAsPx_8);
-        LinearLayout eventLayout = new LinearLayout(mContext);
-        eventLayout.setOrientation(LinearLayout.VERTICAL);
-        eventLayout.setLayoutParams(layoutParams);
-        eventLayout.setBackgroundResource(R.drawable.layout_round_corner);
-
-        // title
-        TextView titleTextView = new TextView(mContext);
-        titleTextView.setText(event.getTitle());
-        eventLayout.addView(titleTextView);
-
-        // duration
-        if (containDuration) {
-            TextView descriptionTextView = new TextView(mContext);
-            descriptionTextView.setPadding(0, dpAsPx_8 / 2, 0, 0);
-            String duration = CalendarUtils.getDate(event.getStartDate(), "hh") + CalendarUtils.getDate(event.getEndDate(), "hh");
-            descriptionTextView.setText(duration);
-            eventLayout.addView(descriptionTextView);
-        }
-
-        // add to parent
-        eventLayout.setPadding(dpAsPx_8 * 2, dpAsPx_8, dpAsPx_8 * 2, dpAsPx_8);
-        parent.addView(eventLayout);
-    }
-
-    private int dpToPixel(int dp) {
-        final float scale = getResources().getDisplayMetrics().density;
-        return (int) (dp * scale + 0.5f);
     }
 
     @Override

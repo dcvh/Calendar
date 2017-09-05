@@ -101,7 +101,7 @@ public class MonthViewFragment extends Fragment {
 
     private void initializeUiComponents(View view) {
         mMonthViewPager = view.findViewById(R.id.vp_month_view);
-        MonthPagerAdapter adapter = new MonthPagerAdapter(getFragmentManager(), mMonths);
+        MonthPagerAdapter adapter = new MonthPagerAdapter(getChildFragmentManager(), mMonths);
         mMonthViewPager.setAdapter(adapter);
 
         mMonthViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
