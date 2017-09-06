@@ -6,20 +6,20 @@ package tcd.training.com.calendar.Calendar;
 
 public class Account {
 
-    private long mId;
+    private int mId;
     private String mDisplayName;
     private String mAccountName;
     private String mOwnerAccount;
     private int mColor;
 
-    public Account(long id, String displayName, String accountName, String ownerAccount) {
+    public Account(int id, String displayName, String accountName, String ownerAccount) {
         this.mId = id;
         this.mDisplayName = displayName;
         this.mAccountName = accountName;
         this.mOwnerAccount = ownerAccount;
     }
 
-    public long getId() {
+    public int getId() {
         return mId;
     }
 

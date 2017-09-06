@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.View;
@@ -34,8 +35,11 @@ public class ViewUtils {
         LinearLayout eventLayout = new LinearLayout(context);
         eventLayout.setOrientation(LinearLayout.VERTICAL);
         eventLayout.setLayoutParams(layoutParams);
+
+        // background color
         eventLayout.setBackgroundResource(R.drawable.layout_round_corner);
-        eventLayout.setBackgroundColor(CalendarUtils.getAccountColor(event.getCalendarId()));
+        GradientDrawable drawable = (GradientDrawable) eventLayout.getBackground();
+        drawable.setColor(CalendarUtils.getAccountColor(event.getCalendarId()));
 
         // title
         TextView titleTextView = getStandardTextView(event.getTitle(), context);

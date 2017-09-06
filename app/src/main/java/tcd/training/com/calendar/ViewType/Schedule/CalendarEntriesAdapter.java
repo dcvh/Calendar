@@ -1,8 +1,12 @@
 package tcd.training.com.calendar.ViewType.Schedule;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +20,7 @@ import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.Calendar.CalendarEntry;
 import tcd.training.com.calendar.Calendar.CalendarEvent;
 import tcd.training.com.calendar.Calendar.CalendarUtils;
+import tcd.training.com.calendar.ViewType.Day.DayViewFragment;
 import tcd.training.com.calendar.ViewType.ViewUtils;
 
 /**
@@ -26,12 +31,12 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<CalendarEntries
 
     private static final String TAG = CalendarEntriesAdapter.class.getSimpleName();
 
-    private ArrayList<CalendarEntry> mDatesList;
+    private ArrayList<CalendarEntry> mEntriesList;
     private Context mContext;
 
-    public CalendarEntriesAdapter(Context context, ArrayList<CalendarEntry> mDatesList) {
+    public CalendarEntriesAdapter(Context context, ArrayList<CalendarEntry> mEntriesList) {
         this.mContext = context;
-        this.mDatesList = mDatesList;
+        this.mEntriesList = mEntriesList;
     }
 
     @Override
@@ -48,19 +53,36 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<CalendarEntries
 
     @Override
     public int getItemCount() {
-        return mDatesList.size();
+        return mEntriesList.size();
     }
 
     @Override
-    public void onBindViewHolder(CalendarViewHolder holder, int position) {
+    public void onBindViewHolder(final CalendarViewHolder holder, int position) {
 
-        CalendarEntry calendarDate = mDatesList.get(position);
-        long dateInMillis = calendarDate.getEvents().get(0).getStartDate();
-        holder.mDayOfMonthTextView.setText(CalendarUtils.getDate(dateInMillis, "d"));
-        holder.mDayOfWeekTextView.setText(CalendarUtils.getDate(dateInMillis, "EEE"));
+        final CalendarEntry entry = mEntriesList.get(position);
 
-        for (CalendarEvent event : calendarDate.getEvents()) {
-            holder.mEventsLinearLayout.addView(ViewUtils.getEventTileView(event, mContext));
+        // day and month
+        holder.mDayOfMonthTextView.setText(CalendarUtils.getDate(entry.getDate(), "d"));
+        holder.mDayOfWeekTextView.setText(CalendarUtils.getDate(entry.getDate(), "EEE"));
+
+        holder.mDayOfMonthTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                DayViewFragment newFragment = DayViewFragment.newInstance(entry.getDate());
+                FragmentTransaction transaction = ((FragmentActivity)mContext).getSupportFragmentManager().beginTransaction();
+                transaction
+                        .addToBackStack(null)
+                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                        .replace(R.id.fl_content, newFragment)
+                        .commit();
+            }
+        });
+
+        // events
+        if (entry.getEvents().size() > 0) {
+            for (CalendarEvent event : entry.getEvents()) {
+                holder.mEventsLinearLayout.addView(ViewUtils.getEventTileView(event, mContext));
+            }
         }
 
         holder.setIsRecyclable(false);

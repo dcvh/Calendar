@@ -22,8 +22,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import tcd.training.com.calendar.R;
 
@@ -36,18 +40,34 @@ public class CalendarUtils {
     private static final String TAG = CalendarUtils.class.getSimpleName();
 
     private static final HashMap<String, Integer> mDefaultColors = new HashMap<>();
-
     private static ArrayList<CalendarEntry> mEntries;
     private static ArrayList<Account> mAccounts;
+    private static ArrayList<Reminder> mReminders;
+    private static ArrayList<Attendee> mAttendees;
     private static int mColorOffset = 0;
 
     public static ArrayList<CalendarEntry> getAllEntries() {
         return mEntries;
     }
 
-    public static ArrayList<CalendarEntry> readCalendarEntries(Context context) {
-
+    public static void readCalendarEventsInfo(Context context) {
         mEntries = new ArrayList<>();
+        mAccounts = new ArrayList<>();
+        mReminders = new ArrayList<>();
+        mAttendees = new ArrayList<>();
+
+        readCalendarEntries(context);
+
+        createDefaultColors(context);
+        readCalendarAccounts(context);
+
+        readCalendarReminders(context);
+
+        readCalendarEventAttendees(context);
+    }
+
+    private static ArrayList<CalendarEntry> readCalendarEntries(Context context) {
+
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
             return mEntries;
         }
@@ -65,6 +85,7 @@ public class CalendarUtils {
         projections.put(CalendarContract.Events.DTSTART, i++);
         projections.put(CalendarContract.Events.DTEND, i++);
         projections.put(CalendarContract.Events.ALL_DAY, i++);
+        projections.put(CalendarContract.Events.HAS_ALARM, i);
 
         // querying
         Cursor cursor = contentResolver.query(uri, projections.keySet().toArray(new String[0]), null, null, null);
@@ -74,31 +95,41 @@ public class CalendarUtils {
             Toast.makeText(context, R.string.no_calendar_events_error, Toast.LENGTH_SHORT).show();
         } else {
             do {
-                long id = cursor.getLong(projections.get(CalendarContract.Events._ID));
+                int id = cursor.getInt(projections.get(CalendarContract.Events._ID));
                 String title = cursor.getString(projections.get(CalendarContract.Events.TITLE));
-                long calendarId = cursor.getLong(projections.get(CalendarContract.Events.CALENDAR_ID));
+                int calendarId = cursor.getInt(projections.get(CalendarContract.Events.CALENDAR_ID));
                 String location = cursor.getString(projections.get(CalendarContract.Events.EVENT_LOCATION));
                 String description = cursor.getString(projections.get(CalendarContract.Events.DESCRIPTION));
                 long startDate = cursor.getLong(projections.get(CalendarContract.Events.DTSTART));
                 long endDate = cursor.getLong(projections.get(CalendarContract.Events.DTEND));
                 boolean allDay = cursor.getInt(projections.get(CalendarContract.Events.ALL_DAY)) == 1;
+                boolean hasAlarm = cursor.getInt(projections.get(CalendarContract.Events.HAS_ALARM)) == 1;
 
                 if (title.length() == 0) {
                     title = context.getString(R.string.no_title);
                 }
+                CalendarEvent event = new CalendarEvent(id, title, calendarId, location, description, startDate, endDate, allDay, hasAlarm);
 
-                CalendarEvent event = new CalendarEvent(id, title, calendarId, location, description, startDate, endDate, allDay);
-
-                String dateOfEvent = getDate(startDate, "yyyy/MM/dd");
-                for (CalendarEntry entry : mEntries) {
-                    if (entry.getDate().equals(dateOfEvent)) {
-                        entry.addEvent(event);
-                        continue;
+                String dateOfEvent = getDate(startDate, getStandardDateFormat());
+                for (i = 0; i < mEntries.size(); i++) {
+                    if (mEntries.get(i).getDate().equals(dateOfEvent)) {
+                        mEntries.get(i).addEvent(event);
+                        break;
                     }
                 }
-                CalendarEntry newEventDate = new CalendarEntry(dateOfEvent, new ArrayList<>(Arrays.asList(event)));
-                mEntries.add(newEventDate);
+                if (i == mEntries.size()) {
+                    mEntries.add(new CalendarEntry(dateOfEvent, new ArrayList<>(Arrays.asList(event))));
+                }
+
             } while (cursor.moveToNext());
+
+            String today = getDate(Calendar.getInstance().getTimeInMillis(), getStandardDateFormat());
+            for (CalendarEntry entry : mEntries) {
+                if (entry.getDate().equals(today)) {
+                    break;
+                }
+            }
+            mEntries.add(new CalendarEntry(today, new ArrayList<CalendarEvent>()));
         }
 
         // clean up
@@ -106,10 +137,11 @@ public class CalendarUtils {
             cursor.close();
         }
 
+        Collections.sort(mEntries);
         return mEntries;
     }
 
-    public static void readCalendarAccounts(Context context) {
+    private static void readCalendarAccounts(Context context) {
 
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -132,32 +164,29 @@ public class CalendarUtils {
         // Run query
         ContentResolver cr = context.getContentResolver();
         Uri uri = CalendarContract.Calendars.CONTENT_URI;
-        
-        mAccounts = new ArrayList<>();
-        createDefaultColors(context);
 
         // Submit the query and get a Cursor object back.
+        mColorOffset = 0;
         Cursor cursor = cr.query(uri, projection, null, null, null);
-        while (cursor.moveToNext()) {
-            long calID = 0;
-            String displayName = null;
-            String accountName = null;
-            String ownerName = null;
+        if (cursor == null) {
+            Log.e(TAG, "readCalendarAccounts: There was a problem handling the cursor");
+        } else if (!cursor.moveToFirst()) {
+            Toast.makeText(context, R.string.no_calendar_events_error, Toast.LENGTH_SHORT).show();
+        } else {
+            while (cursor.moveToNext()) {
 
-            // Get the field values
-            calID = cursor.getLong(PROJECTION_ID_INDEX);
-            displayName = cursor.getString(PROJECTION_DISPLAY_NAME_INDEX);
-            accountName = cursor.getString(PROJECTION_ACCOUNT_NAME_INDEX);
-            ownerName = cursor.getString(PROJECTION_OWNER_ACCOUNT_INDEX);
+                // Get the field values
+                int calId = cursor.getInt(PROJECTION_ID_INDEX);
+                String displayName = cursor.getString(PROJECTION_DISPLAY_NAME_INDEX);
+                String accountName = cursor.getString(PROJECTION_ACCOUNT_NAME_INDEX);
+                String ownerName = cursor.getString(PROJECTION_OWNER_ACCOUNT_INDEX);
 
-            Account account = new Account(calID, displayName, accountName, ownerName);
-            int color = mDefaultColors.values().toArray(new Integer[0])[mColorOffset++ % mDefaultColors.size()];
-            Log.e(TAG, "readCalendarAccounts: " + color);
-            account.setColor(color);
-            mAccounts.add(account);
-        }
+                Account account = new Account(calId, displayName, accountName, ownerName);
+                int color = mDefaultColors.values().toArray(new Integer[0])[mColorOffset++ % mDefaultColors.size()];
+                account.setColor(color);
+                mAccounts.add(account);
+            }
 
-        if (cursor != null) {
             cursor.close();
         }
     }
@@ -182,7 +211,104 @@ public class CalendarUtils {
         mDefaultColors.put("Blue Grey", ContextCompat.getColor(context, R.color.blue_grey));
     }
 
-    public static String getAccountDisplayName(long id) {
+    private static void readCalendarReminders(Context context) {
+
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        // Projection array. Creating indices for this array instead of doing dynamic lookups improves performance.
+        String[] projection = new String[]{
+                CalendarContract.Reminders._ID,                           // 0
+                CalendarContract.Reminders.EVENT_ID,                      // 1
+                CalendarContract.Reminders.MINUTES,                       // 2
+                CalendarContract.Reminders.METHOD                         // 3
+        };
+
+        // The indices for the projection array above.
+        int PROJECTION_ID_INDEX = 0;
+        int PROJECTION_EVENT_ID_INDEX = 1;
+        int PROJECTION_MINUTES_INDEX = 2;
+        int PROJECTION_METHOD_INDEX = 3;
+
+        // Run query
+        ContentResolver cr = context.getContentResolver();
+        Uri uri = CalendarContract.Reminders.CONTENT_URI;
+
+        // Submit the query and get a Cursor object back.
+        Cursor cursor = cr.query(uri, projection, null, null, null);
+        if (cursor == null) {
+            Log.e(TAG, "readCalendarReminders: There was a problem handling the cursor");
+        } else if (!cursor.moveToFirst()) {
+            Toast.makeText(context, R.string.no_calendar_events_error, Toast.LENGTH_SHORT).show();
+        } else {
+            while (cursor.moveToNext()) {
+                int _id = cursor.getInt(PROJECTION_ID_INDEX);
+                int eventId = cursor.getInt(PROJECTION_EVENT_ID_INDEX);
+                int minutes = cursor.getInt(PROJECTION_MINUTES_INDEX);
+                int method = cursor.getInt(PROJECTION_METHOD_INDEX);
+
+                Reminder reminder = new Reminder(_id, eventId, minutes, method);
+                mReminders.add(reminder);
+            }
+            cursor.close();
+        }
+    }
+
+    private static void readCalendarEventAttendees(Context context) {
+
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        // Projection array. Creating indices for this array instead of doing dynamic lookups improves performance.
+        String[] projection = new String[]{
+                CalendarContract.Attendees._ID,                             // 0
+                CalendarContract.Attendees.EVENT_ID,                        // 1
+                CalendarContract.Attendees.ATTENDEE_NAME,                   // 2
+                CalendarContract.Attendees.ATTENDEE_EMAIL,                  // 3
+                CalendarContract.Attendees.ATTENDEE_STATUS,                 // 4
+                CalendarContract.Attendees.ATTENDEE_RELATIONSHIP            // 5
+        };
+
+        // The indices for the projection array above.
+        int PROJECTION_ID_INDEX = 0;
+        int PROJECTION_EVENT_ID_INDEX = 1;
+        int PROJECTION_ATTENDEE_NAME_INDEX = 2;
+        int PROJECTION_ATTENDEE_EMAIL_INDEX = 3;
+        int PROJECTION_ATTENDEE_STATUS_INDEX = 4;
+        int PROJECTION_ATTENDEE_RELATIONSHIP_INDEX = 5;
+
+        // Run query
+        ContentResolver cr = context.getContentResolver();
+        Uri uri = CalendarContract.Attendees.CONTENT_URI;
+
+        // Submit the query and get a Cursor object back.
+        Cursor cursor = cr.query(uri, projection, null, null, null);
+        if (cursor == null) {
+            Log.e(TAG, "readCalendarEventAttendees: There was a problem handling the cursor");
+        } else if (!cursor.moveToFirst()) {
+            Toast.makeText(context, R.string.no_calendar_events_error, Toast.LENGTH_SHORT).show();
+        } else {
+            while (cursor.moveToNext()) {
+                int _id = cursor.getInt(PROJECTION_ID_INDEX);
+                int eventId = cursor.getInt(PROJECTION_EVENT_ID_INDEX);
+                String name = cursor.getString(PROJECTION_ATTENDEE_NAME_INDEX);
+                String email = cursor.getString(PROJECTION_ATTENDEE_EMAIL_INDEX);
+                int status = cursor.getInt(PROJECTION_ATTENDEE_STATUS_INDEX);
+                int relationship = cursor.getInt(PROJECTION_ATTENDEE_RELATIONSHIP_INDEX);
+
+                Log.e(TAG, "readCalendarEventAttendees: " + _id);
+                Log.e(TAG, "readCalendarEventAttendees: " + eventId);
+
+                Attendee attendee = new Attendee(_id, eventId, name, email, status, relationship);
+                mAttendees.add(attendee);
+            }
+            cursor.close();
+        }
+    }
+
+    public static String getAccountDisplayName(int id) {
         for (Account account : mAccounts) {
             if (account.getId() == id) {
                 return account.getDisplayName();
@@ -191,7 +317,7 @@ public class CalendarUtils {
         return "";
     }
 
-    public static String getAccountName(long id) {
+    public static String getAccountName(int id) {
         for (Account account : mAccounts) {
             if (account.getId() == id) {
                 return account.getAccountName();
@@ -200,13 +326,32 @@ public class CalendarUtils {
         return "";
     }
 
-    public static int getAccountColor(long id) {
+    public static int getAccountColor(int id) {
         for (Account account : mAccounts) {
             if (account.getId() == id) {
                 return account.getColor();
             }
         }
-        return Resources.getSystem().getColor(R.color.colorAccent);
+        return mDefaultColors.values().toArray(new Integer[0])[mDefaultColors.size() - 1];
+    }
+    
+    public static int getReminderMinutes(int id) {
+        for (Reminder reminder : mReminders) {
+            if (reminder.getEventId() == id) {
+                return reminder.getMinutes();
+            }
+        }
+        return -1;
+    }
+
+    public static ArrayList<Attendee> getEventAttendees(int id) {
+        ArrayList<Attendee> attendees = new ArrayList<>();
+        for (Attendee attendee: mAttendees) {
+            if (attendee.getEventId() == id) {
+                attendees.add(attendee);
+            }
+        }
+        return attendees;
     }
 
     /**
@@ -231,9 +376,25 @@ public class CalendarUtils {
     }
 
     public static String getDate(long milliSeconds, String dateFormat) {
-        SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
+        SimpleDateFormat formatter = new SimpleDateFormat(dateFormat, Locale.getDefault());
+        formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(milliSeconds);
         return formatter.format(calendar.getTime());
+    }
+
+    public static String getDate(String standardDate, String dateFormat) {
+        SimpleDateFormat formatter = new SimpleDateFormat(getStandardDateFormat(), Locale.getDefault());
+        formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
+        try {
+            Date parsedDate = formatter.parse(standardDate);
+            formatter = new SimpleDateFormat(dateFormat, Locale.getDefault());
+            formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
+            return formatter.format(parsedDate);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }

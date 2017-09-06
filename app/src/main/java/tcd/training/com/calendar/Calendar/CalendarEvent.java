@@ -8,17 +8,18 @@ import android.os.Parcelable;
  */
 
 public class CalendarEvent implements Parcelable{
-    private long mId;
+    private int mId;
     private String mTitle;
-    private long mCalendarId;
+    private int mCalendarId;
     private String mLocation;
     private String mDescription;
     private long mStartDate;
     private long mEndDate;
     private boolean mAllDay;
+    private boolean mHasAlarm;
 
-    public CalendarEvent(long id, String title, long calendarId, String location,
-                         String description, long startDate, long endDate, boolean allDay) {
+    public CalendarEvent(int id, String title, int calendarId, String location,
+                         String description, long startDate, long endDate, boolean allDay, boolean hasAlarm) {
         this.mId = id;
         this.mTitle = title;
         this.mCalendarId = calendarId;
@@ -27,17 +28,19 @@ public class CalendarEvent implements Parcelable{
         this.mStartDate = startDate;
         this.mEndDate = endDate;
         this.mAllDay = allDay;
+        this.mHasAlarm = hasAlarm;
     }
 
     protected CalendarEvent(Parcel in) {
-        mId = in.readLong();
+        mId = in.readInt();
         mTitle = in.readString();
-        mCalendarId = in.readLong();
+        mCalendarId = in.readInt();
         mLocation = in.readString();
         mDescription = in.readString();
         mStartDate = in.readLong();
         mEndDate = in.readLong();
         mAllDay = in.readByte() != 0;
+        mHasAlarm = in.readByte() != 0;
     }
 
     public static final Creator<CalendarEvent> CREATOR = new Creator<CalendarEvent>() {
@@ -52,7 +55,7 @@ public class CalendarEvent implements Parcelable{
         }
     };
 
-    public long getId() {
+    public int getId() {
         return mId;
     }
 
@@ -60,7 +63,7 @@ public class CalendarEvent implements Parcelable{
         return mTitle;
     }
 
-    public long getCalendarId() {
+    public int getCalendarId() {
         return mCalendarId;
     }
 
@@ -84,6 +87,10 @@ public class CalendarEvent implements Parcelable{
         return mAllDay;
     }
 
+    public boolean hasAlarm() {
+        return mHasAlarm;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -91,13 +98,15 @@ public class CalendarEvent implements Parcelable{
 
     @Override
     public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeLong(mId);
+
+        parcel.writeInt(mId);
         parcel.writeString(mTitle);
-        parcel.writeLong(mCalendarId);
+        parcel.writeInt(mCalendarId);
         parcel.writeString(mLocation);
         parcel.writeString(mDescription);
         parcel.writeLong(mStartDate);
         parcel.writeLong(mEndDate);
         parcel.writeByte((byte) (mAllDay ? 1 : 0));
+        parcel.writeByte((byte) (mHasAlarm ? 1 : 0));
     }
 }

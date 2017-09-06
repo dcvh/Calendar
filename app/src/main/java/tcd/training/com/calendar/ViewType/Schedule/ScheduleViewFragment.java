@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.LinearSmoothScroller;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import tcd.training.com.calendar.Calendar.CalendarEntry;
 import tcd.training.com.calendar.Calendar.CalendarUtils;
@@ -29,7 +31,7 @@ public class ScheduleViewFragment extends Fragment {
 
     private ArrayList<CalendarEntry> mEntriesList;
 
-    private RecyclerView.LayoutManager mLayoutManager;
+    private LinearLayoutManager mLayoutManager;
     private CalendarEntriesAdapter mAdapter;
 
     public ScheduleViewFragment() {
@@ -46,13 +48,6 @@ public class ScheduleViewFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        if (getArguments() != null) {
-//            mEntriesList = (ArrayList<CalendarEntry>) getArguments().getSerializable(ARG_ENTRIES_LIST);
-//            getArguments().remove(ARG_ENTRIES_LIST);
-//        } else {
-//            mEntriesList = new ArrayList<>();
-//        }
-
         mEntriesList = CalendarUtils.getAllEntries();
         if (mEntriesList == null) {
             mEntriesList = new ArrayList<>();
@@ -73,20 +68,29 @@ public class ScheduleViewFragment extends Fragment {
         mAdapter = new CalendarEntriesAdapter(view.getContext(), mEntriesList);
         eventsRecyclerView.setAdapter(mAdapter);
 
+        scrollToToday();
+
         return view;
     }
 
     public void scrollToToday() {
-//        String today = CalendarUtils.getDate(Calendar.getInstance().getTimeInMillis(), "yyyy/MM/dd");
-//        // TODO: 8/31/17 this is temporary, must be fixed in the future for better performance (consider switching to binary search)
-//        for (int i = 0; i < mCalendarEntriesList.size(); i++) {
-//            String date = mCalendarEntriesList.get(i).getDate();
-//            if (date.equals(today)) {
-//                mLayoutManager.scrollToPosition(i);
-//            } else if (date.compareTo(today) < 0) {
-//                break;
-//            }
-//        }
+        String today = CalendarUtils.getDate(Calendar.getInstance().getTimeInMillis(), CalendarUtils.getStandardDateFormat());
+        RecyclerView.SmoothScroller smoothScroller = new LinearSmoothScroller(getContext()) {
+            @Override protected int getVerticalSnapPreference() {
+                return LinearSmoothScroller.SNAP_TO_START;
+            }
+        };
+
+        // TODO: 8/31/17 this is temporary, must be fixed in the future for better performance (consider switching to binary search)
+        for (int i = 0; i < mEntriesList.size(); i++) {
+            String date = mEntriesList.get(i).getDate();
+            if (date.equals(today)) {
+                smoothScroller.setTargetPosition(i);
+                mLayoutManager.startSmoothScroll(smoothScroller);
+            } else if (date.compareTo(today) > 0) {
+                break;
+            }
+        }
     }
 
     @Override

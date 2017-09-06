@@ -3,23 +3,32 @@ package tcd.training.com.calendar;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedHashMap;
 
+import tcd.training.com.calendar.Calendar.Attendee;
 import tcd.training.com.calendar.Calendar.CalendarEntry;
 import tcd.training.com.calendar.Calendar.CalendarEvent;
 import tcd.training.com.calendar.Calendar.CalendarUtils;
 
 public class EventDetailsActivity extends AppCompatActivity {
+
+    private static final String TAG = EventDetailsActivity.class.getSimpleName();
 
     public static final String ARG_CALENDAR_ENTRY = "calendarEntry";
 
@@ -56,6 +65,13 @@ public class EventDetailsActivity extends AppCompatActivity {
         actionBar.setTitle(mEvent.getTitle());
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setBackgroundDrawable(new ColorDrawable(CalendarUtils.getAccountColor(mEvent.getCalendarId())));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            window.setStatusBarColor(CalendarUtils.getAccountColor(mEvent.getCalendarId()));
+        }
     }
 
     private void initializeUiComponents() {
@@ -84,51 +100,65 @@ public class EventDetailsActivity extends AppCompatActivity {
     private void displayDateTime() {
 
         ((ImageView)mDateTimeLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_access_time_black_48dp);
-        TextView dateTimeTextView = mDateTimeLayout.findViewById(R.id.tv_primary_description);
+        TextView dateTimeTextView = mDateTimeLayout.findViewById(R.id.tv_primary_content);
 
-        if (CalendarUtils.getDate(mEvent.getStartDate(), "yyyy/MM/dd").equals(CalendarUtils.getDate(mEvent.getEndDate(), "yyyy/MM/dd"))) {
-            String format = "EEEE, MMMM d, hh:mm a";
-            String dateTime = CalendarUtils.getDate(mEvent.getStartDate(), format)
-                    + " -\n"
-                    + CalendarUtils.getDate(mEvent.getEndDate(), format);
-            dateTimeTextView.setText(dateTime);
-        } else {
-            String dateTime = CalendarUtils.getDate(mEvent.getStartDate(), "EEEE, MMMM d")
+        String dateTime;
+        if (CalendarUtils.getDate(mEvent.getStartDate(), CalendarUtils.getStandardDateFormat())
+                .equals(CalendarUtils.getDate(mEvent.getEndDate(), CalendarUtils.getStandardDateFormat()))) {
+            dateTime = CalendarUtils.getDate(mEvent.getStartDate(), "EEEE, MMMM d")
                     + "\n"
                     + CalendarUtils.getDate(mEvent.getStartDate(), "hh:mm a")
                     + " - "
                     + CalendarUtils.getDate(mEvent.getEndDate(), "hh:mm a");
-            dateTimeTextView.setText(dateTime);
-
+        } else {
+            String format = "EEEE, MMMM d, hh:mm a";
+            dateTime = CalendarUtils.getDate(mEvent.getStartDate(), format);
+            if (!mEvent.isAllDay()) {
+                dateTime += " -\n" + CalendarUtils.getDate(mEvent.getEndDate(), format);
+            }
         }
+        dateTimeTextView.setText(dateTime);
     }
 
     private void displayLocation() {
         if (mEvent.getLocation().length() > 0) {
             ((ImageView)mLocationLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_location_on_black_48dp);
-            ((TextView)mLocationLayout.findViewById(R.id.tv_primary_description)).setText(mEvent.getLocation());
+            ((TextView)mLocationLayout.findViewById(R.id.tv_primary_content)).setText(mEvent.getLocation());
             mLocationLayout.setVisibility(View.VISIBLE);
         }
     }
 
     private void displayGuestsInfo() {
-        // TODO: 9/1/17 implement guests
-        ((ImageView)mGuestsLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_people_black_48dp);
-        ((TextView)mGuestsLayout.findViewById(R.id.tv_primary_description)).setText("0");
-        mGuestsLayout.setVisibility(View.VISIBLE);
+        ArrayList<Attendee> attendees = CalendarUtils.getEventAttendees(mEvent.getId());
+        if (attendees.size() > 0) {
+            ((ImageView) mGuestsLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_people_black_48dp);
+
+            TextView content = mGuestsLayout.findViewById(R.id.tv_primary_content);
+            content.setText(String.format(getString(R.string.x_guest), attendees.size()));
+            for (Attendee attendee : attendees) {
+                content.append(String.format(getString(R.string.guest_email), attendee.getEmail()));
+            }
+
+            mGuestsLayout.setVisibility(View.VISIBLE);
+        }
     }
 
     private void displayNotificationInfo() {
-        // TODO: 9/1/17 implement reminder
-        ((ImageView)mNotificationLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_notifications_black_48dp);
-        ((TextView)mNotificationLayout.findViewById(R.id.tv_primary_description)).setText("10 minutes before");
-        mNotificationLayout.setVisibility(View.VISIBLE);
+        if (mEvent.hasAlarm()) {
+            int minutes = CalendarUtils.getReminderMinutes(mEvent.getId());
+            if (minutes > -1) {
+                ((ImageView) mNotificationLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_notifications_black_48dp);
+                String notification = String.format(getString(R.string.x_minutes_before), minutes);
+                ((TextView) mNotificationLayout.findViewById(R.id.tv_primary_content)).setText(notification);
+                mNotificationLayout.setVisibility(View.VISIBLE);
+            }
+        }
     }
-    
+
     private void displayDescription() {
         if (mEvent.getDescription().length() > 0) {
             ((ImageView)mDescriptionLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_description_black_48dp);
-            ((TextView)mDescriptionLayout.findViewById(R.id.tv_primary_description)).setText(mEvent.getDescription());
+            ((TextView)mDescriptionLayout.findViewById(R.id.tv_primary_content)).setText(mEvent.getDescription());
             mDescriptionLayout.setVisibility(View.VISIBLE);
         }
     }
@@ -137,7 +167,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         String displayName = CalendarUtils.getAccountDisplayName(mEvent.getCalendarId());
         if (displayName.length() > 0) {
             ((ImageView)mAccountDisplayNameLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_action_today_black_24dp);
-            ((TextView)mAccountDisplayNameLayout.findViewById(R.id.tv_primary_description)).setText(displayName);
+            ((TextView)mAccountDisplayNameLayout.findViewById(R.id.tv_primary_content)).setText(displayName);
             mAccountDisplayNameLayout.setVisibility(View.VISIBLE);
         }
     }

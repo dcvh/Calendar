@@ -164,7 +164,7 @@ public class MonthFragment extends Fragment {
         TextView dateTextView = createDateTextView(dateColor);
         dateTextView.setText(String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)));
 
-        String date = CalendarUtils.getDate(calendar.getTimeInMillis(), "yyyy/MM/dd");
+        String date = CalendarUtils.getDate(calendar.getTimeInMillis(), CalendarUtils.getStandardDateFormat());
         final CalendarEntry entry = CalendarUtils.findEntryWithDate(date);
 
         View resultView;

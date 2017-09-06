@@ -23,8 +23,9 @@
     <string name="no_calendar_events_error">No event found!</string>
     <string name="no_title">No title</string>
     <string name="wait_load_events_message">Please wait while system loads events</string>
-
-    <!--fragments-->
+    <string name="x_minutes_before">%d minutes before</string>
+    <string name="x_guest">%d guest</string>
+    <string name="guest_email">\n &#8226; %s</string>
 
     <!--permissions-->
     <string name="grant">Grant</string>

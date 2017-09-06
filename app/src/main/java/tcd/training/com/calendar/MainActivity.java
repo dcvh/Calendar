@@ -54,7 +54,6 @@ public class MainActivity extends AppCompatActivity
 
     private DrawerLayout mDrawerLayout;
 
-    private ArrayList<CalendarEntry> mCalendarEntriesList;
     private FragmentManager mFragmentManager;
     private Fragment mCurrentFragment;
     private BroadcastReceiver mBroadcastReceiver;
@@ -158,16 +157,10 @@ public class MainActivity extends AppCompatActivity
         try {
             assert fragmentClass != null;
             mCurrentFragment = (Fragment) fragmentClass.newInstance();
-
-//            Bundle args = new Bundle();
-//            args.putSerializable(ARG_ENTRIES_LIST, mCalendarEntriesList);
-//            mCurrentFragment.setArguments(args);
-
             mFragmentManager.beginTransaction()
                     .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                     .replace(R.id.fl_content, mCurrentFragment)
                     .commit();
-
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
@@ -199,9 +192,6 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
-        // data
-        mCalendarEntriesList = new ArrayList<>();
     }
 
     private void initializeBasicComponents() {
@@ -237,14 +227,10 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             protected Void doInBackground(Void... voids) {
-                ArrayList<CalendarEntry> entriesList = CalendarUtils.readCalendarEntries(MainActivity.this);
-                if (entriesList.size() > 0) {
-                    mCalendarEntriesList.addAll(entriesList);
-                    Collections.sort(mCalendarEntriesList);
-                } else {
+                CalendarUtils.readCalendarEventsInfo(MainActivity.this);
+                if (CalendarUtils.getAllEntries().size() == 0) {
                     Toast.makeText(MainActivity.this, R.string.no_calendar_events_error, Toast.LENGTH_LONG).show();
                 }
-                CalendarUtils.readCalendarAccounts(MainActivity.this);
                 return null;
             }
 
