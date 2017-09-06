@@ -67,7 +67,7 @@ public class ViewUtils {
         return eventLayout;
     }
 
-    private static TextView getStandardTextView(String content, Context context) {
+    public static TextView getStandardTextView(String content, Context context) {
         TextView textView = new TextView(context);
 
         textView.setText(content);

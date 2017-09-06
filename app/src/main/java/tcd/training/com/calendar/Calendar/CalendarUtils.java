@@ -92,7 +92,7 @@ public class CalendarUtils {
         if (cursor == null) {
             Log.e(TAG, "readCalendarEvents: There was a problem handling the cursor");
         } else if (!cursor.moveToFirst()) {
-            Toast.makeText(context, R.string.no_calendar_events_error, Toast.LENGTH_SHORT).show();
+            Log.d(TAG, "readCalendarEntries: No entry found");
         } else {
             do {
                 int id = cursor.getInt(projections.get(CalendarContract.Events._ID));
@@ -171,7 +171,7 @@ public class CalendarUtils {
         if (cursor == null) {
             Log.e(TAG, "readCalendarAccounts: There was a problem handling the cursor");
         } else if (!cursor.moveToFirst()) {
-            Toast.makeText(context, R.string.no_calendar_events_error, Toast.LENGTH_SHORT).show();
+            Log.d(TAG, "readCalendarAccounts: No account found");
         } else {
             while (cursor.moveToNext()) {
 
@@ -240,7 +240,7 @@ public class CalendarUtils {
         if (cursor == null) {
             Log.e(TAG, "readCalendarReminders: There was a problem handling the cursor");
         } else if (!cursor.moveToFirst()) {
-            Toast.makeText(context, R.string.no_calendar_events_error, Toast.LENGTH_SHORT).show();
+            Log.d(TAG, "readCalendarReminders: No reminder found");
         } else {
             while (cursor.moveToNext()) {
                 int _id = cursor.getInt(PROJECTION_ID_INDEX);
@@ -288,7 +288,7 @@ public class CalendarUtils {
         if (cursor == null) {
             Log.e(TAG, "readCalendarEventAttendees: There was a problem handling the cursor");
         } else if (!cursor.moveToFirst()) {
-            Toast.makeText(context, R.string.no_calendar_events_error, Toast.LENGTH_SHORT).show();
+            Log.d(TAG, "readCalendarEventAttendees: No attendee found");
         } else {
             while (cursor.moveToNext()) {
                 int _id = cursor.getInt(PROJECTION_ID_INDEX);

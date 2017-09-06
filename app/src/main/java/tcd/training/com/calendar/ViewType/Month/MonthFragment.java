@@ -3,6 +3,7 @@ package tcd.training.com.calendar.ViewType.Month;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -24,11 +25,13 @@ import android.widget.TextView;
 import java.util.Calendar;
 
 import tcd.training.com.calendar.Calendar.CalendarEntry;
+import tcd.training.com.calendar.Calendar.CalendarEvent;
 import tcd.training.com.calendar.Calendar.CalendarUtils;
 import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.ViewType.Day.DayFragment;
 import tcd.training.com.calendar.ViewType.Day.DayViewFragment;
+import tcd.training.com.calendar.ViewType.ViewUtils;
 
 /**
  * Created by cpu10661-local on 8/31/17.
@@ -155,16 +158,16 @@ public class MonthFragment extends Fragment {
             nextMonth.add(Calendar.DAY_OF_MONTH, 1);
         }
 
-        TextView textView = createDateTextView(Color.BLACK);
-        textView.setText(curMonth.get(Calendar.MONTH) + "/" + curMonth.get(Calendar.YEAR));
-        mCalendarTable.addView(textView);
+//        TextView textView = createDateTextView(Color.BLACK);
+//        textView.setText(curMonth.get(Calendar.MONTH) + "/" + curMonth.get(Calendar.YEAR));
+//        mCalendarTable.addView(textView);
     }
 
     private View createDateView(Calendar calendar, int dateColor) {
         TextView dateTextView = createDateTextView(dateColor);
         dateTextView.setText(String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)));
 
-        String date = CalendarUtils.getDate(calendar.getTimeInMillis(), CalendarUtils.getStandardDateFormat());
+        final String date = CalendarUtils.getDate(calendar.getTimeInMillis(), CalendarUtils.getStandardDateFormat());
         final CalendarEntry entry = CalendarUtils.findEntryWithDate(date);
 
         View resultView;
@@ -175,14 +178,14 @@ public class MonthFragment extends Fragment {
             layout.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, TableRow.LayoutParams.WRAP_CONTENT, 1f));
             layout.setOrientation(LinearLayout.VERTICAL);
             layout.addView(dateTextView);
-            for (int i = 0; i < entry.getEvents().size(); i++) {
-                TextView event = new TextView(mContext);
-                event.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
-                event.setTextColor(dateColor);
-                event.setText(entry.getEvents().get(i).getTitle());
-                event.setSingleLine(true);
-                event.setEllipsize(TextUtils.TruncateAt.END);
-                layout.addView(event);
+            for (CalendarEvent event : entry.getEvents()) {
+                TextView eventTextView = ViewUtils.getStandardTextView(event.getTitle(), mContext);
+                eventTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
+
+                eventTextView.setBackgroundResource(R.drawable.layout_round_corner);
+                GradientDrawable drawable = (GradientDrawable) eventTextView.getBackground();
+                drawable.setColor(CalendarUtils.getAccountColor(event.getCalendarId()));
+                layout.addView(eventTextView);
             }
             resultView = layout;
         }
@@ -190,7 +193,7 @@ public class MonthFragment extends Fragment {
         resultView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                DayViewFragment newFragment = DayViewFragment.newInstance(entry.getDate());
+                DayViewFragment newFragment = DayViewFragment.newInstance(date);
                 FragmentTransaction transaction = getParentFragment().getFragmentManager().beginTransaction();
                 transaction
                         .addToBackStack(null)
