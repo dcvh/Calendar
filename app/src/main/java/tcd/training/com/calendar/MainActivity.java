@@ -19,7 +19,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -31,12 +30,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 
-import tcd.training.com.calendar.Calendar.CalendarEntry;
 import tcd.training.com.calendar.Calendar.CalendarUtils;
+import tcd.training.com.calendar.ReminderTask.ReminderUtils;
 import tcd.training.com.calendar.Settings.SettingsActivity;
 import tcd.training.com.calendar.ViewType.Day.DayViewFragment;
 import tcd.training.com.calendar.ViewType.Month.MonthViewFragment;
@@ -67,6 +64,9 @@ public class MainActivity extends AppCompatActivity
         initializeBasicComponents();
 
         readCalendarEntries();
+
+        ReminderUtils.clearAllNotifications(this);
+        ReminderUtils.scheduleForReadingReminders(this);
     }
 
     @Override

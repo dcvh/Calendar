@@ -366,6 +366,10 @@ public class CalendarUtils {
         return "yyyy/MM/dd";
     }
 
+    public static String getStandardTimeFormat() {
+        return "hh:mm a";
+    }
+
     public static String getDate(long milliSeconds, String dateFormat) {
         SimpleDateFormat formatter = new SimpleDateFormat(dateFormat, Locale.getDefault());
         formatter.setTimeZone(TimeZone.getDefault());
