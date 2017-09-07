@@ -242,6 +242,8 @@ public class CalendarUtils {
                 int minutes = cursor.getInt(PROJECTION_MINUTES_INDEX);
                 int method = cursor.getInt(PROJECTION_METHOD_INDEX);
 
+
+
                 Reminder reminder = new Reminder(_id, eventId, minutes, method);
                 mReminders.add(reminder);
             }

@@ -67,6 +67,9 @@ public class MainActivity extends AppCompatActivity
 
         ReminderUtils.clearAllNotifications(this);
         ReminderUtils.scheduleForReadingReminders(this);
+
+        Intent intent = new Intent(this, AddEventActivity.class);
+        startActivity(intent);
     }
 
     @Override
@@ -153,21 +156,6 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    private void replaceFragment(Class fragmentClass) {
-        try {
-            assert fragmentClass != null;
-            mCurrentFragment = (Fragment) fragmentClass.newInstance();
-            mFragmentManager.beginTransaction()
-                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-                    .replace(R.id.fl_content, mCurrentFragment)
-                    .commit();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
     private void initializeUiComponents() {
         // toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -178,8 +166,8 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Intent addEventIntent = new Intent(MainActivity.this, AddEventActivity.class);
+                startActivity(addEventIntent);
             }
         });
 
@@ -207,6 +195,22 @@ public class MainActivity extends AppCompatActivity
         };
         LocalBroadcastManager.getInstance(this).registerReceiver(mBroadcastReceiver, new IntentFilter(UPDATE_MONTH_ACTION));
     }
+
+    private void replaceFragment(Class fragmentClass) {
+        try {
+            assert fragmentClass != null;
+            mCurrentFragment = (Fragment) fragmentClass.newInstance();
+            mFragmentManager.beginTransaction()
+                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                    .replace(R.id.fl_content, mCurrentFragment)
+                    .commit();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private void readCalendarEntries() {
         if (!requestWriteCalendarPermission()) {

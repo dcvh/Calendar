@@ -1,14 +1,10 @@
 package tcd.training.com.calendar;
 
-import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.util.TypedValue;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
@@ -18,11 +14,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.LinkedHashMap;
 
 import tcd.training.com.calendar.Calendar.Attendee;
-import tcd.training.com.calendar.Calendar.CalendarEntry;
 import tcd.training.com.calendar.Calendar.CalendarEvent;
 import tcd.training.com.calendar.Calendar.CalendarUtils;
 
@@ -99,7 +92,7 @@ public class EventDetailsActivity extends AppCompatActivity {
 
     private void displayDateTime() {
 
-        ((ImageView)mDateTimeLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_access_time_black_48dp);
+        ((ImageView)mDateTimeLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_time_black_48dp);
         TextView dateTimeTextView = mDateTimeLayout.findViewById(R.id.tv_primary_content);
 
         String dateTime;
@@ -122,7 +115,7 @@ public class EventDetailsActivity extends AppCompatActivity {
 
     private void displayLocation() {
         if (mEvent.getLocation().length() > 0) {
-            ((ImageView)mLocationLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_location_on_black_48dp);
+            ((ImageView)mLocationLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_location_black_48dp);
             ((TextView)mLocationLayout.findViewById(R.id.tv_primary_content)).setText(mEvent.getLocation());
             mLocationLayout.setVisibility(View.VISIBLE);
         }
@@ -166,7 +159,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     private void displayAccountDisplayName() {
         String displayName = CalendarUtils.getAccountDisplayName(mEvent.getCalendarId());
         if (displayName.length() > 0) {
-            ((ImageView)mAccountDisplayNameLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_action_today_black_24dp);
+            ((ImageView)mAccountDisplayNameLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_action_today_black_48dp);
             ((TextView)mAccountDisplayNameLayout.findViewById(R.id.tv_primary_content)).setText(displayName);
             mAccountDisplayNameLayout.setVisibility(View.VISIBLE);
         }

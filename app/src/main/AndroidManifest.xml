@@ -28,20 +28,24 @@
         <activity
             android:name=".EventDetailsActivity"
             android:theme="@style/AppTheme.BigActionBar" />
+
         <service
             android:name=".ReminderTask.ReadTodayRemindersJobService"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE"/>
+                <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE" />
             </intent-filter>
         </service>
         <service
             android:name=".ReminderTask.ReminderJobService"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE"/>
+                <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE" />
             </intent-filter>
         </service>
+
+        <activity android:name=".AddEventActivity"
+            android:theme="@style/AppTheme.ColorActionBar" ></activity>
     </application>
 
 </manifest>

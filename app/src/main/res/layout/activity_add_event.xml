@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white"
+    tools:context="tcd.training.com.calendar.AddEventActivity">
+
+    <EditText
+        android:id="@+id/edt_event_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/enter_title"
+        android:textColorHint="@android:color/white"
+        android:padding="16dp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="8dp"
+            android:paddingBottom="32dp">
+
+            <include
+                android:id="@+id/ll_invite_people"
+                layout="@layout/event_detail_list_item" />
+
+            <include layout="@layout/line_separator" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="16dp"
+                android:layout_marginRight="16dp" >
+
+                <ImageView
+                    android:id="@+id/iv_date_time_icon"
+                    android:layout_width="24dp"
+                    android:layout_weight="1"
+                    android:layout_height="24dp"
+                    android:tint="#9E9E9E"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="8"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <android.support.constraint.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/tv_all_day"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/all_day"
+                            android:textSize="16sp"
+                            android:textColor="@android:color/black"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintLeft_toLeftOf="parent"/>
+
+                        <Switch
+                            android:id="@+id/sw_all_day"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:layout_constraintTop_toTopOf="@id/tv_all_day"
+                            app:layout_constraintRight_toRightOf="parent"/>
+
+                        <TextView
+                            android:id="@+id/tv_start_date"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="16sp"
+                            android:textColor="@android:color/black"
+                            app:layout_constraintTop_toBottomOf="@id/tv_all_day"
+                            android:layout_marginTop="16dp"
+                            app:layout_constraintLeft_toLeftOf="parent"
+                            tools:text="Sat, Sep 2, 2017"/>
+
+                        <TextView
+                            android:id="@+id/tv_start_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="16sp"
+                            android:textColor="@android:color/black"
+                            app:layout_constraintTop_toTopOf="@id/tv_start_date"
+                            app:layout_constraintRight_toRightOf="parent"
+                            tools:text="3:00 PM"/>
+
+                        <TextView
+                            android:id="@+id/tv_end_date"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="16sp"
+                            android:textColor="@android:color/black"
+                            app:layout_constraintTop_toBottomOf="@id/tv_start_date"
+                            android:layout_marginTop="16dp"
+                            app:layout_constraintLeft_toLeftOf="parent"
+                            tools:text="Sat, Sep 2, 2017"/>
+
+                        <TextView
+                            android:id="@+id/tv_end_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="16sp"
+                            android:textColor="@android:color/black"
+                            app:layout_constraintTop_toTopOf="@id/tv_end_date"
+                            app:layout_constraintRight_toRightOf="parent"
+                            tools:text="4:00 PM"/>
+
+                        <TextView
+                            android:id="@+id/tv_more_options"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="16sp"
+                            app:layout_constraintTop_toBottomOf="@id/tv_end_date"
+                            android:layout_marginTop="16dp"
+                            app:layout_constraintLeft_toLeftOf="parent"
+                            android:text="@string/more_option"/>
+
+                    </android.support.constraint.ConstraintLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <include
+                android:id="@+id/ll_timezone"
+                android:visibility="gone"
+                layout="@layout/event_detail_list_item" />
+
+            <include
+                android:id="@+id/ll_repeat"
+                android:visibility="gone"
+                layout="@layout/event_detail_list_item" />
+
+            <include layout="@layout/line_separator" />
+
+            <include
+                android:id="@+id/ll_location"
+                layout="@layout/event_detail_list_item" />
+
+            <include layout="@layout/line_separator" />
+
+            <include
+                android:id="@+id/ll_notification"
+                layout="@layout/event_detail_list_item" />
+
+            <include layout="@layout/line_separator" />
+
+            <include
+                android:id="@+id/ll_default_color"
+                layout="@layout/event_detail_list_item" />
+
+            <include layout="@layout/line_separator" />
+
+            <LinearLayout
+                android:id="@+id/ll_note"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="16dp"
+                android:layout_marginRight="16dp" >
+
+                <ImageView
+                    android:id="@+id/iv_note_icon"
+                    android:layout_width="24dp"
+                    android:layout_weight="1"
+                    android:layout_height="24dp"
+                    android:tint="#9E9E9E"/>
+
+                <EditText
+                    android:id="@+id/edt_note"
+                    android:layout_width="0dp"
+                    android:layout_weight="8"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:lineSpacingExtra="5dp"
+                    android:hint="@string/add_note"
+                    android:background="@android:color/transparent"
+                    android:textColor="@android:color/black"/>
+
+            </LinearLayout>
+
+            <include layout="@layout/line_separator" />
+
+            <include
+                android:id="@+id/ll_status"
+                layout="@layout/event_detail_list_item" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

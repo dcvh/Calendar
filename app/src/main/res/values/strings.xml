@@ -26,6 +26,7 @@
     <string name="x_minutes_before">%d minutes before</string>
     <string name="x_guest">%d guest</string>
     <string name="guest_email">\n &#8226; %s</string>
+    <string name="save">Save</string>
 
     <!--permissions-->
     <string name="grant">Grant</string>
@@ -112,5 +113,14 @@
     <string-array name="multi_select_list_preference_default_value" />
 
     <string name="pref_title_system_sync_settings">System sync settings</string>
+    <string name="enter_title">Enter title, times, people, places...</string>
+    <string name="invite_people">Invite people</string>
+    <string name="does_not_repeat">Does not repeat</string>
+    <string name="add_location">Add location</string>
+    <string name="default_color">Default color</string>
+    <string name="add_note">Add note</string>
+    <string name="busy">Busy</string>
+    <string name="all_day">All-day</string>
+    <string name="more_option">More options</string>
 
 </resources>
