@@ -377,7 +377,7 @@ public class CalendarUtils {
 
     public static String getDate(long milliSeconds, String dateFormat) {
         SimpleDateFormat formatter = new SimpleDateFormat(dateFormat, Locale.getDefault());
-        formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
+        formatter.setTimeZone(TimeZone.getDefault());
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(milliSeconds);
         return formatter.format(calendar.getTime());
@@ -385,11 +385,13 @@ public class CalendarUtils {
 
     public static String getDate(String standardDate, String dateFormat) {
         SimpleDateFormat formatter = new SimpleDateFormat(getStandardDateFormat(), Locale.getDefault());
-        formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
+//        formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
+        formatter.setTimeZone(TimeZone.getDefault());
         try {
             Date parsedDate = formatter.parse(standardDate);
             formatter = new SimpleDateFormat(dateFormat, Locale.getDefault());
-            formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
+//            formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
+            formatter.setTimeZone(TimeZone.getDefault());
             return formatter.format(parsedDate);
         } catch (ParseException e) {
             e.printStackTrace();

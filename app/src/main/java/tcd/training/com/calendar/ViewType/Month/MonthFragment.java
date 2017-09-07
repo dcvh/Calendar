@@ -129,9 +129,10 @@ public class MonthFragment extends Fragment {
         // days of previous month
         Calendar lastMonth = (Calendar) curMonth.clone();
         assert Integer.valueOf(lastMonth.get(Calendar.DAY_OF_MONTH)) == 1;
-        for (int i = previousMonthDay; i > 0; i--) {
-            lastMonth.add(Calendar.DAY_OF_MONTH, -1);
+        lastMonth.add(Calendar.DAY_OF_MONTH, -previousMonthDay);
+        for (int i = 0; i < previousMonthDay; i++) {
             getRow(0).addView(createDateView(lastMonth, Color.GRAY));
+            lastMonth.add(Calendar.DAY_OF_MONTH, 1);
         }
 
         // days of current month
@@ -222,7 +223,7 @@ public class MonthFragment extends Fragment {
     private TextView createDateTextView(int color) {
 
         TableRow.LayoutParams layoutParams =
-                new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT, 1f);
+                new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.MATCH_PARENT, 1f);
 
         // create the text view
         TextView dateTextView = new TextView(mContext);
