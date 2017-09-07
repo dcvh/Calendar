@@ -78,6 +78,9 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<CalendarEntries
             }
         });
 
+        Log.e(TAG, "onBindViewHolder: " + entry.getDate());
+        Log.e(TAG, "onBindViewHolder: " + entry.getEvents().size());
+
         // events
         if (entry.getEvents().size() > 0) {
             for (CalendarEvent event : entry.getEvents()) {

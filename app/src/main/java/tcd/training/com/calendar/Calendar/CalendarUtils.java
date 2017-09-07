@@ -105,31 +105,25 @@ public class CalendarUtils {
                 boolean allDay = cursor.getInt(projections.get(CalendarContract.Events.ALL_DAY)) == 1;
                 boolean hasAlarm = cursor.getInt(projections.get(CalendarContract.Events.HAS_ALARM)) == 1;
 
-                if (title.length() == 0) {
+                if (title == null || title.length() == 0) {
                     title = context.getString(R.string.no_title);
                 }
                 CalendarEvent event = new CalendarEvent(id, title, calendarId, location, description, startDate, endDate, allDay, hasAlarm);
 
                 String dateOfEvent = getDate(startDate, getStandardDateFormat());
-                for (i = 0; i < mEntries.size(); i++) {
-                    if (mEntries.get(i).getDate().equals(dateOfEvent)) {
-                        mEntries.get(i).addEvent(event);
+                boolean isDisrupted = false;
+                for (CalendarEntry entry : mEntries) {
+                    if (entry.getDate().equals(dateOfEvent)) {
+                        entry.addEvent(event);
+                        isDisrupted = true;
                         break;
                     }
                 }
-                if (i == mEntries.size()) {
+                if (!isDisrupted) {
                     mEntries.add(new CalendarEntry(dateOfEvent, new ArrayList<>(Arrays.asList(event))));
                 }
 
             } while (cursor.moveToNext());
-
-            String today = getDate(Calendar.getInstance().getTimeInMillis(), getStandardDateFormat());
-            for (CalendarEntry entry : mEntries) {
-                if (entry.getDate().equals(today)) {
-                    break;
-                }
-            }
-            mEntries.add(new CalendarEntry(today, new ArrayList<CalendarEvent>()));
         }
 
         // clean up
@@ -297,9 +291,6 @@ public class CalendarUtils {
                 String email = cursor.getString(PROJECTION_ATTENDEE_EMAIL_INDEX);
                 int status = cursor.getInt(PROJECTION_ATTENDEE_STATUS_INDEX);
                 int relationship = cursor.getInt(PROJECTION_ATTENDEE_RELATIONSHIP_INDEX);
-
-                Log.e(TAG, "readCalendarEventAttendees: " + _id);
-                Log.e(TAG, "readCalendarEventAttendees: " + eventId);
 
                 Attendee attendee = new Attendee(_id, eventId, name, email, status, relationship);
                 mAttendees.add(attendee);

@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import tcd.training.com.calendar.Calendar.CalendarEntry;
+import tcd.training.com.calendar.Calendar.CalendarEvent;
 import tcd.training.com.calendar.Calendar.CalendarUtils;
 import tcd.training.com.calendar.R;
 
@@ -49,7 +50,20 @@ public class ScheduleViewFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mEntriesList = CalendarUtils.getAllEntries();
-        if (mEntriesList == null) {
+        if (mEntriesList != null) {
+            mEntriesList = (ArrayList<CalendarEntry>) mEntriesList.clone();
+            String today = CalendarUtils.getDate(Calendar.getInstance().getTimeInMillis(), CalendarUtils.getStandardDateFormat());
+            boolean isDisrupted = false;
+            for (CalendarEntry entry : mEntriesList) {
+                if (entry.getDate().equals(today)) {
+                    isDisrupted = true;
+                    break;
+                }
+            }
+            if (!isDisrupted) {
+                mEntriesList.add(new CalendarEntry(today, new ArrayList<CalendarEvent>()));
+            }
+        } else {
             mEntriesList = new ArrayList<>();
         }
     }
