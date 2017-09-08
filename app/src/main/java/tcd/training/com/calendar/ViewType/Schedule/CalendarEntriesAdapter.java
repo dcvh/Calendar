@@ -1,12 +1,9 @@
 package tcd.training.com.calendar.ViewType.Schedule;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +12,6 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-import tcd.training.com.calendar.EventDetailsActivity;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.Calendar.CalendarEntry;
 import tcd.training.com.calendar.Calendar.CalendarEvent;
@@ -41,7 +37,7 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<CalendarEntries
 
     @Override
     public CalendarViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.calendar_entry_list_item, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_calendar_entry, parent, false);
         CalendarViewHolder viewHolder = new CalendarViewHolder(view);
         return viewHolder;
     }

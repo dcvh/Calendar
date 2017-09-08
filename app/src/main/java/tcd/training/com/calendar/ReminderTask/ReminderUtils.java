@@ -84,7 +84,7 @@ public class ReminderUtils {
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context)
                 .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
-                .setSmallIcon(R.mipmap.ic_action_today_black_48dp)
+                .setSmallIcon(R.drawable.ic_action_today_black_48dp)
                 .setContentTitle(title)
                 .setContentText(content)
                 .setDefaults(Notification.DEFAULT_VIBRATE)

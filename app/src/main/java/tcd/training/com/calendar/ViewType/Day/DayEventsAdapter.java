@@ -1,11 +1,7 @@
 package tcd.training.com.calendar.ViewType.Day;
 
 import android.content.Context;
-import android.content.Intent;
-import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
-import android.text.TextUtils;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,9 +11,7 @@ import android.widget.TextView;
 import tcd.training.com.calendar.Calendar.CalendarEntry;
 import tcd.training.com.calendar.Calendar.CalendarEvent;
 import tcd.training.com.calendar.Calendar.CalendarUtils;
-import tcd.training.com.calendar.EventDetailsActivity;
 import tcd.training.com.calendar.R;
-import tcd.training.com.calendar.ViewType.Schedule.CalendarEntriesAdapter;
 import tcd.training.com.calendar.ViewType.ViewUtils;
 
 /**
@@ -36,7 +30,7 @@ public class DayEventsAdapter extends RecyclerView.Adapter<DayEventsAdapter.DayE
 
     @Override
     public DayEventViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.day_event_list_item, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_day_event, parent, false);
         return new DayEventViewHolder(view);
     }
 

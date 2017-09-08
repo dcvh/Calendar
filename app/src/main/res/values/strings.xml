@@ -23,10 +23,69 @@
     <string name="no_calendar_events_error">No event found!</string>
     <string name="no_title">No title</string>
     <string name="wait_load_events_message">Please wait while system loads events</string>
-    <string name="x_minutes_before">%d minutes before</string>
+
+    <!--list events-->
+    <string-array name="first_day_saturday">
+        <item>S</item>
+        <item>S</item>
+        <item>M</item>
+        <item>T</item>
+        <item>W</item>
+        <item>T</item>
+        <item>F</item>
+    </string-array>
+    <string-array name="first_day_sunday">
+        <item>S</item>
+        <item>M</item>
+        <item>T</item>
+        <item>W</item>
+        <item>T</item>
+        <item>F</item>
+        <item>S</item>
+    </string-array>
+    <string-array name="first_day_monday">
+        <item>M</item>
+        <item>T</item>
+        <item>W</item>
+        <item>T</item>
+        <item>F</item>
+        <item>S</item>
+        <item>S</item>
+    </string-array>
+
+    <!--display event details activity-->
+    <string name="x_minutes_before">%d minute(s) before</string>
+    <string name="weeks">weeks</string>
+    <string name="days">days</string>
+    <string name="hour">hour</string>
+    <string name="hours">hours</string>
+    <string name="minute">minute</string>
+    <string name="minutes">minutes</string>
     <string name="x_guest">%d guest</string>
     <string name="guest_email">\n &#8226; %s</string>
+
+    <!--add event activity-->
     <string name="save">Save</string>
+    <string name="enter_title">Enter title, times, people, places...</string>
+    <string name="invite_people">Invite people</string>
+    <string name="does_not_repeat">Does not repeat</string>
+    <string name="add_location">Add location</string>
+    <string name="default_color">Default color</string>
+    <string name="add_note">Add note</string>
+    <string name="busy">Busy</string>
+    <string name="all_day">All-day</string>
+    <string name="more_option">More options</string>
+    <string name="check">Check</string>
+    <string name="available">Available</string>
+    <string name="icon">icon</string>
+    <string name="every_day">Every day</string>
+    <string name="every_week">Every week</string>
+    <string name="every_month">Every month</string>
+    <string name="every_year">Every year</string>
+    <string name="no_notification">No notification</string>
+    <string name="custom">Custom...</string>
+    <string name="before">before</string>
+    <string name="done">Done</string>
 
     <!--permissions-->
     <string name="grant">Grant</string>
@@ -42,11 +101,7 @@
         <item>Sunday</item>
         <item>Monday</item>
     </string-array>
-    <string-array name="pref_start_of_the_week_list_values">
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-    </string-array>
+    <string name="pref_start_of_the_week_default">Monday</string>
     <string name="pref_key_show_week_number" translatable="false">show_week_number</string>
     <string name="pref_title_show_week_number">Show week number</string>
     <string name="pref_key_default_event_duration" translatable="false">default_event_duration</string>
@@ -67,6 +122,7 @@
         <item>90</item>
         <item>120</item>
     </string-array>
+    <string name="pref_default_event_duration_values_default">60</string>
     <!-- notifications -->
     <string name="pref_header_notifications">Notifications</string>
     <string name="pref_key_notify_on_this_device" translatable="false">notify_on_this_device</string>
@@ -113,14 +169,5 @@
     <string-array name="multi_select_list_preference_default_value" />
 
     <string name="pref_title_system_sync_settings">System sync settings</string>
-    <string name="enter_title">Enter title, times, people, places...</string>
-    <string name="invite_people">Invite people</string>
-    <string name="does_not_repeat">Does not repeat</string>
-    <string name="add_location">Add location</string>
-    <string name="default_color">Default color</string>
-    <string name="add_note">Add note</string>
-    <string name="busy">Busy</string>
-    <string name="all_day">All-day</string>
-    <string name="more_option">More options</string>
 
 </resources>

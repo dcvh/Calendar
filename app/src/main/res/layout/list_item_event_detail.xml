@@ -12,7 +12,8 @@
         android:layout_weight="1"
         android:layout_height="24dp"
         android:layout_gravity="top"
-        android:tint="#9E9E9E"/>
+        android:tint="#9E9E9E"
+        android:contentDescription="@string/icon"/>
 
     <TextView
         android:id="@+id/tv_primary_content"

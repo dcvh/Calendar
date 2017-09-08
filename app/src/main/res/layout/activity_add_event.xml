@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@android:color/white"
-    tools:context="tcd.training.com.calendar.AddEventActivity">
+    tools:context="tcd.training.com.calendar.AddEventTask.AddEventActivity">
 
     <EditText
         android:id="@+id/edt_event_title"
@@ -29,7 +29,7 @@
 
             <include
                 android:id="@+id/ll_invite_people"
-                layout="@layout/event_detail_list_item" />
+                layout="@layout/list_item_event_detail" />
 
             <include layout="@layout/line_separator" />
 
@@ -135,30 +135,30 @@
             <include
                 android:id="@+id/ll_timezone"
                 android:visibility="gone"
-                layout="@layout/event_detail_list_item" />
+                layout="@layout/list_item_event_detail" />
 
             <include
                 android:id="@+id/ll_repeat"
                 android:visibility="gone"
-                layout="@layout/event_detail_list_item" />
+                layout="@layout/list_item_event_detail" />
 
             <include layout="@layout/line_separator" />
 
             <include
                 android:id="@+id/ll_location"
-                layout="@layout/event_detail_list_item" />
+                layout="@layout/list_item_event_detail" />
 
             <include layout="@layout/line_separator" />
 
             <include
                 android:id="@+id/ll_notification"
-                layout="@layout/event_detail_list_item" />
+                layout="@layout/list_item_event_detail" />
 
             <include layout="@layout/line_separator" />
 
             <include
                 android:id="@+id/ll_default_color"
-                layout="@layout/event_detail_list_item" />
+                layout="@layout/list_item_event_detail" />
 
             <include layout="@layout/line_separator" />
 
@@ -194,7 +194,7 @@
 
             <include
                 android:id="@+id/ll_status"
-                layout="@layout/event_detail_list_item" />
+                layout="@layout/list_item_event_detail" />
 
         </LinearLayout>
 

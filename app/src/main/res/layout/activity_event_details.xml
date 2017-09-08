@@ -15,31 +15,31 @@
 
         <include
             android:id="@+id/ll_date_time"
-            layout="@layout/event_detail_list_item" />
+            layout="@layout/list_item_event_detail" />
 
         <include
             android:id="@+id/ll_location"
-            layout="@layout/event_detail_list_item"
+            layout="@layout/list_item_event_detail"
             android:visibility="gone"/>
 
         <include
             android:id="@+id/ll_notification"
-            layout="@layout/event_detail_list_item"
+            layout="@layout/list_item_event_detail"
             android:visibility="gone"/>
 
         <include
             android:id="@+id/ll_guests"
-            layout="@layout/event_detail_list_item"
+            layout="@layout/list_item_event_detail"
             android:visibility="gone"/>
 
         <include
             android:id="@+id/ll_description"
-            layout="@layout/event_detail_list_item"
+            layout="@layout/list_item_event_detail"
             android:visibility="gone"/>
 
         <include
             android:id="@+id/ll_account"
-            layout="@layout/event_detail_list_item" />
+            layout="@layout/list_item_event_detail" />
 
     </LinearLayout>
 

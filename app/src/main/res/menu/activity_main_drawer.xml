@@ -4,19 +4,19 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_schedule"
-            android:icon="@mipmap/ic_menu_schedule_black_48dp"
+            android:icon="@drawable/ic_menu_schedule_black_48dp"
             android:title="@string/schedule" />
         <item
             android:id="@+id/nav_day"
-            android:icon="@mipmap/ic_menu_day_black_48dp"
+            android:icon="@drawable/ic_menu_day_black_48dp"
             android:title="@string/day" />
         <item
             android:id="@+id/nav_week"
-            android:icon="@mipmap/ic_menu_week_black_48dp"
+            android:icon="@drawable/ic_menu_week_black_48dp"
             android:title="@string/week" />
         <item
             android:id="@+id/nav_month"
-            android:icon="@mipmap/ic_menu_month_black_48dp"
+            android:icon="@drawable/ic_menu_month_black_48dp"
             android:title="@string/month" />
     </group>
 
@@ -24,11 +24,11 @@
         <menu>
             <item
                 android:id="@+id/nav_settings"
-                android:icon="@mipmap/ic_menu_settings_black_48dp"
+                android:icon="@drawable/ic_menu_settings_black_48dp"
                 android:title="@string/settings" />
             <item
                 android:id="@+id/nav_help_feedback"
-                android:icon="@mipmap/ic_menu_help_feedback_black_48dp"
+                android:icon="@drawable/ic_menu_help_feedback_black_48dp"
                 android:title="@string/help_feedback" />
         </menu>
     </item>

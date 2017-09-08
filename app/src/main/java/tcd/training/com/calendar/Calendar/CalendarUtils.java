@@ -27,7 +27,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import tcd.training.com.calendar.R;
 
@@ -39,16 +41,12 @@ public class CalendarUtils {
 
     private static final String TAG = CalendarUtils.class.getSimpleName();
 
-    private static final HashMap<String, Integer> mDefaultColors = new HashMap<>();
+    private static final LinkedHashMap<String, Integer> mDefaultColors = new LinkedHashMap<>();
     private static ArrayList<CalendarEntry> mEntries;
     private static ArrayList<Account> mAccounts;
     private static ArrayList<Reminder> mReminders;
     private static ArrayList<Attendee> mAttendees;
     private static int mColorOffset = 0;
-
-    public static ArrayList<CalendarEntry> getAllEntries() {
-        return mEntries;
-    }
 
     public static void readCalendarEventsInfo(Context context) {
         mEntries = new ArrayList<>();
@@ -301,19 +299,14 @@ public class CalendarUtils {
         }
     }
 
+    public static ArrayList<CalendarEntry> getAllEntries() {
+        return mEntries;
+    }
+
     public static String getAccountDisplayName(int id) {
         for (Account account : mAccounts) {
             if (account.getId() == id) {
                 return account.getDisplayName();
-            }
-        }
-        return "";
-    }
-
-    public static String getAccountName(int id) {
-        for (Account account : mAccounts) {
-            if (account.getId() == id) {
-                return account.getAccountName();
             }
         }
         return "";
@@ -326,6 +319,10 @@ public class CalendarUtils {
             }
         }
         return mDefaultColors.values().toArray(new Integer[0])[mDefaultColors.size() - 1];
+    }
+
+    public static LinkedHashMap<String, Integer> getAllColors() {
+        return mDefaultColors;
     }
     
     public static int getReminderMinutes(int id) {
@@ -368,6 +365,10 @@ public class CalendarUtils {
         return "yyyy/MM/dd";
     }
 
+    public static String getVisibleDateFormat() {
+        return "EEE, MMM d, yyyy";
+    }
+
     public static String getStandardTimeFormat() {
         return "hh:mm a";
     }
@@ -395,5 +396,37 @@ public class CalendarUtils {
         }
 
         return null;
+    }
+
+    public static String getVisibleTime(int minutes, Context context) {
+
+        StringBuilder formattedTime = new StringBuilder();
+
+        int _minutes = minutes;
+        String format = "%d %s ";
+
+        int weeks = (int) (TimeUnit.MINUTES.toDays(_minutes) / 7);
+        if (weeks > 0) {
+            formattedTime.append(String.format(format, weeks, weeks == 1 ? context.getString(R.string.week) : context.getString(R.string.weeks)));
+            _minutes -= TimeUnit.DAYS.toMinutes(weeks) * 7;
+        }
+
+        int days = (int) (TimeUnit.MINUTES.toDays(_minutes));
+        if (days > 0) {
+            formattedTime.append(String.format(format, days, days == 1 ? context.getString(R.string.day) : context.getString(R.string.days)));
+            _minutes -= TimeUnit.DAYS.toMinutes(days);
+        }
+
+        int hours = (int) (TimeUnit.MINUTES.toHours(_minutes));
+        if (hours > 0) {
+            formattedTime.append(String.format(format, hours, hours == 1 ? context.getString(R.string.hour) : context.getString(R.string.hours)));
+            _minutes -= TimeUnit.HOURS.toMinutes(hours);
+        }
+
+        if (_minutes > 0) {
+            formattedTime.append(String.format(format, _minutes, _minutes == 1 ? context.getString(R.string.minute) : context.getString(R.string.minutes)));
+        }
+
+        return formattedTime.toString();
     }
 }

@@ -27,6 +27,10 @@ public class ViewUtils {
     private static final float SCALE = Resources.getSystem().getDisplayMetrics().density;
     private static final int DP_AS_PX_8 = (int) (8 * SCALE + 0.5f);
 
+    public static int dpToPixel(int dp) {
+        return (int) (dp * SCALE + 0.5f);
+    }
+
     public static View getEventTileView(final CalendarEvent event, final Context context) {
 
         // prepare a linear layout for wrapping title and duration

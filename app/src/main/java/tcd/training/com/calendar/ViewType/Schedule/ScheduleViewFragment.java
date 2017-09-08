@@ -51,17 +51,17 @@ public class ScheduleViewFragment extends Fragment {
         super.onCreate(savedInstanceState);
         mEntriesList = CalendarUtils.getAllEntries();
         if (mEntriesList != null) {
+            // insert today (if it doesn't exist)
             mEntriesList = (ArrayList<CalendarEntry>) mEntriesList.clone();
             String today = CalendarUtils.getDate(Calendar.getInstance().getTimeInMillis(), CalendarUtils.getStandardDateFormat());
-            boolean isDisrupted = false;
-            for (CalendarEntry entry : mEntriesList) {
-                if (entry.getDate().equals(today)) {
-                    isDisrupted = true;
+            for (int i = 0; i < mEntriesList.size(); i++) {
+                String date = mEntriesList.get(i).getDate();
+                if (date.equals(today)) {
+                    break;
+                } else if (date.compareTo(today) > 0) {
+                    mEntriesList.add(i, new CalendarEntry(today, new ArrayList<CalendarEvent>()));
                     break;
                 }
-            }
-            if (!isDisrupted) {
-                mEntriesList.add(new CalendarEntry(today, new ArrayList<CalendarEvent>()));
             }
         } else {
             mEntriesList = new ArrayList<>();

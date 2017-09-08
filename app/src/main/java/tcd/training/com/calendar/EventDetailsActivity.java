@@ -92,7 +92,7 @@ public class EventDetailsActivity extends AppCompatActivity {
 
     private void displayDateTime() {
 
-        ((ImageView)mDateTimeLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_time_black_48dp);
+        ((ImageView)mDateTimeLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_time_black_48dp);
         TextView dateTimeTextView = mDateTimeLayout.findViewById(R.id.tv_primary_content);
 
         String dateTime;
@@ -115,7 +115,7 @@ public class EventDetailsActivity extends AppCompatActivity {
 
     private void displayLocation() {
         if (mEvent.getLocation().length() > 0) {
-            ((ImageView)mLocationLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_location_black_48dp);
+            ((ImageView)mLocationLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_location_black_48dp);
             ((TextView)mLocationLayout.findViewById(R.id.tv_primary_content)).setText(mEvent.getLocation());
             mLocationLayout.setVisibility(View.VISIBLE);
         }
@@ -124,7 +124,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     private void displayGuestsInfo() {
         ArrayList<Attendee> attendees = CalendarUtils.getEventAttendees(mEvent.getId());
         if (attendees.size() > 0) {
-            ((ImageView) mGuestsLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_people_black_48dp);
+            ((ImageView) mGuestsLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_people_black_48dp);
 
             TextView content = mGuestsLayout.findViewById(R.id.tv_primary_content);
             content.setText(String.format(getString(R.string.x_guest), attendees.size()));
@@ -140,8 +140,8 @@ public class EventDetailsActivity extends AppCompatActivity {
         if (mEvent.hasAlarm()) {
             int minutes = CalendarUtils.getReminderMinutes(mEvent.getId());
             if (minutes > -1) {
-                ((ImageView) mNotificationLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_notifications_black_48dp);
-                String notification = String.format(getString(R.string.x_minutes_before), minutes);
+                ((ImageView) mNotificationLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_notifications_black_48dp);
+                String notification = CalendarUtils.getVisibleTime(minutes, this);
                 ((TextView) mNotificationLayout.findViewById(R.id.tv_primary_content)).setText(notification);
                 mNotificationLayout.setVisibility(View.VISIBLE);
             }
@@ -150,7 +150,7 @@ public class EventDetailsActivity extends AppCompatActivity {
 
     private void displayDescription() {
         if (mEvent.getDescription().length() > 0) {
-            ((ImageView)mDescriptionLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_description_black_48dp);
+            ((ImageView)mDescriptionLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_description_black_48dp);
             ((TextView)mDescriptionLayout.findViewById(R.id.tv_primary_content)).setText(mEvent.getDescription());
             mDescriptionLayout.setVisibility(View.VISIBLE);
         }
@@ -159,7 +159,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     private void displayAccountDisplayName() {
         String displayName = CalendarUtils.getAccountDisplayName(mEvent.getCalendarId());
         if (displayName.length() > 0) {
-            ((ImageView)mAccountDisplayNameLayout.findViewById(R.id.iv_icon)).setImageResource(R.mipmap.ic_action_today_black_48dp);
+            ((ImageView)mAccountDisplayNameLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_action_today_black_48dp);
             ((TextView)mAccountDisplayNameLayout.findViewById(R.id.tv_primary_content)).setText(displayName);
             mAccountDisplayNameLayout.setVisibility(View.VISIBLE);
         }

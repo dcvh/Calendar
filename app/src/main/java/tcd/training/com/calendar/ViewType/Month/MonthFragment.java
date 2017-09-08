@@ -2,9 +2,11 @@ package tcd.training.com.calendar.ViewType.Month;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -45,6 +47,7 @@ public class MonthFragment extends Fragment {
 
     private Calendar mCurMonth;
     private Context mContext;
+    private int mFirstDayOfWeek;
 
     private TableLayout mCalendarTable;
     private TableRow mTableHeader;
@@ -102,10 +105,8 @@ public class MonthFragment extends Fragment {
         TableRow.LayoutParams layoutParams =
                 new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT, 1f);
 
-        // TODO: 8/31/17 this is temporary, must be fixed in the future for better localization
-        String[] daysOfWeek = Calendar.getInstance().getFirstDayOfWeek() == Calendar.MONDAY ?
-                new String[] {"M", "T", "W", "T", "F", "S", "S"} :
-                new String[] {"S", "M", "T", "W", "T", "F", "S"};
+        String[] daysOfWeek = getDayOfWeekOrder();
+
         for (String dayOfWeek : daysOfWeek) {
             TextView dayTextView = new TextView(mContext);
             dayTextView.setText(dayOfWeek);
@@ -117,6 +118,33 @@ public class MonthFragment extends Fragment {
         }
     }
 
+    private String[] getDayOfWeekOrder() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+        String firstDay = sharedPreferences.getString(getString(R.string.pref_key_start_of_the_week), "Monday");
+
+        Log.e(TAG, "getDayOfWeekOrder: " + firstDay);
+
+        String[] daysOfWeek;
+        switch (firstDay) {
+            case "Saturday":
+                daysOfWeek = getResources().getStringArray(R.array.first_day_saturday);
+                mFirstDayOfWeek = Calendar.SATURDAY;
+                break;
+            case "Sunday":
+                daysOfWeek = getResources().getStringArray(R.array.first_day_sunday);
+                mFirstDayOfWeek = Calendar.SUNDAY;
+                break;
+            case "Monday":
+                daysOfWeek = getResources().getStringArray(R.array.first_day_monday);
+                mFirstDayOfWeek = Calendar.MONDAY;
+                break;
+            default:
+                throw new UnsupportedOperationException("Unknown first day");
+        }
+
+        return daysOfWeek;
+    }
+
     private void createCalendarDates() {
 
         // TODO: 8/31/17 clean this mess
@@ -124,7 +152,10 @@ public class MonthFragment extends Fragment {
         // determine number of days of the previous month will be shown
         Calendar curMonth = (Calendar) mCurMonth.clone();
         curMonth.set(Calendar.DAY_OF_MONTH, 1);
-        int previousMonthDay = curMonth.get(Calendar.DAY_OF_WEEK) - curMonth.getFirstDayOfWeek();
+        int previousMonthDay = curMonth.get(Calendar.DAY_OF_WEEK) - mFirstDayOfWeek;
+        if (previousMonthDay < 0) {
+            previousMonthDay += 7;
+        }
 
         // days of previous month
         Calendar lastMonth = (Calendar) curMonth.clone();
