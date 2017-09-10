@@ -83,4 +83,42 @@ public class ViewUtils {
 
         return textView;
     }
+
+    public static int getMonthImageResourceId(int month) {
+        switch (month) {
+            case 0: return R.drawable.bkg_01_january ;
+            case 1: return R.drawable.bkg_02_february ;
+            case 2: return R.drawable.bkg_03_march ;
+            case 3: return R.drawable.bkg_04_april ;
+            case 4: return R.drawable.bkg_05_may ;
+            case 5: return R.drawable.bkg_06_june ;
+            case 6: return R.drawable.bkg_07_july ;
+            case 7: return R.drawable.bkg_08_august ;
+            case 8: return R.drawable.bkg_09_september ;
+            case 9: return R.drawable.bkg_10_october ;
+            case 10: return R.drawable.bkg_11_november ;
+            case 11: return R.drawable.bkg_12_december ;
+            default:
+                throw new UnsupportedOperationException("Unknown month");
+        }
+    }
+
+    public static int getMonthImageResourceId(String month) {
+        switch (month) {
+            case "January": return R.drawable.bkg_01_january ;
+            case "February": return R.drawable.bkg_02_february ;
+            case "March": return R.drawable.bkg_03_march ;
+            case "April": return R.drawable.bkg_04_april ;
+            case "May": return R.drawable.bkg_05_may ;
+            case "June": return R.drawable.bkg_06_june ;
+            case "July": return R.drawable.bkg_07_july ;
+            case "August": return R.drawable.bkg_08_august ;
+            case "September": return R.drawable.bkg_09_september ;
+            case "October": return R.drawable.bkg_10_october ;
+            case "November": return R.drawable.bkg_11_november ;
+            case "December": return R.drawable.bkg_12_december ;
+            default:
+                throw new UnsupportedOperationException("Unknown month");
+        }
+    }
 }

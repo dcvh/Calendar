@@ -59,7 +59,7 @@ public class ScheduleViewFragment extends Fragment {
             mEntriesList = (ArrayList<CalendarEntry>) mEntriesList.clone();
 
             insertToday();
-            createWeekEntries();
+            createMonthAndWeekEntries();
 
         } else {
             mEntriesList = new ArrayList<>();
@@ -79,7 +79,7 @@ public class ScheduleViewFragment extends Fragment {
         }
     }
 
-    private void createWeekEntries() {
+    private void createMonthAndWeekEntries() {
 
         // determine the first date
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
@@ -98,22 +98,42 @@ public class ScheduleViewFragment extends Fragment {
         firstDate.add(Calendar.DAY_OF_MONTH, -previousWeekDays);
 
         // add week entries
+        boolean isNewMonth = false;
         for (int i = 0; i < mEntriesList.size(); i++) {
             long difference = firstDate.getTimeInMillis() - CalendarUtils.getMilliSeconds(mEntriesList.get(i).getDate());
             if (difference < 0) {
 
-                String date = CalendarUtils.getDate(firstDate.getTimeInMillis(), "MMM, d");
+                if (isNewMonth) {
+                    String month = CalendarUtils.getDate(firstDate.getTimeInMillis(), "MMMM yyyy");
+                    CalendarEntry monthEntry = new CalendarEntry(month, null);
+                    mEntriesList.add(i++, monthEntry);
+                    isNewMonth = false;
+                }
+
+                String date = CalendarUtils.getDate(firstDate.getTimeInMillis(), "MMM, d") + " - ";
                 int curMonth = firstDate.get(Calendar.MONTH);
-                firstDate.add(Calendar.DAY_OF_MONTH, 7);
-                date += " - " + (curMonth == firstDate.get(Calendar.MONTH) ?
-                        CalendarUtils.getDate(firstDate.getTimeInMillis(), "d") :
-                        CalendarUtils.getDate(firstDate.getTimeInMillis(), "MMM, d"));
+                firstDate.add(Calendar.DAY_OF_MONTH, 6);
+                if (curMonth == firstDate.get(Calendar.MONTH)) {
+                    date += CalendarUtils.getDate(firstDate.getTimeInMillis(), "d");
+                } else {
+                    date += CalendarUtils.getDate(firstDate.getTimeInMillis(), "MMM, d");
+                    isNewMonth = true;
+                }
                 if (firstDate.get(Calendar.YEAR) != Calendar.getInstance().get(Calendar.YEAR)) {
                     date += ", " + firstDate.get(Calendar.YEAR);
                 }
 
-                CalendarEntry weekEntry = new CalendarEntry(date, new ArrayList<CalendarEvent>());
+                CalendarEntry weekEntry = new CalendarEntry(date, null);
                 mEntriesList.add(i, weekEntry);
+
+            } else if (isNewMonth) {
+                int eventMonth = Integer.parseInt(CalendarUtils.getDate(mEntriesList.get(i).getDate(), "M")) - 1;
+                if ((int)firstDate.get(Calendar.MONTH) <= eventMonth) {
+                    String month = CalendarUtils.getDate(firstDate.getTimeInMillis(), "MMMM yyyy");
+                    CalendarEntry monthEntry = new CalendarEntry(month, null);
+                    mEntriesList.add(i, monthEntry);
+                    isNewMonth = false;
+                }
             }
         }
     }

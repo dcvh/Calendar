@@ -5,11 +5,15 @@ import android.content.Intent;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 
@@ -32,6 +36,7 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     private static final int TYPE_EVENT = 1;
     private static final int TYPE_WEEK = 2;
     private static final int TYPE_TODAY = 3;
+    private static final int TYPE_MONTH = 4;
 
     private ArrayList<CalendarEntry> mEntriesList;
     private Context mContext;
@@ -58,6 +63,10 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_schedule_week, parent, false);
                 viewHolder = new WeekViewHolder(view);
                 break;
+            case TYPE_MONTH:
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_schedule_month, parent, false);
+                viewHolder = new MonthViewHolder(view);
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown type");
         }
@@ -66,13 +75,18 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
     @Override
     public int getItemViewType(int position) {
-        if (mEntriesList.get(position).getEvents().size() > 0) {
-            return TYPE_EVENT;
-        } else {
-            if (mEntriesList.get(position).getDate().contains("/")) {
-                return TYPE_TODAY;
-            } else {
+        CalendarEntry entry = mEntriesList.get(position);
+        if (entry.getEvents() == null) {
+            if (entry.getDate().contains("-")){
                 return TYPE_WEEK;
+            } else {
+                return TYPE_MONTH;
+            }
+        } else {
+            if (entry.getEvents().size() > 0) {
+                return TYPE_EVENT;
+            } else {
+                return TYPE_TODAY;
             }
         }
     }
@@ -135,6 +149,13 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 WeekViewHolder weekHolder = (WeekViewHolder) viewHolder;
                 weekHolder.mWeekTextView.setText(entry.getDate());
                 break;
+
+            case TYPE_MONTH:
+                MonthViewHolder monthHolder = (MonthViewHolder) viewHolder;
+                int resId = ViewUtils.getMonthImageResourceId(entry.getDate().substring(0, entry.getDate().indexOf(" ")));
+                Glide.with(mContext).load(resId).into(monthHolder.mMonthImageView);
+                monthHolder.mMonthTextView.setText(entry.getDate());
+                break;
         }
     }
 
@@ -193,6 +214,18 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         WeekViewHolder(View itemView) {
             super(itemView);
             mWeekTextView = itemView.findViewById(R.id.tv_week);
+        }
+    }
+
+    private class MonthViewHolder extends RecyclerView.ViewHolder {
+
+        private ImageView mMonthImageView;
+        private TextView mMonthTextView;
+
+        public MonthViewHolder(View itemView) {
+            super(itemView);
+            mMonthImageView = itemView.findViewById(R.id.iv_month_image);
+            mMonthTextView = itemView.findViewById(R.id.tv_month);
         }
     }
 }

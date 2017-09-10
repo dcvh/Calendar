@@ -8,4 +8,5 @@
     <dimen name="app_bar_height">180dp</dimen>
     <dimen name="text_margin">16dp</dimen>
     <dimen name="big_action_bar_height">120dp</dimen>
+    <dimen name="month_image_height">180dp</dimen>
 </resources>

@@ -353,7 +353,7 @@ public class CalendarUtils {
         // TODO: 9/1/17 this is temporary, must be fixed in the future for better performance (consider switching to binary search)
         assert mEntries != null;
         assert date.length() == 10;
-        for (int i = 0; i< mEntries.size(); i++) {
+        for (int i = 0; i < mEntries.size(); i++) {
             if (mEntries.get(i).getDate().equals(date)) {
                 return mEntries.get(i);
             }
