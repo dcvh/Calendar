@@ -21,6 +21,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -35,6 +36,8 @@ import android.widget.Toast;
 import java.util.Calendar;
 
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
+import tcd.training.com.calendar.Calendar.CalendarEntry;
+import tcd.training.com.calendar.Calendar.CalendarEvent;
 import tcd.training.com.calendar.Calendar.CalendarUtils;
 import tcd.training.com.calendar.ReminderTask.ReminderUtils;
 import tcd.training.com.calendar.Settings.SettingsActivity;
@@ -71,8 +74,8 @@ public class MainActivity extends AppCompatActivity
         ReminderUtils.clearAllNotifications(this);
         ReminderUtils.scheduleForReadingReminders(this);
 
-        Intent intent = new Intent(this, AddEventActivity.class);
-        startActivity(intent);
+//        Intent intent = new Intent(this, AddEventActivity.class);
+//        startActivity(intent);
     }
 
     @Override
@@ -236,6 +239,13 @@ public class MainActivity extends AppCompatActivity
                 CalendarUtils.readCalendarEventsInfo(MainActivity.this);
                 if (CalendarUtils.getAllEntries().size() == 0) {
                     Toast.makeText(MainActivity.this, R.string.no_calendar_events_error, Toast.LENGTH_LONG).show();
+                } else {
+//                    for (CalendarEntry entry : CalendarUtils.getAllEntries()) {
+//                        for (CalendarEvent event : entry.getEvents()) {
+//                            Log.e(TAG, "doInBackground: " + event.getTitle());
+//                            Log.e(TAG, "doInBackground: " + CalendarUtils.getDate(event.getStartDate(), "dd/MM/yyyy"));
+//                        }
+//                    }
                 }
                 return null;
             }

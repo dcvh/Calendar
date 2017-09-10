@@ -398,6 +398,19 @@ public class CalendarUtils {
         return null;
     }
 
+    public static long getMilliSeconds(String standardDate) {
+        SimpleDateFormat formatter = new SimpleDateFormat(getStandardDateFormat(), Locale.getDefault());
+        formatter.setTimeZone(TimeZone.getDefault());
+        try {
+            Calendar date = Calendar.getInstance();
+            date.setTime(formatter.parse(standardDate));
+            return date.getTimeInMillis();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
     public static String getVisibleTime(int minutes, Context context) {
 
         StringBuilder formattedTime = new StringBuilder();

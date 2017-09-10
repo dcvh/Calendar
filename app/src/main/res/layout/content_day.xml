@@ -6,7 +6,7 @@
 
     <include
         android:id="@+id/ll_entry"
-        layout="@layout/list_item_calendar_entry" />
+        layout="@layout/list_item_schedule_entry" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rv_events_list"
