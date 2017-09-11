@@ -237,15 +237,20 @@ public class MainActivity extends AppCompatActivity
             protected Void doInBackground(Void... voids) {
                 DataUtils.readCalendarEventsInfo(MainActivity.this);
                 if (DataUtils.getAllEntries().size() == 0) {
-                    Toast.makeText(MainActivity.this, R.string.no_calendar_events_error, Toast.LENGTH_LONG).show();
-                } else {
-                    Log.e(TAG, "doInBackground: " + DataUtils.getAllEntries().size());
-                    for (Entry entry : DataUtils.getAllEntries()) {
-                        for (Event event : entry.getEvents()) {
-                            Log.e(TAG, "doInBackground: " + event.getTitle());
-                            Log.e(TAG, "doInBackground: " + TimeUtils.getFormattedDate(event.getStartDate(), "dd/MM/yyyy"));
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this, R.string.no_calendar_events_error, Toast.LENGTH_LONG).show();
                         }
-                    }
+                    });
+                } else {
+//                    Log.e(TAG, "doInBackground: " + DataUtils.getAllEntries().size());
+//                    for (Entry entry : DataUtils.getAllEntries()) {
+//                        for (Event event : entry.getEvents()) {
+//                            Log.e(TAG, "doInBackground: " + event.getTitle());
+//                            Log.e(TAG, "doInBackground: " + TimeUtils.getFormattedDate(event.getStartDate(), "dd/MM/yyyy"));
+//                        }
+//                    }
                 }
                 return null;
             }

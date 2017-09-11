@@ -115,8 +115,6 @@ public class MonthFragment extends Fragment {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
         String firstDay = sharedPreferences.getString(getString(R.string.pref_key_start_of_the_week), "Monday");
 
-        Log.e(TAG, "getDayOfWeekOrder: " + firstDay);
-
         String[] daysOfWeek;
         switch (firstDay) {
             case "Saturday":

@@ -13,6 +13,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 
@@ -41,10 +42,10 @@ public class DataUtils {
         mReminders = new ArrayList<>();
         mAttendees = new ArrayList<>();
 
-        readCalendarEntries(context);
-
         createDefaultColors(context);
         readCalendarAccounts(context);
+
+        readCalendarEntries(context);
 
         readCalendarReminders(context);
 
@@ -70,6 +71,8 @@ public class DataUtils {
         projections.put(CalendarContract.Events.DTSTART, i++);
         projections.put(CalendarContract.Events.DTEND, i++);
         projections.put(CalendarContract.Events.ALL_DAY, i++);
+        projections.put(CalendarContract.Events.RRULE, i++);
+        projections.put(CalendarContract.Events.RDATE, i++);
         projections.put(CalendarContract.Events.HAS_ALARM, i);
 
         // querying
@@ -90,10 +93,22 @@ public class DataUtils {
                 boolean allDay = cursor.getInt(projections.get(CalendarContract.Events.ALL_DAY)) == 1;
                 boolean hasAlarm = cursor.getInt(projections.get(CalendarContract.Events.HAS_ALARM)) == 1;
 
+                String rrule = cursor.getString(projections.get(CalendarContract.Events.RRULE));
+                String rdate = cursor.getString(projections.get(CalendarContract.Events.RDATE));
+
+//                Log.e(TAG, "readCalendarEntries: " + id);
+//                Log.e(TAG, "readCalendarEntries: " + title);
+//                Log.e(TAG, "readCalendarEntries: " + rrule);
+//                Log.e(TAG, "readCalendarEntries: " + rdate);
+
                 if (title == null || title.length() == 0) {
                     title = context.getString(R.string.no_title);
                 }
                 Event event = new Event(id, title, calendarId, location, description, startDate, endDate, allDay, hasAlarm);
+
+                if (getAccountDisplayName(calendarId).length() == 0) {
+                    continue;
+                }
 
                 boolean isDisrupted = false;
                 for (Entry entry : mEntries) {
@@ -154,12 +169,16 @@ public class DataUtils {
             while (cursor.moveToNext()) {
 
                 // Get the field values
-                int calId = cursor.getInt(PROJECTION_ID_INDEX);
+                int id = cursor.getInt(PROJECTION_ID_INDEX);
                 String displayName = cursor.getString(PROJECTION_DISPLAY_NAME_INDEX);
                 String accountName = cursor.getString(PROJECTION_ACCOUNT_NAME_INDEX);
                 String ownerName = cursor.getString(PROJECTION_OWNER_ACCOUNT_INDEX);
 
-                Account account = new Account(calId, displayName, accountName, ownerName);
+                Account account = new Account(id, displayName, accountName, ownerName);
+                if (isThisDuplicateHoliday(account)) {
+                    continue;
+                }
+
                 int color = mDefaultColors.values().toArray(new Integer[0])[mColorOffset++ % mDefaultColors.size()];
                 account.setColor(color);
                 mAccounts.add(account);
@@ -167,6 +186,18 @@ public class DataUtils {
 
             cursor.close();
         }
+    }
+
+    private static boolean isThisDuplicateHoliday(Account account) {
+        if (!account.getDisplayName().startsWith("Holidays in ")) {
+            return false;
+        }
+        for (Account curAccount : mAccounts) {
+            if (curAccount.getDisplayName().equals(account.getDisplayName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void createDefaultColors(Context context) {
