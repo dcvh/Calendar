@@ -13,27 +13,38 @@ public class Event implements Parcelable{
     private int mCalendarId;
     private String mLocation;
     private String mDescription;
+    private String mTimeZone;
     private long mStartDate;
     private long mEndDate;
     private boolean mAllDay;
     private boolean mHasAlarm;
     private String mRRule;
     private int mDisplayColor;
+    private int mAvailability;
 
-    public Event(int id, String title, int calendarId, String location, String description,
-                 long startDate, long endDate, boolean allDay, boolean hasAlarm, String rRule, int displayColor) {
-        this.mId = id;
+    public Event(String title, int calendarId, String location, String description, String timeZone, long startDate, long endDate,
+                 boolean allDay, boolean hasAlarm, String rRule, int displayColor, int availability) {
         this.mTitle = title;
         this.mCalendarId = calendarId;
         this.mLocation = location;
         this.mDescription = description;
+        this.mTimeZone = timeZone;
         this.mStartDate = startDate;
         this.mEndDate = endDate;
         this.mAllDay = allDay;
         this.mHasAlarm = hasAlarm;
         this.mRRule = rRule;
         this.mDisplayColor = displayColor;
+        this.mAvailability = availability;
     }
+
+    public Event(int id, String title, int calendarId, String location, String description, String timeZone, long startDate, long endDate,
+                 boolean allDay, boolean hasAlarm, String rRule, int displayColor, int availability) {
+        this(title, calendarId, location, description, timeZone, startDate, endDate, allDay, hasAlarm, rRule, displayColor, availability);
+        mId = id;
+    }
+
+
 
     protected Event(Parcel in) {
         mId = in.readInt();
@@ -47,6 +58,7 @@ public class Event implements Parcelable{
         mHasAlarm = in.readByte() != 0;
         mRRule = in.readString();
         mDisplayColor = in.readInt();
+        mAvailability = in.readInt();
     }
 
     public static final Creator<Event> CREATOR = new Creator<Event>() {
@@ -65,6 +77,10 @@ public class Event implements Parcelable{
         return mId;
     }
 
+    public void setId(int id) {
+        mId = id;
+    }
+
     public String getTitle() {
         return mTitle;
     }
@@ -79,6 +95,10 @@ public class Event implements Parcelable{
 
     public String getDescription() {
         return mDescription;
+    }
+
+    public String getTimeZone() {
+        return mTimeZone;
     }
 
     public long getStartDate() {
@@ -124,5 +144,6 @@ public class Event implements Parcelable{
         parcel.writeByte((byte) (mHasAlarm ? 1 : 0));
         parcel.writeString(mRRule);
         parcel.writeInt(mDisplayColor);
+        parcel.writeInt(mAvailability);
     }
 }

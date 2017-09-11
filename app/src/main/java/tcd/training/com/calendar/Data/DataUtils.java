@@ -3,6 +3,7 @@ package tcd.training.com.calendar.Data;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -37,7 +38,6 @@ public class DataUtils {
     private static int mColorOffset = 0;
 
 
-
     public static void readCalendarEventsInfo(Context context) {
         mEntries = new ArrayList<>();
         mAccounts = new ArrayList<>();
@@ -70,13 +70,14 @@ public class DataUtils {
         projections.put(CalendarContract.Events.CALENDAR_ID, i++);
         projections.put(CalendarContract.Events.EVENT_LOCATION, i++);
         projections.put(CalendarContract.Events.DESCRIPTION, i++);
+        projections.put(CalendarContract.Events.EVENT_TIMEZONE, i++);
         projections.put(CalendarContract.Events.DTSTART, i++);
         projections.put(CalendarContract.Events.DTEND, i++);
         projections.put(CalendarContract.Events.ALL_DAY, i++);
         projections.put(CalendarContract.Events.HAS_ALARM, i++);
         projections.put(CalendarContract.Events.RRULE, i++);
         projections.put(CalendarContract.Events.DISPLAY_COLOR, i++);
-        projections.put(CalendarContract.Events.CALENDAR_COLOR, i++);
+        projections.put(CalendarContract.Events.AVAILABILITY, i++);
 
         // querying
         Cursor cursor = contentResolver.query(uri, projections.keySet().toArray(new String[0]), null, null, null);
@@ -91,33 +92,21 @@ public class DataUtils {
                 int calendarId = cursor.getInt(projections.get(CalendarContract.Events.CALENDAR_ID));
                 String location = cursor.getString(projections.get(CalendarContract.Events.EVENT_LOCATION));
                 String description = cursor.getString(projections.get(CalendarContract.Events.DESCRIPTION));
+                String timezone = cursor.getString(projections.get(CalendarContract.Events.EVENT_TIMEZONE));
                 long startDate = cursor.getLong(projections.get(CalendarContract.Events.DTSTART));
                 long endDate = cursor.getLong(projections.get(CalendarContract.Events.DTEND));
                 boolean allDay = cursor.getInt(projections.get(CalendarContract.Events.ALL_DAY)) == 1;
                 boolean hasAlarm = cursor.getInt(projections.get(CalendarContract.Events.HAS_ALARM)) == 1;
                 String rRule = cursor.getString(projections.get(CalendarContract.Events.RRULE));
                 int displayColor = cursor.getInt(projections.get(CalendarContract.Events.DISPLAY_COLOR));
+                int availability = cursor.getInt(projections.get(CalendarContract.Events.DISPLAY_COLOR));
 
                 if (title == null || title.length() == 0) {
                     title = context.getString(R.string.no_title);
                 }
-                Event event = new Event(id, title, calendarId, location, description, startDate, endDate, allDay, hasAlarm, rRule, displayColor);
 
-                if (getAccountDisplayName(calendarId).length() == 0) {
-                    continue;
-                }
-
-                boolean isDisrupted = false;
-                for (Entry entry : mEntries) {
-                    if (TimeUtils.isSameDay(entry.getTime(), startDate)) {
-                        entry.addEvent(event);
-                        isDisrupted = true;
-                        break;
-                    }
-                }
-                if (!isDisrupted) {
-                    mEntries.add(new Entry(startDate, new ArrayList<>(Arrays.asList(event))));
-                }
+                addEventToEntries(new Event(id, title, calendarId, location, description, timezone,
+                        startDate, endDate, allDay, hasAlarm, rRule, displayColor, availability));
 
             } while (cursor.moveToNext());
         }
@@ -131,6 +120,25 @@ public class DataUtils {
         return mEntries;
     }
 
+    private static void addEventToEntries(Event event) {
+        if (getAccountDisplayName(event.getCalendarId()).length() == 0) {
+            return;
+        }
+
+        boolean isDisrupted = false;
+        for (Entry entry : mEntries) {
+            if (TimeUtils.isSameDay(entry.getTime(), event.getStartDate())) {
+                entry.addEvent(event);
+                isDisrupted = true;
+                break;
+            }
+        }
+
+        if (!isDisrupted) {
+            mEntries.add(new Entry(event.getStartDate(), new ArrayList<>(Arrays.asList(event))));
+        }
+    }
+
     private static void readCalendarAccounts(Context context) {
 
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
@@ -138,18 +146,23 @@ public class DataUtils {
         }
 
         // Projection array. Creating indices for this array instead of doing dynamic lookups improves performance.
-        String[] projection = new String[]{
+
+        ArrayList<String> projection = new ArrayList<>(Arrays.asList(
                 CalendarContract.Calendars._ID,                           // 0
                 CalendarContract.Calendars.ACCOUNT_NAME,                  // 1
                 CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,         // 2
                 CalendarContract.Calendars.OWNER_ACCOUNT                  // 3
-        };
+        ));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            projection.add(CalendarContract.Calendars.IS_PRIMARY);
+        }
 
         // The indices for the projection array above.
         int PROJECTION_ID_INDEX = 0;
         int PROJECTION_ACCOUNT_NAME_INDEX = 1;
         int PROJECTION_DISPLAY_NAME_INDEX = 2;
         int PROJECTION_OWNER_ACCOUNT_INDEX = 3;
+        int PROJECTION_IS_PRIMARY_INDEX = 3;
 
         // Run query
         ContentResolver cr = context.getContentResolver();
@@ -157,7 +170,7 @@ public class DataUtils {
 
         // Submit the query and get a Cursor object back.
         mColorOffset = 0;
-        Cursor cursor = cr.query(uri, projection, null, null, null);
+        Cursor cursor = cr.query(uri, projection.toArray(new String[0]), null, null, null);
         if (cursor == null) {
             Log.e(TAG, "readCalendarAccounts: There was a problem handling the cursor");
         } else if (!cursor.moveToFirst()) {
@@ -170,8 +183,12 @@ public class DataUtils {
                 String displayName = cursor.getString(PROJECTION_DISPLAY_NAME_INDEX);
                 String accountName = cursor.getString(PROJECTION_ACCOUNT_NAME_INDEX);
                 String ownerName = cursor.getString(PROJECTION_OWNER_ACCOUNT_INDEX);
+                boolean isPrimary = false;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                    isPrimary = cursor.getInt(PROJECTION_IS_PRIMARY_INDEX) == 1;
+                }
 
-                Account account = new Account(id, displayName, accountName, ownerName);
+                Account account = new Account(id, displayName, accountName, ownerName, isPrimary);
                 if (isThisDuplicateHoliday(account)) {
                     continue;
                 }
@@ -255,7 +272,6 @@ public class DataUtils {
                 int method = cursor.getInt(PROJECTION_METHOD_INDEX);
 
 
-
                 Reminder reminder = new Reminder(_id, eventId, minutes, method);
                 mReminders.add(reminder);
             }
@@ -323,6 +339,15 @@ public class DataUtils {
         return mDefaultColors;
     }
 
+    public static int getPrimaryAccountId() {
+        for (Account account : mAccounts) {
+            if (account.isPrimary()) {
+                return account.getId();
+            }
+        }
+        return mAccounts.get(0).getId();
+    }
+
     public static String getAccountDisplayName(int id) {
         for (Account account : mAccounts) {
             if (account.getId() == id) {
@@ -330,15 +355,6 @@ public class DataUtils {
             }
         }
         return "";
-    }
-
-    public static int getAccountColor(int id) {
-        for (Account account : mAccounts) {
-            if (account.getId() == id) {
-                return account.getColor();
-            }
-        }
-        return mDefaultColors.values().toArray(new Integer[0])[mDefaultColors.size() - 1];
     }
 
     public static int getReminderMinutes(int id) {
@@ -352,14 +368,13 @@ public class DataUtils {
 
     public static ArrayList<Attendee> getEventAttendees(int id) {
         ArrayList<Attendee> attendees = new ArrayList<>();
-        for (Attendee attendee: mAttendees) {
+        for (Attendee attendee : mAttendees) {
             if (attendee.getEventId() == id) {
                 attendees.add(attendee);
             }
         }
         return attendees;
     }
-
 
 
     /**
@@ -370,11 +385,51 @@ public class DataUtils {
     public static Entry findEntryWithDate(long millis) {
         // TODO: 9/1/17 this is temporary, must be fixed in the future for better performance (consider switching to binary search)
         assert mEntries != null;
-        for (int i = 0; i< mEntries.size(); i++) {
+        for (int i = 0; i < mEntries.size(); i++) {
             if (TimeUtils.isSameDay(mEntries.get(i).getTime(), millis)) {
                 return mEntries.get(i);
             }
         }
         return null;
+    }
+
+
+    public static long addEvent(Event event, Reminder reminder, Context context) {
+
+        ContentResolver cr = context.getContentResolver();
+        ContentValues values = new ContentValues();
+        values.put(CalendarContract.Events.TITLE, event.getTitle());
+        values.put(CalendarContract.Events.CALENDAR_ID, event.getCalendarId());
+        values.put(CalendarContract.Events.EVENT_LOCATION, event.getLocation());
+        values.put(CalendarContract.Events.DESCRIPTION, event.getDescription());
+        values.put(CalendarContract.Events.EVENT_TIMEZONE, event.getTimeZone());
+        values.put(CalendarContract.Events.DTSTART, event.getStartDate());
+        values.put(CalendarContract.Events.DTEND, event.getEndDate());
+        values.put(CalendarContract.Events.ALL_DAY, event.isAllDay());
+        values.put(CalendarContract.Events.HAS_ALARM, event.hasAlarm());
+        values.put(CalendarContract.Events.RRULE, event.getRRule());
+        if (event.getDisplayColor() != -1) {
+            values.put(CalendarContract.Events.EVENT_COLOR, event.getDisplayColor());
+        }
+
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
+            return -1;
+        }
+
+        addEventToEntries(event);
+        Uri uri = cr.insert(CalendarContract.Events.CONTENT_URI, values);
+        long id = uri != null ? Long.parseLong(uri.getLastPathSegment()) : -1;
+
+        if (event.hasAlarm() && id != -1) {
+            values = new ContentValues();
+            values.put(CalendarContract.Reminders.EVENT_ID, id);
+            values.put(CalendarContract.Reminders.MINUTES, reminder.getMinutes());
+            values.put(CalendarContract.Reminders.METHOD, reminder.getMethod());
+
+            cr.insert(CalendarContract.Reminders.CONTENT_URI, values);
+            mReminders.add(reminder);
+        }
+
+        return id;
     }
 }

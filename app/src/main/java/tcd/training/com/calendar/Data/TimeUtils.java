@@ -1,5 +1,6 @@
 package tcd.training.com.calendar.Data;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -55,5 +56,16 @@ public class TimeUtils {
 
     public static String getStandardTimeFormat() {
         return "hh:mm a";
+    }
+
+    public static long getMillis(String date, String pattern) {
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat format = new SimpleDateFormat(pattern, Locale.getDefault());
+        try {
+            cal.setTime(format.parse(date));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return cal.getTimeInMillis();
     }
 }

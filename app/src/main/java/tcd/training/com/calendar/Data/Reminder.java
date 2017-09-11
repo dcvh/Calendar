@@ -11,11 +11,15 @@ public class Reminder {
     private int mMinutes;
     private int mMethod;
 
-    public Reminder(int id, int eventId, int minutes, int method) {
-        this.mId = id;
-        this.mEventId = eventId;
+    public Reminder(int minutes, int method) {
         this.mMinutes = minutes;
         this.mMethod = method;
+    }
+
+    public Reminder(int id, int eventId, int minutes, int method) {
+        this(minutes, method);
+        this.mId = id;
+        this.mEventId = eventId;
     }
 
     public int getId() {

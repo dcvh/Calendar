@@ -170,5 +170,7 @@
 
     <string name="pref_title_system_sync_settings">System sync settings</string>
     <string name="no_event">Nothing planned. Tap to create.</string>
+    <string name="title_empty_error">Title cannot be blank</string>
+    <string name="wait_message">Please wait until the process is completed</string>
 
 </resources>

@@ -8,6 +8,9 @@ import android.content.res.ColorStateList;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.preference.PreferenceManager;
+import android.provider.CalendarContract;
+import android.provider.ContactsContract;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -39,10 +42,16 @@ import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import tcd.training.com.calendar.Data.DataUtils;
+import tcd.training.com.calendar.Data.Event;
+import tcd.training.com.calendar.Data.Reminder;
 import tcd.training.com.calendar.Data.TimeUtils;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.ContentView.ViewUtils;
@@ -52,28 +61,33 @@ public class AddEventActivity extends AppCompatActivity {
     private static final int MENU_SAVE_ID = 1;
     private static final int STATUS_DIALOG_TYPE = 1;
     private static final int REPEAT_DIALOG_TYPE = 2;
-    private static final int NOTIFICATION_DIALOG_TYPE = 3;
-    private static final int COLOR_DIALOG_TYPE = 4;
+    private static final int TIME_ZONE_DIALOG_TYPE = 3;
+    private static final int NOTIFICATION_DIALOG_TYPE = 4;
+    private static final int COLOR_DIALOG_TYPE = 5;
     private static final String TAG = AddEventActivity.class.getSimpleName();
     private static final int RC_PLACE_AUTOCOMPLETE = 1;
 
-    private EditText mTitleEditText, mNoteEditText;
     private TextView mStartDateTextView, mEndDateTextView, mStartTimeTextView, mEndTimeTextView, mLocationTextView;
+    private EditText mTitleEditText, mNoteEditText;
     private Switch mAllDaySwitch;
     private ImageView mCircleColor;
 
     private ArrayList<String> mColorNames;
     private ArrayList<Integer> mColorValues;
-    private int mStatusIndex;
+    private int mColorIndex;
 
     private ArrayList<String> mStatusTitles;
-    private int mColorIndex;
+    private int mStatusIndex;
 
     private ArrayList<String> mRepeatChoiceTitles;
     private int mRepeatIndex;
 
+    private ArrayList<String> mTimeZoneTitles;
+    private int mTimeZoneIndex;
+
     private int mDefaultReminderTime = 10;
     private ArrayList<String> mNotificationTitles;
+    private ArrayList<Integer> mNotificationMinutes;
     private int mNotificationIndex;
     private int mUnitIndex;
 
@@ -106,10 +120,61 @@ public class AddEventActivity extends AppCompatActivity {
                 onBackPressed();
                 break;
             case MENU_SAVE_ID:
-
+                Event event = getEventFromInput();
+                if (event != null) {
+                    Snackbar.make(findViewById(android.R.id.content), R.string.wait_message, Snackbar.LENGTH_INDEFINITE);
+                    Reminder reminder = null;
+                    if (event.hasAlarm()) {
+                        reminder = new Reminder(mNotificationMinutes.get(mNotificationIndex), CalendarContract.Reminders.METHOD_DEFAULT);
+                    }
+                    DataUtils.addEvent(event, reminder, this);
+                    finish();
+                }
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private Event getEventFromInput() {
+
+        String title = mTitleEditText.getText().toString();
+        if (title.length() == 0) {
+            Snackbar.make(findViewById(android.R.id.content), R.string.title_empty_error, Snackbar.LENGTH_SHORT).show();
+            return null;
+        }
+
+        boolean isAllDay = mAllDaySwitch.isChecked();
+
+        int calendarId = DataUtils.getPrimaryAccountId();
+
+        String location = mLocation != null ? mLocation.getName().toString() : null;
+
+        String description = mNoteEditText.getText().toString();
+
+        String timeZone = mTimeZoneTitles.get(mTimeZoneIndex);
+
+        Calendar startDate = Calendar.getInstance();
+        startDate.setTimeInMillis(TimeUtils.getMillis(mStartDateTextView.getText().toString(), ViewUtils.getAddEventDateFormat()));
+        Calendar startTime = Calendar.getInstance();
+        startTime.setTimeInMillis(TimeUtils.getMillis(mStartTimeTextView.getText().toString(), TimeUtils.getStandardTimeFormat()));
+        startDate.set(Calendar.HOUR_OF_DAY, startTime.get(Calendar.HOUR_OF_DAY));
+        startDate.set(Calendar.MINUTE, startTime.get(Calendar.MINUTE));
+
+        Calendar endDate = Calendar.getInstance();
+        endDate.setTimeInMillis(TimeUtils.getMillis(mEndDateTextView.getText().toString(), ViewUtils.getAddEventDateFormat()));
+        Calendar endTime = Calendar.getInstance();
+        endTime.setTimeInMillis(TimeUtils.getMillis(mEndTimeTextView.getText().toString(), TimeUtils.getStandardTimeFormat()));
+        endDate.set(Calendar.HOUR_OF_DAY, endTime.get(Calendar.HOUR_OF_DAY));
+        endDate.set(Calendar.MINUTE, endTime.get(Calendar.MINUTE));
+
+        boolean hasAlarm = mNotificationMinutes.get(mNotificationIndex) != 0;
+
+        int displayColor = mColorValues.get(mColorIndex);
+
+        int availability = mStatusIndex == 0 ? CalendarContract.Events.AVAILABILITY_BUSY : CalendarContract.Events.AVAILABILITY_FREE;
+
+        return new Event(title, calendarId, location, description, timeZone, startDate.getTimeInMillis(), endDate.getTimeInMillis(),
+                isAllDay, hasAlarm, "", displayColor, availability);
     }
 
     private void updateActionBar() {
@@ -137,15 +202,54 @@ public class AddEventActivity extends AppCompatActivity {
         mRepeatChoiceTitles.add(getString(R.string.every_month));
         mRepeatChoiceTitles.add(getString(R.string.every_year));
 
+        createTimeZoneList();
+
         mNotificationTitles = new ArrayList<>();
-        mNotificationTitles.add(getString(R.string.no_notification));
-        mNotificationTitles.add(ViewUtils.getNotificationTimeFormat(mDefaultReminderTime, this) + getString(R.string.before));
-        mNotificationTitles.add(getString(R.string.custom));
+        mNotificationMinutes = new ArrayList<>(Arrays.asList(0, mDefaultReminderTime, -1));
 
         mStatusIndex = 0;
         mColorIndex = 0;
         mRepeatIndex = 0;
         mNotificationIndex = 1;
+    }
+
+    private void createTimeZoneList() {
+        ArrayList<TimeZone> timeZoneList = new ArrayList<>();
+        for (String id : TimeZone.getAvailableIDs()) {
+            timeZoneList.add(TimeZone.getTimeZone(id));
+        }
+        Collections.sort(timeZoneList, new Comparator<TimeZone>() {
+            public int compare(TimeZone s1, TimeZone s2) {
+                return s1.getRawOffset() - s2.getRawOffset();
+            }});
+
+        mTimeZoneTitles = new ArrayList<>();
+        for (int i = 0; i < timeZoneList.size(); i++) {
+            mTimeZoneTitles.add(getTimeZoneTitle(timeZoneList.get(i)));
+            if (timeZoneList.get(i).equals(TimeZone.getDefault())) {
+                mTimeZoneIndex = i;
+            }
+        }
+    }
+
+    private String getTimeZoneTitle(TimeZone tz) {
+
+        long hours = TimeUnit.MILLISECONDS.toHours(tz.getRawOffset());
+        long minutes = TimeUnit.MILLISECONDS.toMinutes(tz.getRawOffset())
+                - TimeUnit.HOURS.toMinutes(hours);
+
+        // avoid -4:-30 issue
+        minutes = Math.abs(minutes);
+
+        String result;
+        if (hours > 0) {
+            result = String.format("%s (GMT+%d:%02d)", tz.getID(), hours, minutes);
+        } else {
+            result = String.format("%s (GMT%d:%02d)", tz.getID(), hours, minutes);
+        }
+
+        return result;
+
     }
 
     private void initializeUiComponents() {
@@ -261,7 +365,7 @@ public class AddEventActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 moreOptionsTextView.setVisibility(View.GONE);
-//                initializeTimeZoneOption();
+                initializeTimeZoneOption();
                 initializeRepeatOption();
             }
         });
@@ -307,12 +411,13 @@ public class AddEventActivity extends AppCompatActivity {
         timeZoneLayout.setVisibility(View.VISIBLE);
 
         ((ImageView)timeZoneLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_time_zone_black_48dp);
-        TextView content = timeZoneLayout.findViewById(R.id.tv_primary_content);
+        final TextView content = timeZoneLayout.findViewById(R.id.tv_primary_content);
+        content.setText(mTimeZoneTitles.get(mTimeZoneIndex));
 
         timeZoneLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO: 9/7/17 add time zone function
+                showChoicePickerDialog(TIME_ZONE_DIALOG_TYPE, content);
             }
         });
     }
@@ -360,11 +465,21 @@ public class AddEventActivity extends AppCompatActivity {
 
         ((ImageView)notificationLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_notifications_black_48dp);
         final TextView content = notificationLayout.findViewById(R.id.tv_primary_content);
-        content.setText(mNotificationTitles.get(mNotificationIndex));
+        content.setText(ViewUtils.getNotificationTimeFormat(mDefaultReminderTime, AddEventActivity.this));
 
         notificationLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                mNotificationTitles = new ArrayList<>();
+                for (int minutes : mNotificationMinutes) {
+                    if (minutes == 0) {
+                        mNotificationTitles.add(getString(R.string.no_notification));
+                    } else if (minutes == -1) {
+                        mNotificationTitles.add(getString(R.string.custom));
+                    } else {
+                        mNotificationTitles.add(ViewUtils.getNotificationTimeFormat(minutes, AddEventActivity.this));
+                    }
+                }
                 showChoicePickerDialog(NOTIFICATION_DIALOG_TYPE, content);
             }
         });
@@ -415,27 +530,22 @@ public class AddEventActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         ArrayAdapter adapter;
+        int startIndex;
         switch (type) {
             case STATUS_DIALOG_TYPE:
-                adapter = new DialogListAdapter(AddEventActivity.this, R.layout.list_item_dialog,
-                        mStatusTitles,
-                        mStatusIndex);
+                adapter = new DialogListAdapter(AddEventActivity.this, R.layout.list_item_dialog, mStatusTitles, mStatusIndex);
                 break;
             case REPEAT_DIALOG_TYPE:
-                adapter = new DialogListAdapter(AddEventActivity.this, R.layout.list_item_dialog,
-                        mRepeatChoiceTitles,
-                        mRepeatIndex);
+                adapter = new DialogListAdapter(AddEventActivity.this, R.layout.list_item_dialog, mRepeatChoiceTitles, mRepeatIndex);
+                break;
+            case TIME_ZONE_DIALOG_TYPE:
+                adapter = new DialogListAdapter(AddEventActivity.this, R.layout.list_item_dialog, mTimeZoneTitles, mTimeZoneIndex);
                 break;
             case NOTIFICATION_DIALOG_TYPE:
-                adapter = new DialogListAdapter(AddEventActivity.this, R.layout.list_item_dialog,
-                        mNotificationTitles,
-                        mNotificationIndex);
+                adapter = new DialogListAdapter(AddEventActivity.this, R.layout.list_item_dialog, mNotificationTitles, mNotificationIndex);
                 break;
             case COLOR_DIALOG_TYPE:
-                adapter = new ColorAdapter(this,
-                        mColorNames,
-                        mColorValues,
-                        mColorIndex);
+                adapter = new ColorAdapter(this, mColorNames, mColorValues, mColorIndex);
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown dialog type");
@@ -461,6 +571,10 @@ public class AddEventActivity extends AppCompatActivity {
                     case REPEAT_DIALOG_TYPE:
                         mRepeatIndex = i;
                         displayView.setText(mRepeatChoiceTitles.get(i));
+                        break;
+                    case TIME_ZONE_DIALOG_TYPE:
+                        mTimeZoneIndex = i;
+                        displayView.setText(mTimeZoneTitles.get(i));
                         break;
                     case NOTIFICATION_DIALOG_TYPE:
                         mNotificationIndex = i;
@@ -517,8 +631,8 @@ public class AddEventActivity extends AppCompatActivity {
                 }
                 String timeString = ViewUtils.getNotificationTimeFormat(time, AddEventActivity.this) + getString(R.string.before);
                 displayView.setText(timeString);
-                mNotificationTitles.add(mNotificationTitles.size() - 1, timeString);
-                mNotificationIndex = mNotificationTitles.size() - 2;
+                mNotificationMinutes.add(mNotificationMinutes.size() - 1, time);
+                mNotificationIndex = mNotificationMinutes.size() - 2;
                 dialog.dismiss();
             }
         });
