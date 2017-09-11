@@ -20,10 +20,12 @@ import android.widget.TableRow;
 import android.widget.TextView;
 
 import java.util.Calendar;
+import java.util.concurrent.TimeUnit;
 
 import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.Entry;
 import tcd.training.com.calendar.Data.Event;
+import tcd.training.com.calendar.Data.TimeUtils;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.ContentView.Day.DayViewFragment;
 import tcd.training.com.calendar.ContentView.ViewUtils;
@@ -181,13 +183,14 @@ public class MonthFragment extends Fragment {
             nextMonth.add(Calendar.DAY_OF_MONTH, 1);
         }
 
-//        TextView textView = createDateTextView(Color.BLACK);
+//        TextView textView = new TextView(mContext);
+//        textView.setTextColor(Color.BLACK);
 //        textView.setText(curMonth.get(Calendar.MONTH) + "/" + curMonth.get(Calendar.YEAR));
 //        mCalendarTable.addView(textView);
     }
 
     private View createDateView(final Calendar calendar, int dateColor) {
-        TextView dateTextView = createDateTextView(dateColor);
+        final TextView dateTextView = createDateTextView(dateColor);
         dateTextView.setText(String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)));
 
         final Entry entry = DataUtils.findEntryWithDate(calendar.getTimeInMillis());
@@ -212,10 +215,11 @@ public class MonthFragment extends Fragment {
             resultView = layout;
         }
 
+        final long date = calendar.getTimeInMillis();
         resultView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                DayViewFragment newFragment = DayViewFragment.newInstance(calendar.getTimeInMillis());
+                DayViewFragment newFragment = DayViewFragment.newInstance(date);
                 FragmentTransaction transaction = getParentFragment().getFragmentManager().beginTransaction();
                 transaction
                         .addToBackStack(null)

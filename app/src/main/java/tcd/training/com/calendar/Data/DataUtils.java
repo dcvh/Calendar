@@ -14,12 +14,14 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import tcd.training.com.calendar.R;
 
@@ -329,6 +331,19 @@ public class DataUtils {
 
     public static ArrayList<Entry> getAllEntries() {
         return mEntries;
+    }
+
+    public static ArrayList<Entry> getEntriesInYear(int year) {
+        ArrayList<Entry> entries = new ArrayList<>();
+
+        Calendar cal = Calendar.getInstance();
+        for (Entry entry : mEntries) {
+            cal.setTimeInMillis(entry.getTime());
+            if (cal.get(Calendar.YEAR) == year) {
+                entries.add(entry);
+            }
+        }
+        return entries;
     }
 
     public static LinkedHashMap<String, Integer> getAllColors() {

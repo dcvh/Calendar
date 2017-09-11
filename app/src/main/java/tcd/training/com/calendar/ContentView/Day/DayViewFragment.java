@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -70,8 +71,13 @@ public class DayViewFragment extends Fragment{
             mEntriesList = new ArrayList<>();
         }
 
+        // determine the year to be showed
         mDays = new ArrayList<>();
-        addOneMoreYear(Calendar.getInstance().get(Calendar.YEAR), false);
+        Calendar year = Calendar.getInstance();
+        if (mSpecifiedTime != -1) {
+            year.setTimeInMillis(mSpecifiedTime);
+        }
+        addOneMoreYear(year.get(Calendar.YEAR), false);
     }
 
     @Nullable
@@ -94,7 +100,7 @@ public class DayViewFragment extends Fragment{
 
     private void initializeUiComponents(View view) {
         mDayViewPager = view.findViewById(R.id.vp_day_view);
-        DayPagerAdapter adapter = new DayPagerAdapter(getChildFragmentManager(), mDays);
+        final DayPagerAdapter adapter = new DayPagerAdapter(getChildFragmentManager(), mDays);
         mDayViewPager.setAdapter(adapter);
 
         mDayViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
@@ -106,11 +112,19 @@ public class DayViewFragment extends Fragment{
             @Override
             public void onPageSelected(int position) {
                 if (position == mDays.size() - 1) {
-                    addOneMoreYear(mDays.get(0).get(Calendar.YEAR) + 1, false);
+                    addOneMoreYear(mDays.get(mDays.size() - 1).get(Calendar.YEAR) + 1, false);
+                    adapter.notifyDataSetChanged();
                 } else if (position == 0) {
-                    addOneMoreYear(mDays.get(0).get(Calendar.YEAR) - 1, true);
+                    int dayOfYear = addOneMoreYear(mDays.get(0).get(Calendar.YEAR) - 1, true);
+                    adapter.notifyDataSetChanged();
+                    mDayViewPager.setCurrentItem(dayOfYear, false);
+
                 }
-                sendUpdateMonthAction(mContext, position);
+                // change month
+                int dayOfMonth = mDays.get(position).get(Calendar.DAY_OF_MONTH);
+                if (dayOfMonth == 1 || dayOfMonth == mDays.get(position).getActualMaximum(Calendar.DAY_OF_MONTH)) {
+                    sendUpdateMonthAction(mContext, position);
+                }
             }
 
             @Override
@@ -120,36 +134,32 @@ public class DayViewFragment extends Fragment{
         });
     }
 
-    private void addOneMoreYear(int year, boolean toHead) {
+    private int addOneMoreYear(int year, boolean toHead) {
         Calendar startDate = Calendar.getInstance();
-        startDate.set(Calendar.YEAR, year);
-        startDate.set(Calendar.MONTH, 0);
-        startDate.set(Calendar.DAY_OF_MONTH, 1);
-        Calendar endDate = (Calendar) startDate.clone();
-        endDate.set(Calendar.MONTH, 11);
-        endDate.set(Calendar.DAY_OF_MONTH, 31);
+        startDate.set(year, 0, 1);
+        Calendar endDate = Calendar.getInstance();
+        endDate.set(year, 11, 31);
 
         if (toHead) {
             while (endDate.compareTo(startDate) > 0) {
-                mDays.add(0, (Calendar) startDate.clone());
+                mDays.add(0, (Calendar) endDate.clone());
                 endDate.add(Calendar.DAY_OF_MONTH, -1);
             }
+            return startDate.get(Calendar.DAY_OF_YEAR);
 
         } else {
             while (startDate.compareTo(endDate) < 0) {
                 mDays.add((Calendar) startDate.clone());
                 startDate.add(Calendar.DAY_OF_MONTH, 1);
             }
+            return endDate.get(Calendar.DAY_OF_YEAR);
         }
     }
 
     private void sendUpdateMonthAction(Context context, int position) {
-        int dayOfMonth = mDays.get(position).get(Calendar.DAY_OF_MONTH);
-        if (dayOfMonth == 1 || dayOfMonth == mDays.get(position).getActualMaximum(Calendar.DAY_OF_MONTH)) {
-            Intent intent = new Intent(MainActivity.UPDATE_MONTH_ACTION);
-            intent.putExtra(MainActivity.ARG_CALENDAR, mDays.get(position));
-            LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
-        }
+        Intent intent = new Intent(MainActivity.UPDATE_MONTH_ACTION);
+        intent.putExtra(MainActivity.ARG_CALENDAR, mDays.get(position));
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
     private void scrollTo(long millis) {

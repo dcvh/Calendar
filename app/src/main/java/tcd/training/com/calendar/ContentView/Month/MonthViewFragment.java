@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,7 +33,6 @@ public class MonthViewFragment extends Fragment {
 
     private static final String TAG = MonthViewFragment.class.getSimpleName();
 
-    private ArrayList<Entry> mEntriesList;
     private ArrayList<Calendar> mMonths;
     private Context mContext;
 
@@ -52,12 +52,12 @@ public class MonthViewFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mEntriesList = (ArrayList<Entry>) getArguments().getSerializable(ARG_ENTRIES_LIST);
-            getArguments().remove(ARG_ENTRIES_LIST);
-        } else {
-            mEntriesList = new ArrayList<>();
-        }
+//        if (getArguments() != null) {
+//            mEntriesList = (ArrayList<Entry>) getArguments().getSerializable(ARG_ENTRIES_LIST);
+//            getArguments().remove(ARG_ENTRIES_LIST);
+//        } else {
+//            mEntriesList = new ArrayList<>();
+//        }
         mMonths = new ArrayList<>();
     }
 
@@ -67,18 +67,14 @@ public class MonthViewFragment extends Fragment {
         View view = inflater.inflate(R.layout.content_month_view, container, false);
         mContext = view.getContext();
 
-        SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
-        try {
-            Calendar startDate = Calendar.getInstance();
-            startDate.setTime(format.parse("2000/01/01"));
-            Calendar endDate = Calendar.getInstance();
-            endDate.setTime(format.parse("2030/12/31"));
-            while (startDate.compareTo(endDate) < 0) {
-                mMonths.add((Calendar) startDate.clone());
-                startDate.add(Calendar.MONTH, 1);
-            }
-        } catch (ParseException e) {
-            e.printStackTrace();
+        Calendar startDate = Calendar.getInstance();
+        startDate.set(2010, 0, 1);
+        Calendar endDate = Calendar.getInstance();
+        endDate.set(Calendar.MONTH, 11);
+        endDate.set(Calendar.DAY_OF_MONTH, 31);
+        while (startDate.compareTo(endDate) < 0) {
+            mMonths.add((Calendar) startDate.clone());
+            startDate.add(Calendar.MONTH, 1);
         }
 
         initializeUiComponents(view);
@@ -90,7 +86,7 @@ public class MonthViewFragment extends Fragment {
 
     private void initializeUiComponents(View view) {
         mMonthViewPager = view.findViewById(R.id.vp_month_view);
-        MonthPagerAdapter adapter = new MonthPagerAdapter(getChildFragmentManager(), mMonths);
+        final MonthPagerAdapter adapter = new MonthPagerAdapter(getChildFragmentManager(), mMonths);
         mMonthViewPager.setAdapter(adapter);
 
         mMonthViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
@@ -101,6 +97,14 @@ public class MonthViewFragment extends Fragment {
 
             @Override
             public void onPageSelected(int position) {
+                if (position == mMonths.size() - 1) {
+                    addOneMoreYear(mMonths.get(mMonths.size() - 1).get(Calendar.YEAR) + 1, false);
+                    adapter.notifyDataSetChanged();
+                } else if (position == 0) {
+                    addOneMoreYear(mMonths.get(0).get(Calendar.YEAR) - 1, true);
+                    adapter.notifyDataSetChanged();
+                    mMonthViewPager.setCurrentItem(12, false);
+                }
                 sendUpdateMonthAction(mContext, position);
             }
 
@@ -110,6 +114,28 @@ public class MonthViewFragment extends Fragment {
             }
         });
     }
+
+    private void addOneMoreYear(int year, boolean toTop) {
+
+        Calendar startDate = Calendar.getInstance();
+        startDate.set(year, 0, 1);
+        Calendar endDate = Calendar.getInstance();
+        endDate.set(year, 11, 31);
+
+        if (toTop) {
+            while (endDate.compareTo(startDate) > 0) {
+                mMonths.add(0, (Calendar)endDate.clone());
+                endDate.add(Calendar.MONTH, -1);
+            }
+
+        } else {
+            while (startDate.compareTo(endDate) < 0) {
+                mMonths.add((Calendar) startDate.clone());
+                startDate.add(Calendar.MONTH, 1);
+            }
+        }
+    }
+
 
     private void sendUpdateMonthAction(Context context, int position) {
         Intent intent = new Intent(MainActivity.UPDATE_MONTH_ACTION);
