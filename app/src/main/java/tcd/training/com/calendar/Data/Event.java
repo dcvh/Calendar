@@ -1,4 +1,4 @@
-package tcd.training.com.calendar.Calendar;
+package tcd.training.com.calendar.Data;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -7,7 +7,7 @@ import android.os.Parcelable;
  * Created by cpu10661-local on 8/30/17.
  */
 
-public class CalendarEvent implements Parcelable{
+public class Event implements Parcelable{
     private int mId;
     private String mTitle;
     private int mCalendarId;
@@ -18,8 +18,8 @@ public class CalendarEvent implements Parcelable{
     private boolean mAllDay;
     private boolean mHasAlarm;
 
-    public CalendarEvent(int id, String title, int calendarId, String location,
-                         String description, long startDate, long endDate, boolean allDay, boolean hasAlarm) {
+    public Event(int id, String title, int calendarId, String location,
+                 String description, long startDate, long endDate, boolean allDay, boolean hasAlarm) {
         this.mId = id;
         this.mTitle = title;
         this.mCalendarId = calendarId;
@@ -31,7 +31,7 @@ public class CalendarEvent implements Parcelable{
         this.mHasAlarm = hasAlarm;
     }
 
-    protected CalendarEvent(Parcel in) {
+    protected Event(Parcel in) {
         mId = in.readInt();
         mTitle = in.readString();
         mCalendarId = in.readInt();
@@ -43,15 +43,15 @@ public class CalendarEvent implements Parcelable{
         mHasAlarm = in.readByte() != 0;
     }
 
-    public static final Creator<CalendarEvent> CREATOR = new Creator<CalendarEvent>() {
+    public static final Creator<Event> CREATOR = new Creator<Event>() {
         @Override
-        public CalendarEvent createFromParcel(Parcel in) {
-            return new CalendarEvent(in);
+        public Event createFromParcel(Parcel in) {
+            return new Event(in);
         }
 
         @Override
-        public CalendarEvent[] newArray(int size) {
-            return new CalendarEvent[size];
+        public Event[] newArray(int size) {
+            return new Event[size];
         }
     };
 

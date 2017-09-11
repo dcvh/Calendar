@@ -3,7 +3,6 @@ package tcd.training.com.calendar.AddEventTask;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.GradientDrawable;
-import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
@@ -16,7 +15,6 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-import tcd.training.com.calendar.Calendar.CalendarUtils;
 import tcd.training.com.calendar.R;
 
 /**

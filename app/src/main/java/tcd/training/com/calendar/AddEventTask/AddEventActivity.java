@@ -42,9 +42,10 @@ import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.concurrent.TimeUnit;
 
-import tcd.training.com.calendar.Calendar.CalendarUtils;
+import tcd.training.com.calendar.Data.DataUtils;
+import tcd.training.com.calendar.Data.TimeUtils;
 import tcd.training.com.calendar.R;
-import tcd.training.com.calendar.ViewType.ViewUtils;
+import tcd.training.com.calendar.ContentView.ViewUtils;
 
 public class AddEventActivity extends AppCompatActivity {
 
@@ -121,7 +122,7 @@ public class AddEventActivity extends AppCompatActivity {
     }
 
     private void initializeVariables() {
-        LinkedHashMap<String, Integer> colors = CalendarUtils.getAllColors();
+        LinkedHashMap<String, Integer> colors = DataUtils.getAllColors();
         mColorNames = new ArrayList<>(colors.keySet());
         mColorValues = new ArrayList<>(colors.values());
 
@@ -138,7 +139,7 @@ public class AddEventActivity extends AppCompatActivity {
 
         mNotificationTitles = new ArrayList<>();
         mNotificationTitles.add(getString(R.string.no_notification));
-        mNotificationTitles.add(CalendarUtils.getVisibleTime(mDefaultReminderTime, this) + getString(R.string.before));
+        mNotificationTitles.add(ViewUtils.getNotificationTimeFormat(mDefaultReminderTime, this) + getString(R.string.before));
         mNotificationTitles.add(getString(R.string.custom));
 
         mStatusIndex = 0;
@@ -227,14 +228,14 @@ public class AddEventActivity extends AppCompatActivity {
         // default date time values
         long curTime = Calendar.getInstance().getTimeInMillis();
 
-        String today = CalendarUtils.getDate(curTime, CalendarUtils.getVisibleDateFormat());
+        String today = TimeUtils.getFormattedDate(curTime, ViewUtils.getAddEventDateFormat());
         mStartDateTextView.setText(today);
         mEndDateTextView.setText(today);
 
-        mStartTimeTextView.setText(CalendarUtils.getDate(curTime, CalendarUtils.getStandardTimeFormat()));
+        mStartTimeTextView.setText(TimeUtils.getFormattedDate(curTime, TimeUtils.getStandardTimeFormat()));
         int defaultEventDuration = Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(this)
                 .getString(getString(R.string.pref_key_default_event_duration), getString(R.string.pref_default_event_duration_values_default)));
-        mEndTimeTextView.setText(CalendarUtils.getDate(curTime + TimeUnit.MINUTES.toMillis(defaultEventDuration), CalendarUtils.getStandardTimeFormat()));
+        mEndTimeTextView.setText(TimeUtils.getFormattedDate(curTime + TimeUnit.MINUTES.toMillis(defaultEventDuration), TimeUtils.getStandardTimeFormat()));
 
         // on click listener
         View.OnClickListener dateListener = new View.OnClickListener() {
@@ -274,7 +275,7 @@ public class AddEventActivity extends AppCompatActivity {
                     public void onDateSet(DatePicker datePicker, int year, int month, int dayOfMonth) {
                         Calendar date = Calendar.getInstance();
                         date.set(year, month, dayOfMonth);
-                        textView.setText(CalendarUtils.getDate(date.getTimeInMillis(), CalendarUtils.getVisibleDateFormat()));
+                        textView.setText(TimeUtils.getFormattedDate(date.getTimeInMillis(), ViewUtils.getAddEventDateFormat()));
                     }
                 },
                 today.get(Calendar.YEAR),
@@ -292,7 +293,7 @@ public class AddEventActivity extends AppCompatActivity {
                         Calendar date = Calendar.getInstance();
                         date.set(Calendar.HOUR_OF_DAY, hourOfDay);
                         date.set(Calendar.MINUTE, minute);
-                        textView.setText(CalendarUtils.getDate(date.getTimeInMillis(), CalendarUtils.getStandardTimeFormat()));
+                        textView.setText(TimeUtils.getFormattedDate(date.getTimeInMillis(), TimeUtils.getStandardTimeFormat()));
                     }
                 },
                 today.get(Calendar.HOUR_OF_DAY),
@@ -514,7 +515,7 @@ public class AddEventActivity extends AppCompatActivity {
                     case 2: time = (int) TimeUnit.DAYS.toMinutes(time); break;
                     case 3: time = (int) TimeUnit.DAYS.toMinutes(time) * 7; break;
                 }
-                String timeString = CalendarUtils.getVisibleTime(time, AddEventActivity.this) + getString(R.string.before);
+                String timeString = ViewUtils.getNotificationTimeFormat(time, AddEventActivity.this) + getString(R.string.before);
                 displayView.setText(timeString);
                 mNotificationTitles.add(mNotificationTitles.size() - 1, timeString);
                 mNotificationIndex = mNotificationTitles.size() - 2;

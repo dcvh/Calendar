@@ -1,37 +1,25 @@
-package tcd.training.com.calendar.ViewType.Month;
+package tcd.training.com.calendar.ContentView.Month;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
-import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.util.Log;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TableLayout;
-import android.widget.TableRow;
-import android.widget.TextView;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import tcd.training.com.calendar.Calendar.CalendarEntry;
-import tcd.training.com.calendar.Calendar.CalendarUtils;
+import tcd.training.com.calendar.Data.Entry;
+import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
-import tcd.training.com.calendar.ViewType.Schedule.ScheduleViewFragment;
 
 import static tcd.training.com.calendar.MainActivity.ARG_ENTRIES_LIST;
 
@@ -43,7 +31,7 @@ public class MonthViewFragment extends Fragment {
 
     private static final String TAG = MonthViewFragment.class.getSimpleName();
 
-    private ArrayList<CalendarEntry> mEntriesList;
+    private ArrayList<Entry> mEntriesList;
     private ArrayList<Calendar> mMonths;
     private Context mContext;
 
@@ -54,7 +42,7 @@ public class MonthViewFragment extends Fragment {
 
     public static MonthViewFragment newInstance() {
         Bundle args = new Bundle();
-        args.putSerializable(ARG_ENTRIES_LIST, CalendarUtils.getAllEntries());
+        args.putSerializable(ARG_ENTRIES_LIST, DataUtils.getAllEntries());
         MonthViewFragment fragment = new MonthViewFragment();
         fragment.setArguments(args);
         return fragment;
@@ -64,7 +52,7 @@ public class MonthViewFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mEntriesList = (ArrayList<CalendarEntry>) getArguments().getSerializable(ARG_ENTRIES_LIST);
+            mEntriesList = (ArrayList<Entry>) getArguments().getSerializable(ARG_ENTRIES_LIST);
             getArguments().remove(ARG_ENTRIES_LIST);
         } else {
             mEntriesList = new ArrayList<>();

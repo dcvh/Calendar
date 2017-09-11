@@ -1,4 +1,4 @@
-package tcd.training.com.calendar.ViewType.Day;
+package tcd.training.com.calendar.ContentView.Day;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -6,8 +6,6 @@ import android.support.v4.app.FragmentPagerAdapter;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-
-import tcd.training.com.calendar.ViewType.Month.MonthFragment;
 
 /**
  * Created by cpu10661-local on 9/1/17.

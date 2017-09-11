@@ -15,9 +15,11 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-import tcd.training.com.calendar.Calendar.Attendee;
-import tcd.training.com.calendar.Calendar.CalendarEvent;
-import tcd.training.com.calendar.Calendar.CalendarUtils;
+import tcd.training.com.calendar.Data.Attendee;
+import tcd.training.com.calendar.Data.DataUtils;
+import tcd.training.com.calendar.Data.Event;
+import tcd.training.com.calendar.Data.TimeUtils;
+import tcd.training.com.calendar.ContentView.ViewUtils;
 
 public class EventDetailsActivity extends AppCompatActivity {
 
@@ -31,7 +33,7 @@ public class EventDetailsActivity extends AppCompatActivity {
             mGuestsLayout,
             mDescriptionLayout,
             mAccountDisplayNameLayout;
-    private CalendarEvent mEvent;
+    private Event mEvent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,13 +59,13 @@ public class EventDetailsActivity extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         actionBar.setTitle(mEvent.getTitle());
         actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setBackgroundDrawable(new ColorDrawable(CalendarUtils.getAccountColor(mEvent.getCalendarId())));
+        actionBar.setBackgroundDrawable(new ColorDrawable(DataUtils.getAccountColor(mEvent.getCalendarId())));
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             Window window = getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-            window.setStatusBarColor(CalendarUtils.getAccountColor(mEvent.getCalendarId()));
+            window.setStatusBarColor(DataUtils.getAccountColor(mEvent.getCalendarId()));
         }
     }
 
@@ -96,18 +98,17 @@ public class EventDetailsActivity extends AppCompatActivity {
         TextView dateTimeTextView = mDateTimeLayout.findViewById(R.id.tv_primary_content);
 
         String dateTime;
-        if (CalendarUtils.getDate(mEvent.getStartDate(), CalendarUtils.getStandardDateFormat())
-                .equals(CalendarUtils.getDate(mEvent.getEndDate(), CalendarUtils.getStandardDateFormat()))) {
-            dateTime = CalendarUtils.getDate(mEvent.getStartDate(), "EEEE, MMMM d")
+        if (TimeUtils.isSameDay(mEvent.getStartDate(), mEvent.getEndDate())) {
+            dateTime = TimeUtils.getFormattedDate(mEvent.getStartDate(), "EEEE, MMMM d")
                     + "\n"
-                    + CalendarUtils.getDate(mEvent.getStartDate(), "hh:mm a")
+                    + TimeUtils.getFormattedDate(mEvent.getStartDate(), "hh:mm a")
                     + " - "
-                    + CalendarUtils.getDate(mEvent.getEndDate(), "hh:mm a");
+                    + TimeUtils.getFormattedDate(mEvent.getEndDate(), "hh:mm a");
         } else {
             String format = "EEEE, MMMM d, hh:mm a";
-            dateTime = CalendarUtils.getDate(mEvent.getStartDate(), format);
+            dateTime = TimeUtils.getFormattedDate(mEvent.getStartDate(), format);
             if (!mEvent.isAllDay()) {
-                dateTime += " -\n" + CalendarUtils.getDate(mEvent.getEndDate(), format);
+                dateTime += " -\n" + TimeUtils.getFormattedDate(mEvent.getEndDate(), format);
             }
         }
         dateTimeTextView.setText(dateTime);
@@ -122,7 +123,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     private void displayGuestsInfo() {
-        ArrayList<Attendee> attendees = CalendarUtils.getEventAttendees(mEvent.getId());
+        ArrayList<Attendee> attendees = DataUtils.getEventAttendees(mEvent.getId());
         if (attendees.size() > 0) {
             ((ImageView) mGuestsLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_people_black_48dp);
 
@@ -138,10 +139,10 @@ public class EventDetailsActivity extends AppCompatActivity {
 
     private void displayNotificationInfo() {
         if (mEvent.hasAlarm()) {
-            int minutes = CalendarUtils.getReminderMinutes(mEvent.getId());
+            int minutes = DataUtils.getReminderMinutes(mEvent.getId());
             if (minutes > -1) {
                 ((ImageView) mNotificationLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_notifications_black_48dp);
-                String notification = CalendarUtils.getVisibleTime(minutes, this);
+                String notification = ViewUtils.getNotificationTimeFormat(minutes, this);
                 ((TextView) mNotificationLayout.findViewById(R.id.tv_primary_content)).setText(notification);
                 mNotificationLayout.setVisibility(View.VISIBLE);
             }
@@ -157,7 +158,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     private void displayAccountDisplayName() {
-        String displayName = CalendarUtils.getAccountDisplayName(mEvent.getCalendarId());
+        String displayName = DataUtils.getAccountDisplayName(mEvent.getCalendarId());
         if (displayName.length() > 0) {
             ((ImageView)mAccountDisplayNameLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_action_today_black_48dp);
             ((TextView)mAccountDisplayNameLayout.findViewById(R.id.tv_primary_content)).setText(displayName);

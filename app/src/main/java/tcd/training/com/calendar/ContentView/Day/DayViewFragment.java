@@ -1,29 +1,24 @@
-package tcd.training.com.calendar.ViewType.Day;
+package tcd.training.com.calendar.ContentView.Day;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Paint;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import tcd.training.com.calendar.Calendar.CalendarEntry;
-import tcd.training.com.calendar.Calendar.CalendarUtils;
+import tcd.training.com.calendar.Data.DataUtils;
+import tcd.training.com.calendar.Data.Entry;
+import tcd.training.com.calendar.Data.TimeUtils;
 import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
-import tcd.training.com.calendar.ViewType.Month.MonthPagerAdapter;
-import tcd.training.com.calendar.ViewType.Month.MonthViewFragment;
 
 import static tcd.training.com.calendar.MainActivity.ARG_ENTRIES_LIST;
 
@@ -36,9 +31,9 @@ public class DayViewFragment extends Fragment{
     private static final String TAG = DayViewFragment.class.getSimpleName();
     private static final String ARG_SPECIFIED_DATE = "specificDate";
 
-    private ArrayList<CalendarEntry> mEntriesList;
+    private ArrayList<Entry> mEntriesList;
     private ArrayList<Calendar> mDays;
-    private String mSpecifiedDate;
+    private long mSpecifiedTime;
     private Context mContext;
 
     private ViewPager mDayViewPager;
@@ -48,16 +43,16 @@ public class DayViewFragment extends Fragment{
 
     public static DayViewFragment newInstance() {
         Bundle args = new Bundle();
-        args.putSerializable(ARG_ENTRIES_LIST, CalendarUtils.getAllEntries());
+        args.putSerializable(ARG_ENTRIES_LIST, DataUtils.getAllEntries());
         DayViewFragment fragment = new DayViewFragment();
         fragment.setArguments(args);
         return fragment;
     }
 
-    public static DayViewFragment newInstance(String date) {
+    public static DayViewFragment newInstance(long millis) {
         Bundle args = new Bundle();
-        args.putSerializable(ARG_ENTRIES_LIST, CalendarUtils.getAllEntries());
-        args.putString(ARG_SPECIFIED_DATE, date);
+        args.putSerializable(ARG_ENTRIES_LIST, DataUtils.getAllEntries());
+        args.putLong(ARG_SPECIFIED_DATE, millis);
         DayViewFragment fragment = new DayViewFragment();
         fragment.setArguments(args);
         return fragment;
@@ -68,8 +63,8 @@ public class DayViewFragment extends Fragment{
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             Bundle args = getArguments();
-            mEntriesList = (ArrayList<CalendarEntry>) args.getSerializable(ARG_ENTRIES_LIST);
-            mSpecifiedDate = args.getString(ARG_SPECIFIED_DATE, "");
+            mEntriesList = (ArrayList<Entry>) args.getSerializable(ARG_ENTRIES_LIST);
+            mSpecifiedTime = args.getLong(ARG_SPECIFIED_DATE, -1);
             getArguments().remove(ARG_ENTRIES_LIST);
         } else {
             mEntriesList = new ArrayList<>();
@@ -88,8 +83,8 @@ public class DayViewFragment extends Fragment{
         initializeUiComponents(view);
 
         // scroll to specified day (if any), otherwise scroll to today
-        if (mSpecifiedDate != null && mSpecifiedDate.length() > 0) {
-            scrollTo(mSpecifiedDate);
+        if (mSpecifiedTime != -1) {
+            scrollTo(mSpecifiedTime);
         } else {
             scrollToToday();
         }
@@ -157,14 +152,10 @@ public class DayViewFragment extends Fragment{
         }
     }
 
-    /**
-     *
-     * @param date must be in standard format, use CalendarUtils.getStandardDateFormat()
-     */
-    private void scrollTo(String date) {
+    private void scrollTo(long millis) {
         // TODO: 9/1/17 this is temporary, must be fixed in the future for better performance (consider switching to binary search)
         for (int i = 0; i < mDays.size(); i++) {
-            if (CalendarUtils.getDate(mDays.get(i).getTimeInMillis(), CalendarUtils.getStandardDateFormat()).equals(date)) {
+            if (TimeUtils.isSameDay(mDays.get(i).getTimeInMillis(), millis)) {
                 mDayViewPager.setCurrentItem(i);
                 sendUpdateMonthAction(mContext, i);
             }
@@ -172,7 +163,6 @@ public class DayViewFragment extends Fragment{
     }
 
     public void scrollToToday() {
-        String date = CalendarUtils.getDate(Calendar.getInstance().getTimeInMillis(), CalendarUtils.getStandardDateFormat());
-        scrollTo(date);
+        scrollTo(Calendar.getInstance().getTimeInMillis());
     }
 }

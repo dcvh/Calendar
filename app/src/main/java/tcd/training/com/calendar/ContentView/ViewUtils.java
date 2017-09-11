@@ -1,4 +1,4 @@
-package tcd.training.com.calendar.ViewType;
+package tcd.training.com.calendar.ContentView;
 
 import android.content.Context;
 import android.content.Intent;
@@ -7,14 +7,16 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.text.TextUtils;
-import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import tcd.training.com.calendar.Calendar.CalendarEvent;
-import tcd.training.com.calendar.Calendar.CalendarUtils;
+import java.util.concurrent.TimeUnit;
+
+import tcd.training.com.calendar.Data.DataUtils;
+import tcd.training.com.calendar.Data.Event;
+import tcd.training.com.calendar.Data.TimeUtils;
 import tcd.training.com.calendar.EventDetailsActivity;
 import tcd.training.com.calendar.R;
 
@@ -31,7 +33,7 @@ public class ViewUtils {
         return (int) (dp * SCALE + 0.5f);
     }
 
-    public static View getEventTileView(final CalendarEvent event, final Context context) {
+    public static View getEventTileView(final Event event, final Context context) {
 
         // prepare a linear layout for wrapping title and duration
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -43,7 +45,7 @@ public class ViewUtils {
         // background color
         eventLayout.setBackgroundResource(R.drawable.layout_round_corner);
         GradientDrawable drawable = (GradientDrawable) eventLayout.getBackground();
-        drawable.setColor(CalendarUtils.getAccountColor(event.getCalendarId()));
+        drawable.setColor(DataUtils.getAccountColor(event.getCalendarId()));
 
         // title
         TextView titleTextView = getStandardTextView(event.getTitle(), context);
@@ -51,7 +53,8 @@ public class ViewUtils {
 
         // duration
         if (!event.isAllDay()) {
-            String duration = CalendarUtils.getDate(event.getStartDate(), "hh:mm a") + " - " + CalendarUtils.getDate(event.getEndDate(), "hh:mm a");
+            String duration = TimeUtils.getFormattedDate(event.getStartDate(), TimeUtils.getStandardTimeFormat())
+                    + " - " + TimeUtils.getFormattedDate(event.getEndDate(), TimeUtils.getStandardTimeFormat());
             TextView descriptionTextView = getStandardTextView(duration, context);
             descriptionTextView.setPadding(0, DP_AS_PX_8 / 2, 0, 0);
             eventLayout.addView(descriptionTextView);
@@ -120,5 +123,41 @@ public class ViewUtils {
             default:
                 throw new UnsupportedOperationException("Unknown month");
         }
+    }
+
+    public static String getAddEventDateFormat() {
+        return "EEE, MMM d, yyyy";
+    }
+
+    public static String getNotificationTimeFormat(int minutes, Context context) {
+
+        StringBuilder formattedTime = new StringBuilder();
+
+        int _minutes = minutes;
+        String format = "%d %s ";
+
+        int weeks = (int) (TimeUnit.MINUTES.toDays(_minutes) / 7);
+        if (weeks > 0) {
+            formattedTime.append(String.format(format, weeks, weeks == 1 ? context.getString(R.string.week) : context.getString(R.string.weeks)));
+            _minutes -= TimeUnit.DAYS.toMinutes(weeks) * 7;
+        }
+
+        int days = (int) (TimeUnit.MINUTES.toDays(_minutes));
+        if (days > 0) {
+            formattedTime.append(String.format(format, days, days == 1 ? context.getString(R.string.day) : context.getString(R.string.days)));
+            _minutes -= TimeUnit.DAYS.toMinutes(days);
+        }
+
+        int hours = (int) (TimeUnit.MINUTES.toHours(_minutes));
+        if (hours > 0) {
+            formattedTime.append(String.format(format, hours, hours == 1 ? context.getString(R.string.hour) : context.getString(R.string.hours)));
+            _minutes -= TimeUnit.HOURS.toMinutes(hours);
+        }
+
+        if (_minutes > 0) {
+            formattedTime.append(String.format(format, _minutes, _minutes == 1 ? context.getString(R.string.minute) : context.getString(R.string.minutes)));
+        }
+
+        return formattedTime.toString();
     }
 }

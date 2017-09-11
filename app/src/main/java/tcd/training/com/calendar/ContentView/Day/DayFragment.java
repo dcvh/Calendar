@@ -1,33 +1,26 @@
-package tcd.training.com.calendar.ViewType.Day;
+package tcd.training.com.calendar.ContentView.Day;
 
 import android.content.Context;
-import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.TextUtils;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TableLayout;
-import android.widget.TableRow;
 import android.widget.TextView;
 
 import java.util.Calendar;
 
-import tcd.training.com.calendar.Calendar.CalendarEntry;
-import tcd.training.com.calendar.Calendar.CalendarEvent;
-import tcd.training.com.calendar.Calendar.CalendarUtils;
-import tcd.training.com.calendar.EventDetailsActivity;
+import tcd.training.com.calendar.Data.DataUtils;
+import tcd.training.com.calendar.Data.Entry;
+import tcd.training.com.calendar.Data.Event;
+import tcd.training.com.calendar.Data.TimeUtils;
 import tcd.training.com.calendar.R;
-import tcd.training.com.calendar.ViewType.Month.MonthFragment;
-import tcd.training.com.calendar.ViewType.ViewUtils;
+import tcd.training.com.calendar.ContentView.ViewUtils;
 
 /**
  * Created by cpu10661-local on 9/1/17.
@@ -84,10 +77,10 @@ public class DayFragment extends Fragment {
 
         // header
         mDayOfMonthTextView.setText(String.valueOf(mCurDay.get(Calendar.DAY_OF_MONTH)));
-        mDayOfWeekTextView.setText(CalendarUtils.getDate(mCurDay.getTimeInMillis(), "EEE"));
-        CalendarEntry entry = CalendarUtils.findEntryWithDate(CalendarUtils.getDate(mCurDay.getTimeInMillis(), "yyyy/MM/dd"));
+        mDayOfWeekTextView.setText(TimeUtils.getFormattedDate(mCurDay.getTimeInMillis(), "EEE"));
+        Entry entry = DataUtils.findEntryWithDate(mCurDay.getTimeInMillis());
         if (entry != null) {
-            for (CalendarEvent event : entry.getEvents()) {
+            for (Event event : entry.getEvents()) {
                 if (event.isAllDay()) {
                     mAllDayEventsLayout.addView(ViewUtils.getEventTileView(event, mContext));
                 }

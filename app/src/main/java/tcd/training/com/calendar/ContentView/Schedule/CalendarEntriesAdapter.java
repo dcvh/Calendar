@@ -1,11 +1,10 @@
-package tcd.training.com.calendar.ViewType.Schedule;
+package tcd.training.com.calendar.ContentView.Schedule;
 
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,12 +17,12 @@ import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
+import tcd.training.com.calendar.Data.TimeUtils;
 import tcd.training.com.calendar.R;
-import tcd.training.com.calendar.Calendar.CalendarEntry;
-import tcd.training.com.calendar.Calendar.CalendarEvent;
-import tcd.training.com.calendar.Calendar.CalendarUtils;
-import tcd.training.com.calendar.ViewType.Day.DayViewFragment;
-import tcd.training.com.calendar.ViewType.ViewUtils;
+import tcd.training.com.calendar.Data.Entry;
+import tcd.training.com.calendar.Data.Event;
+import tcd.training.com.calendar.ContentView.Day.DayViewFragment;
+import tcd.training.com.calendar.ContentView.ViewUtils;
 
 /**
  * Created by cpu10661-local on 8/30/17.
@@ -38,10 +37,10 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     private static final int TYPE_TODAY = 3;
     private static final int TYPE_MONTH = 4;
 
-    private ArrayList<CalendarEntry> mEntriesList;
+    private ArrayList<Entry> mEntriesList;
     private Context mContext;
 
-    public CalendarEntriesAdapter(Context context, ArrayList<CalendarEntry> mEntriesList) {
+    public CalendarEntriesAdapter(Context context, ArrayList<Entry> mEntriesList) {
         this.mContext = context;
         this.mEntriesList = mEntriesList;
     }
@@ -75,9 +74,9 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
     @Override
     public int getItemViewType(int position) {
-        CalendarEntry entry = mEntriesList.get(position);
+        Entry entry = mEntriesList.get(position);
         if (entry.getEvents() == null) {
-            if (entry.getDate().contains("-")){
+            if (entry.getDescription().contains("-")){
                 return TYPE_WEEK;
             } else {
                 return TYPE_MONTH;
@@ -104,7 +103,7 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder viewHolder, int position) {
 
-        final CalendarEntry entry = mEntriesList.get(position);
+        final Entry entry = mEntriesList.get(position);
 
         switch (viewHolder.getItemViewType()) {
             case TYPE_EVENT:
@@ -114,7 +113,7 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
                 // events
                 if (entry.getEvents().size() > 0) {
-                    for (CalendarEvent event : entry.getEvents()) {
+                    for (Event event : entry.getEvents()) {
                         entryHolder.mEventsLinearLayout.addView(ViewUtils.getEventTileView(event, mContext));
                     }
                 }
@@ -138,7 +137,7 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                     });
                     todayHolder.mNoEventTextView.setVisibility(View.VISIBLE);
                 } else {
-                    for (CalendarEvent event : entry.getEvents()) {
+                    for (Event event : entry.getEvents()) {
                         todayHolder.mEventsLinearLayout.addView(ViewUtils.getEventTileView(event, mContext));
                     }
                 }
@@ -147,27 +146,27 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
             case TYPE_WEEK:
                 WeekViewHolder weekHolder = (WeekViewHolder) viewHolder;
-                weekHolder.mWeekTextView.setText(entry.getDate());
+                weekHolder.mWeekTextView.setText(entry.getDescription());
                 break;
 
             case TYPE_MONTH:
                 MonthViewHolder monthHolder = (MonthViewHolder) viewHolder;
-                int resId = ViewUtils.getMonthImageResourceId(entry.getDate().substring(0, entry.getDate().indexOf(" ")));
+                int resId = ViewUtils.getMonthImageResourceId(entry.getDescription().substring(0, entry.getDescription().indexOf(" ")));
                 Glide.with(mContext).load(resId).into(monthHolder.mMonthImageView);
-                monthHolder.mMonthTextView.setText(entry.getDate());
+                monthHolder.mMonthTextView.setText(entry.getDescription());
                 break;
         }
     }
 
-    private void createDateTextViews(EntryViewHolder holder, final CalendarEntry entry) {
+    private void createDateTextViews(EntryViewHolder holder, final Entry entry) {
         // day and month
-        holder.mDayOfMonthTextView.setText(CalendarUtils.getDate(entry.getDate(), "d"));
-        holder.mDayOfWeekTextView.setText(CalendarUtils.getDate(entry.getDate(), "EEE"));
+        holder.mDayOfMonthTextView.setText(TimeUtils.getFormattedDate(entry.getTime(), "d"));
+        holder.mDayOfWeekTextView.setText(TimeUtils.getFormattedDate(entry.getTime(), "EEE"));
 
         holder.mDayOfMonthTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                DayViewFragment newFragment = DayViewFragment.newInstance(entry.getDate());
+                DayViewFragment newFragment = DayViewFragment.newInstance(entry.getTime());
                 FragmentTransaction transaction = ((FragmentActivity) mContext).getSupportFragmentManager().beginTransaction();
                 transaction
                         .addToBackStack(null)

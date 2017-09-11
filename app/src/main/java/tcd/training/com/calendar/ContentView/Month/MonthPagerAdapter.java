@@ -1,4 +1,4 @@
-package tcd.training.com.calendar.ViewType.Month;
+package tcd.training.com.calendar.ContentView.Month;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;

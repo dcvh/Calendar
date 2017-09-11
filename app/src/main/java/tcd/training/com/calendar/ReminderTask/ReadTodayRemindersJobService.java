@@ -2,7 +2,6 @@ package tcd.training.com.calendar.ReminderTask;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.util.Log;
 
 import com.firebase.jobdispatcher.Driver;
@@ -18,10 +17,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
-import tcd.training.com.calendar.Calendar.CalendarEntry;
-import tcd.training.com.calendar.Calendar.CalendarEvent;
-import tcd.training.com.calendar.Calendar.CalendarUtils;
-import tcd.training.com.calendar.Calendar.Reminder;
+import tcd.training.com.calendar.Data.DataUtils;
+import tcd.training.com.calendar.Data.Entry;
+import tcd.training.com.calendar.Data.Event;
 
 /**
  * Created by cpu10661-local on 9/7/17.
@@ -45,9 +43,9 @@ public class ReadTodayRemindersJobService extends JobService {
             @Override
             protected Object doInBackground(Object[] objects) {
 
-                ArrayList<CalendarEvent> events = getTodayAndTomorrowEvents();
+                ArrayList<Event> events = getTodayAndTomorrowEvents();
                 if (events != null) {
-                    for (CalendarEvent event : events) {
+                    for (Event event : events) {
                         int reminderTime = calculateReminderTime(event);
                         Log.e(TAG, "doInBackground: " + reminderTime);
                         if (reminderTime < 0) {
@@ -78,21 +76,18 @@ public class ReadTodayRemindersJobService extends JobService {
         return true;
     }
 
-    private ArrayList<CalendarEvent> getTodayAndTomorrowEvents() {
+    private ArrayList<Event> getTodayAndTomorrowEvents() {
 
         // today events
-        Calendar today = Calendar.getInstance();
-        String todayString = CalendarUtils.getDate(today.getTimeInMillis(), CalendarUtils.getStandardDateFormat());
-        CalendarEntry todayEntry = CalendarUtils.findEntryWithDate(todayString);
+        Entry todayEntry = DataUtils.findEntryWithDate(Calendar.getInstance().getTimeInMillis());
 
         // tomorrow events
-        Calendar tomorrow = (Calendar) today.clone();
+        Calendar tomorrow = Calendar.getInstance();
         tomorrow.add(Calendar.DAY_OF_MONTH, 1);
-        String tomorrowString = CalendarUtils.getDate(tomorrow.getTimeInMillis(), CalendarUtils.getStandardDateFormat());
-        CalendarEntry tomorrowEntry = CalendarUtils.findEntryWithDate(tomorrowString);
+        Entry tomorrowEntry = DataUtils.findEntryWithDate(tomorrow.getTimeInMillis());
 
         // assign to result
-        ArrayList<CalendarEvent> events = todayEntry != null ? todayEntry.getEvents() : null;
+        ArrayList<Event> events = todayEntry != null ? todayEntry.getEvents() : null;
         if (tomorrowEntry != null) {
             if (events != null) {
                 events.addAll(tomorrowEntry.getEvents());
@@ -104,7 +99,7 @@ public class ReadTodayRemindersJobService extends JobService {
         return events;
     }
 
-    private int calculateReminderTime(CalendarEvent event) {
+    private int calculateReminderTime(Event event) {
 
         long time;
 
@@ -122,13 +117,13 @@ public class ReadTodayRemindersJobService extends JobService {
 
         time = TimeUnit.MILLISECONDS.toSeconds(time - Calendar.getInstance().getTimeInMillis());
 
-        int beforeTime = (int) TimeUnit.MINUTES.toSeconds(CalendarUtils.getReminderMinutes(event.getId()));
+        int beforeTime = (int) TimeUnit.MINUTES.toSeconds(DataUtils.getReminderMinutes(event.getId()));
         time -= beforeTime;
 
         return (int) time;
     }
 
-    private void scheduleEventReminder(CalendarEvent event, int reminderTime) {
+    private void scheduleEventReminder(Event event, int reminderTime) {
 
         // prepare data
         Bundle bundle = new Bundle();

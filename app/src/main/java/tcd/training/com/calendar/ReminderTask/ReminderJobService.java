@@ -2,15 +2,11 @@ package tcd.training.com.calendar.ReminderTask;
 
 import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.firebase.jobdispatcher.JobParameters;
 import com.firebase.jobdispatcher.JobService;
 
-import java.util.ArrayList;
-
-import tcd.training.com.calendar.Calendar.CalendarUtils;
-import tcd.training.com.calendar.Calendar.Reminder;
+import tcd.training.com.calendar.Data.TimeUtils;
 
 /**
  * Created by cpu10661-local on 9/7/17.
@@ -36,7 +32,7 @@ public class ReminderJobService extends JobService {
                     ReminderUtils.showReminderNotification(
                             ReminderJobService.this,
                             title,
-                            CalendarUtils.getDate(startTime, CalendarUtils.getStandardTimeFormat())
+                            TimeUtils.getFormattedDate(startTime, TimeUtils.getStandardTimeFormat())
                     );
                 } else {
                     Log.e(TAG, "doInBackground: There was a problem retrieving the event data");

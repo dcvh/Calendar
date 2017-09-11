@@ -1,4 +1,4 @@
-package tcd.training.com.calendar.ViewType.Day;
+package tcd.training.com.calendar.ContentView.Day;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
@@ -8,11 +8,11 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import tcd.training.com.calendar.Calendar.CalendarEntry;
-import tcd.training.com.calendar.Calendar.CalendarEvent;
-import tcd.training.com.calendar.Calendar.CalendarUtils;
+import tcd.training.com.calendar.Data.Entry;
+import tcd.training.com.calendar.Data.Event;
+import tcd.training.com.calendar.Data.TimeUtils;
 import tcd.training.com.calendar.R;
-import tcd.training.com.calendar.ViewType.ViewUtils;
+import tcd.training.com.calendar.ContentView.ViewUtils;
 
 /**
  * Created by cpu10661-local on 9/1/17.
@@ -21,9 +21,9 @@ import tcd.training.com.calendar.ViewType.ViewUtils;
 public class DayEventsAdapter extends RecyclerView.Adapter<DayEventsAdapter.DayEventViewHolder> {
 
     private final Context mContext;
-    private CalendarEntry mEntry;
+    private Entry mEntry;
 
-    public DayEventsAdapter(CalendarEntry entry, Context context) {
+    public DayEventsAdapter(Entry entry, Context context) {
         this.mEntry = entry;
         this.mContext = context;
     }
@@ -49,8 +49,8 @@ public class DayEventsAdapter extends RecyclerView.Adapter<DayEventsAdapter.DayE
         String time = String.valueOf(position % 12 + 1) + (position < 12 ? " AM" : " PM");
         holder.mTimeTextView.setText(time);
         if (mEntry != null) {
-            for (CalendarEvent event : mEntry.getEvents()) {
-                if (!event.isAllDay() && Integer.valueOf(CalendarUtils.getDate(event.getStartDate(), "HH")) == position) {
+            for (Event event : mEntry.getEvents()) {
+                if (!event.isAllDay() && Integer.valueOf(TimeUtils.getFormattedDate(event.getStartDate(), "HH")) == position) {
                     holder.mEventsLinearLayout.addView(ViewUtils.getEventTileView(event, mContext));
                     holder.mEventsLinearLayout.setVisibility(View.VISIBLE);
                     holder.setIsRecyclable(false);

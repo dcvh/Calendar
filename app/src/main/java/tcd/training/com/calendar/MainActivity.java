@@ -6,12 +6,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -36,14 +34,15 @@ import android.widget.Toast;
 import java.util.Calendar;
 
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
-import tcd.training.com.calendar.Calendar.CalendarEntry;
-import tcd.training.com.calendar.Calendar.CalendarEvent;
-import tcd.training.com.calendar.Calendar.CalendarUtils;
+import tcd.training.com.calendar.Data.DataUtils;
+import tcd.training.com.calendar.Data.Entry;
+import tcd.training.com.calendar.Data.Event;
+import tcd.training.com.calendar.Data.TimeUtils;
 import tcd.training.com.calendar.ReminderTask.ReminderUtils;
 import tcd.training.com.calendar.Settings.SettingsActivity;
-import tcd.training.com.calendar.ViewType.Day.DayViewFragment;
-import tcd.training.com.calendar.ViewType.Month.MonthViewFragment;
-import tcd.training.com.calendar.ViewType.Schedule.ScheduleViewFragment;
+import tcd.training.com.calendar.ContentView.Day.DayViewFragment;
+import tcd.training.com.calendar.ContentView.Month.MonthViewFragment;
+import tcd.training.com.calendar.ContentView.Schedule.ScheduleViewFragment;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -195,7 +194,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onReceive(Context context, Intent intent) {
                 Calendar calendar = (Calendar) intent.getSerializableExtra(ARG_CALENDAR);
-                String month = CalendarUtils.getDate(calendar.getTimeInMillis(), "MMMM");
+                String month = TimeUtils.getFormattedDate(calendar.getTimeInMillis(), "MMMM");
                 getSupportActionBar().setTitle(month);
             }
         };
@@ -236,16 +235,17 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             protected Void doInBackground(Void... voids) {
-                CalendarUtils.readCalendarEventsInfo(MainActivity.this);
-                if (CalendarUtils.getAllEntries().size() == 0) {
+                DataUtils.readCalendarEventsInfo(MainActivity.this);
+                if (DataUtils.getAllEntries().size() == 0) {
                     Toast.makeText(MainActivity.this, R.string.no_calendar_events_error, Toast.LENGTH_LONG).show();
                 } else {
-//                    for (CalendarEntry entry : CalendarUtils.getAllEntries()) {
-//                        for (CalendarEvent event : entry.getEvents()) {
-//                            Log.e(TAG, "doInBackground: " + event.getTitle());
-//                            Log.e(TAG, "doInBackground: " + CalendarUtils.getDate(event.getStartDate(), "dd/MM/yyyy"));
-//                        }
-//                    }
+                    Log.e(TAG, "doInBackground: " + DataUtils.getAllEntries().size());
+                    for (Entry entry : DataUtils.getAllEntries()) {
+                        for (Event event : entry.getEvents()) {
+                            Log.e(TAG, "doInBackground: " + event.getTitle());
+                            Log.e(TAG, "doInBackground: " + TimeUtils.getFormattedDate(event.getStartDate(), "dd/MM/yyyy"));
+                        }
+                    }
                 }
                 return null;
             }

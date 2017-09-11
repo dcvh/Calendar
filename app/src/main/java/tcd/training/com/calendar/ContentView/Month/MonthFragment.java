@@ -1,7 +1,6 @@
-package tcd.training.com.calendar.ViewType.Month;
+package tcd.training.com.calendar.ContentView.Month;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
@@ -9,11 +8,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.view.ViewPager;
-import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -26,14 +21,12 @@ import android.widget.TextView;
 
 import java.util.Calendar;
 
-import tcd.training.com.calendar.Calendar.CalendarEntry;
-import tcd.training.com.calendar.Calendar.CalendarEvent;
-import tcd.training.com.calendar.Calendar.CalendarUtils;
-import tcd.training.com.calendar.MainActivity;
+import tcd.training.com.calendar.Data.DataUtils;
+import tcd.training.com.calendar.Data.Entry;
+import tcd.training.com.calendar.Data.Event;
 import tcd.training.com.calendar.R;
-import tcd.training.com.calendar.ViewType.Day.DayFragment;
-import tcd.training.com.calendar.ViewType.Day.DayViewFragment;
-import tcd.training.com.calendar.ViewType.ViewUtils;
+import tcd.training.com.calendar.ContentView.Day.DayViewFragment;
+import tcd.training.com.calendar.ContentView.ViewUtils;
 
 /**
  * Created by cpu10661-local on 8/31/17.
@@ -195,12 +188,11 @@ public class MonthFragment extends Fragment {
 //        mCalendarTable.addView(textView);
     }
 
-    private View createDateView(Calendar calendar, int dateColor) {
+    private View createDateView(final Calendar calendar, int dateColor) {
         TextView dateTextView = createDateTextView(dateColor);
         dateTextView.setText(String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)));
 
-        final String date = CalendarUtils.getDate(calendar.getTimeInMillis(), CalendarUtils.getStandardDateFormat());
-        final CalendarEntry entry = CalendarUtils.findEntryWithDate(date);
+        final Entry entry = DataUtils.findEntryWithDate(calendar.getTimeInMillis());
 
         View resultView;
         if (entry == null) {
@@ -210,13 +202,13 @@ public class MonthFragment extends Fragment {
             layout.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, TableRow.LayoutParams.WRAP_CONTENT, 1f));
             layout.setOrientation(LinearLayout.VERTICAL);
             layout.addView(dateTextView);
-            for (CalendarEvent event : entry.getEvents()) {
+            for (Event event : entry.getEvents()) {
                 TextView eventTextView = ViewUtils.getStandardTextView(event.getTitle(), mContext);
                 eventTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
 
                 eventTextView.setBackgroundResource(R.drawable.layout_round_corner);
                 GradientDrawable drawable = (GradientDrawable) eventTextView.getBackground();
-                drawable.setColor(CalendarUtils.getAccountColor(event.getCalendarId()));
+                drawable.setColor(DataUtils.getAccountColor(event.getCalendarId()));
                 layout.addView(eventTextView);
             }
             resultView = layout;
@@ -225,7 +217,7 @@ public class MonthFragment extends Fragment {
         resultView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                DayViewFragment newFragment = DayViewFragment.newInstance(date);
+                DayViewFragment newFragment = DayViewFragment.newInstance(calendar.getTimeInMillis());
                 FragmentTransaction transaction = getParentFragment().getFragmentManager().beginTransaction();
                 transaction
                         .addToBackStack(null)
