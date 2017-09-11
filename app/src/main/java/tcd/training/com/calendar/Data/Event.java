@@ -17,9 +17,11 @@ public class Event implements Parcelable{
     private long mEndDate;
     private boolean mAllDay;
     private boolean mHasAlarm;
+    private String mRRule;
+    private int mDisplayColor;
 
-    public Event(int id, String title, int calendarId, String location,
-                 String description, long startDate, long endDate, boolean allDay, boolean hasAlarm) {
+    public Event(int id, String title, int calendarId, String location, String description,
+                 long startDate, long endDate, boolean allDay, boolean hasAlarm, String rRule, int displayColor) {
         this.mId = id;
         this.mTitle = title;
         this.mCalendarId = calendarId;
@@ -29,6 +31,8 @@ public class Event implements Parcelable{
         this.mEndDate = endDate;
         this.mAllDay = allDay;
         this.mHasAlarm = hasAlarm;
+        this.mRRule = rRule;
+        this.mDisplayColor = displayColor;
     }
 
     protected Event(Parcel in) {
@@ -41,6 +45,8 @@ public class Event implements Parcelable{
         mEndDate = in.readLong();
         mAllDay = in.readByte() != 0;
         mHasAlarm = in.readByte() != 0;
+        mRRule = in.readString();
+        mDisplayColor = in.readInt();
     }
 
     public static final Creator<Event> CREATOR = new Creator<Event>() {
@@ -91,6 +97,14 @@ public class Event implements Parcelable{
         return mHasAlarm;
     }
 
+    public String getRRule() {
+        return mRRule;
+    }
+
+    public int getDisplayColor() {
+        return mDisplayColor;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -108,5 +122,7 @@ public class Event implements Parcelable{
         parcel.writeLong(mEndDate);
         parcel.writeByte((byte) (mAllDay ? 1 : 0));
         parcel.writeByte((byte) (mHasAlarm ? 1 : 0));
+        parcel.writeString(mRRule);
+        parcel.writeInt(mDisplayColor);
     }
 }

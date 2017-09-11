@@ -1,11 +1,13 @@
 package tcd.training.com.calendar.Data;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.CalendarContract;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -71,9 +73,10 @@ public class DataUtils {
         projections.put(CalendarContract.Events.DTSTART, i++);
         projections.put(CalendarContract.Events.DTEND, i++);
         projections.put(CalendarContract.Events.ALL_DAY, i++);
+        projections.put(CalendarContract.Events.HAS_ALARM, i++);
         projections.put(CalendarContract.Events.RRULE, i++);
-        projections.put(CalendarContract.Events.RDATE, i++);
-        projections.put(CalendarContract.Events.HAS_ALARM, i);
+        projections.put(CalendarContract.Events.DISPLAY_COLOR, i++);
+        projections.put(CalendarContract.Events.CALENDAR_COLOR, i++);
 
         // querying
         Cursor cursor = contentResolver.query(uri, projections.keySet().toArray(new String[0]), null, null, null);
@@ -92,19 +95,13 @@ public class DataUtils {
                 long endDate = cursor.getLong(projections.get(CalendarContract.Events.DTEND));
                 boolean allDay = cursor.getInt(projections.get(CalendarContract.Events.ALL_DAY)) == 1;
                 boolean hasAlarm = cursor.getInt(projections.get(CalendarContract.Events.HAS_ALARM)) == 1;
-
-                String rrule = cursor.getString(projections.get(CalendarContract.Events.RRULE));
-                String rdate = cursor.getString(projections.get(CalendarContract.Events.RDATE));
-
-//                Log.e(TAG, "readCalendarEntries: " + id);
-//                Log.e(TAG, "readCalendarEntries: " + title);
-//                Log.e(TAG, "readCalendarEntries: " + rrule);
-//                Log.e(TAG, "readCalendarEntries: " + rdate);
+                String rRule = cursor.getString(projections.get(CalendarContract.Events.RRULE));
+                int displayColor = cursor.getInt(projections.get(CalendarContract.Events.DISPLAY_COLOR));
 
                 if (title == null || title.length() == 0) {
                     title = context.getString(R.string.no_title);
                 }
-                Event event = new Event(id, title, calendarId, location, description, startDate, endDate, allDay, hasAlarm);
+                Event event = new Event(id, title, calendarId, location, description, startDate, endDate, allDay, hasAlarm, rRule, displayColor);
 
                 if (getAccountDisplayName(calendarId).length() == 0) {
                     continue;

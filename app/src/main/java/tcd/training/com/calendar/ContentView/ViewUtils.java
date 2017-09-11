@@ -45,7 +45,7 @@ public class ViewUtils {
         // background color
         eventLayout.setBackgroundResource(R.drawable.layout_round_corner);
         GradientDrawable drawable = (GradientDrawable) eventLayout.getBackground();
-        drawable.setColor(DataUtils.getAccountColor(event.getCalendarId()));
+        drawable.setColor(event.getDisplayColor());
 
         // title
         TextView titleTextView = getStandardTextView(event.getTitle(), context);
