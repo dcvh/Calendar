@@ -153,11 +153,18 @@ public class DayViewFragment extends Fragment{
     }
 
     private void scrollTo(long millis) {
-        // TODO: 9/1/17 this is temporary, must be fixed in the future for better performance (consider switching to binary search)
-        for (int i = 0; i < mDays.size(); i++) {
-            if (TimeUtils.isSameDay(mDays.get(i).getTimeInMillis(), millis)) {
-                mDayViewPager.setCurrentItem(i);
-                sendUpdateMonthAction(mContext, i);
+        int low = 0;
+        int high = mDays.size() - 1;
+        while (low <= high) {
+            int mid = low + (high - low) / 2;
+            if (TimeUtils.compareDay(millis, mDays.get(mid).getTimeInMillis()) < 0) {
+                high = mid - 1;
+            } else if (TimeUtils.compareDay(millis, mDays.get(mid).getTimeInMillis()) > 0) {
+                low = mid + 1;
+            } else {
+                mDayViewPager.setCurrentItem(mid);
+                sendUpdateMonthAction(mContext, mid);
+                return;
             }
         }
     }

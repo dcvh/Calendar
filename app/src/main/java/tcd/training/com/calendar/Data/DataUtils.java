@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 
 import tcd.training.com.calendar.R;
@@ -35,7 +36,6 @@ public class DataUtils {
     private static ArrayList<Account> mAccounts;
     private static ArrayList<Reminder> mReminders;
     private static ArrayList<Attendee> mAttendees;
-    private static int mColorOffset = 0;
 
 
     public static void readCalendarEventsInfo(Context context) {
@@ -66,6 +66,8 @@ public class DataUtils {
         LinkedHashMap<String, Integer> projections = new LinkedHashMap<>();
         int i = 0;
         projections.put(CalendarContract.Events._ID, i++);
+
+
         projections.put(CalendarContract.Events.TITLE, i++);
         projections.put(CalendarContract.Events.CALENDAR_ID, i++);
         projections.put(CalendarContract.Events.EVENT_LOCATION, i++);
@@ -87,9 +89,13 @@ public class DataUtils {
             Log.d(TAG, "readCalendarEntries: No entry found");
         } else {
             do {
+                int calendarId = cursor.getInt(projections.get(CalendarContract.Events.CALENDAR_ID));
+                if (getAccountDisplayName(calendarId).length() == 0) {
+                    continue;
+                }
+
                 int id = cursor.getInt(projections.get(CalendarContract.Events._ID));
                 String title = cursor.getString(projections.get(CalendarContract.Events.TITLE));
-                int calendarId = cursor.getInt(projections.get(CalendarContract.Events.CALENDAR_ID));
                 String location = cursor.getString(projections.get(CalendarContract.Events.EVENT_LOCATION));
                 String description = cursor.getString(projections.get(CalendarContract.Events.DESCRIPTION));
                 String timezone = cursor.getString(projections.get(CalendarContract.Events.EVENT_TIMEZONE));
@@ -125,16 +131,10 @@ public class DataUtils {
             return;
         }
 
-        boolean isDisrupted = false;
-        for (Entry entry : mEntries) {
-            if (TimeUtils.isSameDay(entry.getTime(), event.getStartDate())) {
-                entry.addEvent(event);
-                isDisrupted = true;
-                break;
-            }
-        }
-
-        if (!isDisrupted) {
+        int index = findEntryIndexWithDate(event.getStartDate());
+        if (index != -1) {
+            mEntries.get(index).addEvent(event);
+        } else {
             mEntries.add(new Entry(event.getStartDate(), new ArrayList<>(Arrays.asList(event))));
         }
     }
@@ -169,7 +169,6 @@ public class DataUtils {
         Uri uri = CalendarContract.Calendars.CONTENT_URI;
 
         // Submit the query and get a Cursor object back.
-        mColorOffset = 0;
         Cursor cursor = cr.query(uri, projection.toArray(new String[0]), null, null, null);
         if (cursor == null) {
             Log.e(TAG, "readCalendarAccounts: There was a problem handling the cursor");
@@ -192,9 +191,6 @@ public class DataUtils {
                 if (isThisDuplicateHoliday(account)) {
                     continue;
                 }
-
-                int color = mDefaultColors.values().toArray(new Integer[0])[mColorOffset++ % mDefaultColors.size()];
-                account.setColor(color);
                 mAccounts.add(account);
             }
 
@@ -376,23 +372,31 @@ public class DataUtils {
         return attendees;
     }
 
-
     /**
      *
      * @param millis  the milliseconds since January 1, 1970, 00:00:00 GMT.
      * @return entry with the specified date, null if there is no entry matches the date
      */
     public static Entry findEntryWithDate(long millis) {
-        // TODO: 9/1/17 this is temporary, must be fixed in the future for better performance (consider switching to binary search)
-        assert mEntries != null;
-        for (int i = 0; i < mEntries.size(); i++) {
-            if (TimeUtils.isSameDay(mEntries.get(i).getTime(), millis)) {
-                return mEntries.get(i);
-            }
-        }
-        return null;
+        int index = findEntryIndexWithDate(millis);
+        return index == -1 ? null : mEntries.get(index);
     }
 
+    private static int findEntryIndexWithDate(final long millis) {
+        int low = 0;
+        int high = mEntries.size() - 1;
+        while (low <= high) {
+            int mid = low + (high - low) / 2;
+            if (TimeUtils.compareDay(millis, mEntries.get(mid).getTime()) < 0) {
+                high = mid - 1;
+            } else if (TimeUtils.compareDay(millis, mEntries.get(mid).getTime()) > 0) {
+                low = mid + 1;
+            } else {
+                return mid;
+            }
+        }
+        return -1;
+    }
 
     public static long addEvent(Event event, Reminder reminder, Context context) {
 

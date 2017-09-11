@@ -18,6 +18,7 @@ import java.util.Calendar;
 
 import tcd.training.com.calendar.Data.Entry;
 import tcd.training.com.calendar.Data.DataUtils;
+import tcd.training.com.calendar.Data.TimeUtils;
 import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
 
@@ -117,13 +118,19 @@ public class MonthViewFragment extends Fragment {
     }
 
     public void scrollToToday() {
-        // TODO: 9/1/17 this is temporary, must be fixed in the future for better performance (consider switching to binary search)
-        int curYear = Calendar.getInstance().get(Calendar.YEAR);
-        int curMonth = Calendar.getInstance().get(Calendar.MONTH);
-        for (int i = 0; i < mMonths.size(); i++) {
-            if (mMonths.get(i).get(Calendar.YEAR) == curYear && mMonths.get(i).get(Calendar.MONTH) == curMonth) {
-                mMonthViewPager.setCurrentItem(i);
-                sendUpdateMonthAction(mContext, i);
+        long today = Calendar.getInstance().getTimeInMillis();
+        int low = 0;
+        int high = mMonths.size() - 1;
+        while (low <= high) {
+            int mid = low + (high - low) / 2;
+            if (TimeUtils.compareMonth(today, mMonths.get(mid).getTimeInMillis()) < 0) {
+                high = mid - 1;
+            } else if (TimeUtils.compareMonth(today, mMonths.get(mid).getTimeInMillis()) > 0) {
+                low = mid + 1;
+            } else {
+                mMonthViewPager.setCurrentItem(mid);
+                sendUpdateMonthAction(mContext, mid);
+                return;
             }
         }
     }
