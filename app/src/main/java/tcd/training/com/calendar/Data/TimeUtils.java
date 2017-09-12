@@ -46,6 +46,12 @@ public class TimeUtils {
         return formatter.format(new Date(millis1)).compareTo(formatter.format(new Date(millis2)));
     }
 
+    public static int getYear(long millis) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(millis);
+        return calendar.get(Calendar.YEAR);
+    }
+
     public static String getFormattedDate(long millis, String format) {
         SimpleDateFormat formatter = new SimpleDateFormat(format, Locale.getDefault());
         formatter.setTimeZone(TimeZone.getDefault());

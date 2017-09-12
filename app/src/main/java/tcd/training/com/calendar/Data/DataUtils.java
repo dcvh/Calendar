@@ -353,7 +353,7 @@ public class DataUtils {
 
         for (Entry entry : mEntries) {
             if (entry.getTime() > start && entry.getTime() < end) {
-                mEntries.add(entry);
+                entries.add(entry);
             }
         }
 
