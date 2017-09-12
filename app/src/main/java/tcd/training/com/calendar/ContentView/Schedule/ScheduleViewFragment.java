@@ -92,6 +92,7 @@ public class ScheduleViewFragment extends Fragment {
                 throw new UnsupportedOperationException("Unknown first day");
         }
         Calendar firstDate = Calendar.getInstance();
+        // TODO: 9/12/17 handle case entries being empty
         firstDate.setTimeInMillis(entries.get(0).getTime());
         int previousWeekDays = firstDate.get(Calendar.DAY_OF_WEEK) - firstDayOfWeek;
         firstDate.add(Calendar.DAY_OF_MONTH, -previousWeekDays);

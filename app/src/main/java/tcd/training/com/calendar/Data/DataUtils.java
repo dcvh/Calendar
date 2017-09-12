@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import tcd.training.com.calendar.R;
 
@@ -124,20 +125,22 @@ public class DataUtils {
             cursor.close();
         }
 
-        Collections.sort(mEntries);
         return mEntries;
     }
 
     private static void addEventToEntries(Event event) {
+
         if (getAccountDisplayName(event.getCalendarId()).length() == 0) {
             return;
         }
 
         int index = findEntryIndexWithDate(event.getStartDate());
-        if (index != -1) {
+        if (index >= 0) {
             mEntries.get(index).addEvent(event);
         } else {
-            mEntries.add(new Entry(event.getStartDate(), new ArrayList<>(Arrays.asList(event))));
+            index = -index - 1;
+            Entry newEntry = new Entry(event.getStartDate(), new ArrayList<>(Arrays.asList(event)));
+            mEntries.add(index, newEntry);
         }
     }
 
@@ -269,7 +272,6 @@ public class DataUtils {
                 int minutes = cursor.getInt(PROJECTION_MINUTES_INDEX);
                 int method = cursor.getInt(PROJECTION_METHOD_INDEX);
 
-
                 Reminder reminder = new Reminder(_id, eventId, minutes, method);
                 mReminders.add(reminder);
             }
@@ -346,6 +348,18 @@ public class DataUtils {
         return entries;
     }
 
+    public static ArrayList<Entry> getEntriesBetween(long start, long end) {
+        ArrayList<Entry> entries = new ArrayList<>();
+
+        for (Entry entry : mEntries) {
+            if (entry.getTime() > start && entry.getTime() < end) {
+                mEntries.add(entry);
+            }
+        }
+
+        return entries;
+    }
+
     public static LinkedHashMap<String, Integer> getAllColors() {
         return mDefaultColors;
     }
@@ -394,23 +408,30 @@ public class DataUtils {
      */
     public static Entry findEntryWithDate(long millis) {
         int index = findEntryIndexWithDate(millis);
-        return index == -1 ? null : mEntries.get(index);
+        return index < 0 ? null : mEntries.get(index);
     }
 
     private static int findEntryIndexWithDate(final long millis) {
-        int low = 0;
-        int high = mEntries.size() - 1;
-        while (low <= high) {
-            int mid = low + (high - low) / 2;
-            if (TimeUtils.compareDay(millis, mEntries.get(mid).getTime()) < 0) {
-                high = mid - 1;
-            } else if (TimeUtils.compareDay(millis, mEntries.get(mid).getTime()) > 0) {
-                low = mid + 1;
-            } else {
-                return mid;
+//            int low = 0;
+//            int high = mEntries.size() - 1;
+//            while (low <= high) {
+//                int mid = low + (high - low) / 2;
+//                if (TimeUtils.compareDay(millis, mEntries.get(mid).getTime()) < 0) {
+//                    high = mid - 1;
+//                } else if (TimeUtils.compareDay(millis, mEntries.get(mid).getTime()) > 0) {
+//                    low = mid + 1;
+//                } else {
+//                    return mid;
+//                }
+//            }
+        Comparator<Entry> comparator = new Comparator<Entry>() {
+            @Override
+            public int compare(Entry entry, Entry t1) {
+                return TimeUtils.compareDay(entry.getTime(), t1.getTime());
             }
-        }
-        return -1;
+        };
+        Entry entry = new Entry(millis, null);
+        return Collections.binarySearch(mEntries, entry, comparator);
     }
 
     public static long addEvent(Event event, Reminder reminder, Context context) {

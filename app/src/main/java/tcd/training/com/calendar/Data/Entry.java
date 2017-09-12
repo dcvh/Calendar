@@ -3,12 +3,13 @@ package tcd.training.com.calendar.Data;
 import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 
 /**
  * Created by cpu10661-local on 8/30/17.
  */
 
-public class Entry implements Comparable {
+public class Entry implements Comparable<Entry> {
 
     private long mMillis;
     private String mDescription;
@@ -33,10 +34,6 @@ public class Entry implements Comparable {
         return mDescription;
     }
 
-    public void setDescription(String description) {
-        mDescription = description;
-    }
-
     public ArrayList<Event> getEvents() {
         return mEvents;
     }
@@ -46,8 +43,8 @@ public class Entry implements Comparable {
     }
 
     @Override
-    public int compareTo(@NonNull Object object) {
-        long millis = ((Entry)object).getTime();
+    public int compareTo(@NonNull Entry entry) {
+        long millis = entry.getTime();
         if (mMillis == millis) {
             return 0;
         } else if (mMillis > millis) {

@@ -11,7 +11,6 @@ public class Account {
     private String mAccountName;
     private String mOwnerAccount;
     private boolean mIsPrimary;
-    private int mColor;
 
     public Account(int id, String displayName, String accountName, String ownerAccount, boolean isPrimary) {
         this.mId = id;
@@ -39,13 +38,5 @@ public class Account {
 
     public boolean isPrimary() {
         return mIsPrimary;
-    }
-
-    public int getColor() {
-        return mColor;
-    }
-
-    public void setColor(int color) {
-        this.mColor = color;
     }
 }
