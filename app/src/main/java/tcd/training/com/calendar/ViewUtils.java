@@ -55,9 +55,9 @@ public class ViewUtils {
         if (!event.isAllDay()) {
             String duration = TimeUtils.getFormattedDate(event.getStartDate(), TimeUtils.getStandardTimeFormat())
                     + " - " + TimeUtils.getFormattedDate(event.getEndDate(), TimeUtils.getStandardTimeFormat());
-            TextView descriptionTextView = getStandardTextView(duration, context);
-            descriptionTextView.setPadding(0, DP_AS_PX_8 / 2, 0, 0);
-            eventLayout.addView(descriptionTextView);
+            TextView durationTextView = getStandardTextView(duration, context);
+            durationTextView.setPadding(0, DP_AS_PX_8 / 2, 0, 0);
+            eventLayout.addView(durationTextView);
         }
 
         // onClick listener
@@ -86,26 +86,7 @@ public class ViewUtils {
 
         return textView;
     }
-
-    public static int getMonthImageResourceId(int month) {
-        switch (month) {
-            case 0: return R.drawable.bkg_01_january ;
-            case 1: return R.drawable.bkg_02_february ;
-            case 2: return R.drawable.bkg_03_march ;
-            case 3: return R.drawable.bkg_04_april ;
-            case 4: return R.drawable.bkg_05_may ;
-            case 5: return R.drawable.bkg_06_june ;
-            case 6: return R.drawable.bkg_07_july ;
-            case 7: return R.drawable.bkg_08_august ;
-            case 8: return R.drawable.bkg_09_september ;
-            case 9: return R.drawable.bkg_10_october ;
-            case 10: return R.drawable.bkg_11_november ;
-            case 11: return R.drawable.bkg_12_december ;
-            default:
-                throw new UnsupportedOperationException("Unknown month");
-        }
-    }
-
+    
     public static int getMonthImageResourceId(String month) {
         switch (month) {
             case "January": return R.drawable.bkg_01_january ;
@@ -123,6 +104,13 @@ public class ViewUtils {
             default:
                 throw new UnsupportedOperationException("Unknown month");
         }
+    }
+
+    public static int getDarkerColor(int color) {
+        float[] hsv = new float[3];
+        Color.colorToHSV(color, hsv);
+        hsv[2] *= 0.8f; // value component
+        return Color.HSVToColor(hsv);
     }
 
     public static String getAddEventDateFormat() {

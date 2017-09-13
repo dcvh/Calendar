@@ -172,5 +172,8 @@
     <string name="no_event">Nothing planned. Tap to create.</string>
     <string name="title_empty_error">Title cannot be blank</string>
     <string name="wait_message">Please wait until the process is completed</string>
+    <string name="discard_event">Are you sure you want to discard this event?</string>
+    <string name="keep_editing">KEEP EDITING</string>
+    <string name="discard">DISCARD</string>
 
 </resources>

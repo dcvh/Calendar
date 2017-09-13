@@ -207,6 +207,7 @@ public class MonthFragment extends Fragment {
                 eventTextView.setBackgroundResource(R.drawable.layout_round_corner);
                 GradientDrawable drawable = (GradientDrawable) eventTextView.getBackground();
                 drawable.setColor(event.getDisplayColor());
+
                 layout.addView(eventTextView);
             }
             resultView = layout;

@@ -8,6 +8,19 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="MainActionBar" parent="Theme.AppCompat.Light">
+        <item name="android:actionBarStyle">@style/MainActionBarColor</item>
+    </style>
+    
+    <style name="MainActionBarColor" parent="MainActionBar">
+        <item name="android:titleTextStyle">@style/TitleBarTextColor</item>
+        <item name="android:background">@color/light_blue</item>
+    </style>
+
+    <style name="TitleBarTextColor" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textColor">#ffffff</item>
+    </style>
+
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>

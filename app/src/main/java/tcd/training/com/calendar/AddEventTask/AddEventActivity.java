@@ -3,6 +3,7 @@ package tcd.training.com.calendar.AddEventTask;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.ColorDrawable;
@@ -131,6 +132,20 @@ public class AddEventActivity extends AppCompatActivity {
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        new AlertDialog.Builder(this)
+                .setMessage(R.string.discard_event)
+                .setPositiveButton(R.string.keep_editing, null)
+                .setNegativeButton(R.string.discard, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        finish();
+                    }
+                })
+                .show();
     }
 
     private Event getEventFromInput() {
@@ -282,7 +297,7 @@ public class AddEventActivity extends AppCompatActivity {
             Window window = getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-            window.setStatusBarColor(mColorValues.get(mColorIndex));
+            window.setStatusBarColor(ViewUtils.getDarkerColor(mColorValues.get(mColorIndex)));
         }
 
         mTitleEditText.setBackgroundColor(mColorValues.get(mColorIndex));

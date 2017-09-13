@@ -64,7 +64,7 @@ public class EventDetailsActivity extends AppCompatActivity {
             Window window = getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-            window.setStatusBarColor(mEvent.getDisplayColor());
+            window.setStatusBarColor(ViewUtils.getDarkerColor(mEvent.getDisplayColor()));
         }
     }
 
