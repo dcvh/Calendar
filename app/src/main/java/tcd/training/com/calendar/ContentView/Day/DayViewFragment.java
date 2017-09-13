@@ -74,7 +74,7 @@ public class DayViewFragment extends Fragment{
         // determine the year to be showed
         mDays = new ArrayList<>();
         Calendar year = Calendar.getInstance();
-        if (mSpecifiedTime != -1) {
+        if (mSpecifiedTime > 0) {
             year.setTimeInMillis(mSpecifiedTime);
         }
         addOneMoreYear(year.get(Calendar.YEAR), false);
@@ -89,7 +89,7 @@ public class DayViewFragment extends Fragment{
         initializeUiComponents(view);
 
         // scroll to specified day (if any), otherwise scroll to today
-        if (mSpecifiedTime != -1) {
+        if (mSpecifiedTime > 0) {
             scrollTo(mSpecifiedTime);
         } else {
             scrollToToday();
@@ -115,10 +115,9 @@ public class DayViewFragment extends Fragment{
                     addOneMoreYear(mDays.get(mDays.size() - 1).get(Calendar.YEAR) + 1, false);
                     adapter.notifyDataSetChanged();
                 } else if (position == 0) {
-                    int dayOfYear = addOneMoreYear(mDays.get(0).get(Calendar.YEAR) - 1, true);
+                    int daysOfYear = addOneMoreYear(mDays.get(0).get(Calendar.YEAR) - 1, true);
                     adapter.notifyDataSetChanged();
-                    mDayViewPager.setCurrentItem(dayOfYear, false);
-
+                    mDayViewPager.setCurrentItem(daysOfYear - 1, false);
                 }
                 // change month
                 int dayOfMonth = mDays.get(position).get(Calendar.DAY_OF_MONTH);
@@ -145,14 +144,14 @@ public class DayViewFragment extends Fragment{
                 mDays.add(0, (Calendar) endDate.clone());
                 endDate.add(Calendar.DAY_OF_MONTH, -1);
             }
-            return startDate.get(Calendar.DAY_OF_YEAR);
+            return startDate.getActualMaximum(Calendar.DAY_OF_YEAR);
 
         } else {
             while (startDate.compareTo(endDate) < 0) {
                 mDays.add((Calendar) startDate.clone());
                 startDate.add(Calendar.DAY_OF_MONTH, 1);
             }
-            return endDate.get(Calendar.DAY_OF_YEAR);
+            return endDate.getActualMaximum(Calendar.DAY_OF_YEAR);
         }
     }
 
