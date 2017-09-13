@@ -93,7 +93,7 @@ public class ScheduleViewFragment extends Fragment {
         Calendar start = Calendar.getInstance();
         start.set(1970, 0, 8, 0, 0);
         Calendar end = Calendar.getInstance();
-        end.set(2030, 11, 31, 0, 0);
+        end.set(2030, 11, 31, 23, 59);
 
         // determine the first date of week
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
@@ -233,7 +233,7 @@ public class ScheduleViewFragment extends Fragment {
                         mStartWeekIndex = newStartIndex;
                     }
                 } else {
-                    if (mEntriesList.size() - position < 3) {
+                    if (mEntriesList.size() - position < 10) {
                         int newEndIndex = mEndWeekIndex + 52 < mWeekPeriods.size() ? mEndWeekIndex + 52 : mWeekPeriods.size() - 1;
                         ArrayList<Entry> newEntries = DataUtils.getEntriesBetween(mWeekPeriods.get(mEndWeekIndex), mWeekPeriods.get(newEndIndex));
                         insertMonthAndWeekEntries(newEntries, mWeekPeriods.get(mEndWeekIndex), mWeekPeriods.get(newEndIndex));

@@ -22,7 +22,7 @@ import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.Data.Entry;
 import tcd.training.com.calendar.Data.Event;
 import tcd.training.com.calendar.ContentView.Day.DayViewFragment;
-import tcd.training.com.calendar.ContentView.ViewUtils;
+import tcd.training.com.calendar.ViewUtils;
 
 /**
  * Created by cpu10661-local on 8/30/17.

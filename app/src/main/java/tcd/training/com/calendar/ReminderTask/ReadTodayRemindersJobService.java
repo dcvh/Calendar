@@ -127,7 +127,7 @@ public class ReadTodayRemindersJobService extends JobService {
 
         // prepare data
         Bundle bundle = new Bundle();
-        bundle.putInt(ARG_EVENT_ID, event.getId());
+        bundle.putLong(ARG_EVENT_ID, event.getId());
         bundle.putString(ARG_EVENT_TITLE, event.getTitle());
         bundle.putLong(ARG_EVENT_START_TIME, event.getStartDate());
 

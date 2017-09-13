@@ -1,4 +1,4 @@
-package tcd.training.com.calendar.ContentView;
+package tcd.training.com.calendar;
 
 import android.content.Context;
 import android.content.Intent;

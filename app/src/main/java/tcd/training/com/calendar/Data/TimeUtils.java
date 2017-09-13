@@ -1,5 +1,7 @@
 package tcd.training.com.calendar.Data;
 
+import android.util.Log;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -12,6 +14,8 @@ import java.util.TimeZone;
  */
 
 public class TimeUtils {
+
+    private static final String TAG = TimeUtils.class.getSimpleName();
 
     private static final int TYPE_DAY = 1;
     private static final int TYPE_MONTH = 2;
@@ -73,5 +77,18 @@ public class TimeUtils {
             e.printStackTrace();
         }
         return cal.getTimeInMillis();
+    }
+
+    public static long getDurationValue(String duration) {
+
+        int i = 0;
+        for (; !Character.isDigit(duration.charAt(i)); i++);
+
+        String value = duration.substring(i, duration.length() - 1);
+        return Integer.valueOf(value) * 1000;
+    }
+
+    public static String getDurationString(long millis) {
+        return "P" + millis / 1000 + "S";
     }
 }

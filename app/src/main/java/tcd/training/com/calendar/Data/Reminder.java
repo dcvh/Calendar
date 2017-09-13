@@ -6,8 +6,8 @@ package tcd.training.com.calendar.Data;
 
 public class Reminder {
 
-    private int mId;
-    private int mEventId;
+    private long mId;
+    private long mEventId;
     private int mMinutes;
     private int mMethod;
 
@@ -16,17 +16,17 @@ public class Reminder {
         this.mMethod = method;
     }
 
-    public Reminder(int id, int eventId, int minutes, int method) {
+    public Reminder(long id, long eventId, int minutes, int method) {
         this(minutes, method);
         this.mId = id;
         this.mEventId = eventId;
     }
 
-    public int getId() {
+    public long getId() {
         return mId;
     }
 
-    public int getEventId() {
+    public long getEventId() {
         return mEventId;
     }
 

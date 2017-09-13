@@ -19,7 +19,6 @@ import tcd.training.com.calendar.Data.Attendee;
 import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.Event;
 import tcd.training.com.calendar.Data.TimeUtils;
-import tcd.training.com.calendar.ContentView.ViewUtils;
 
 public class EventDetailsActivity extends AppCompatActivity {
 
@@ -98,24 +97,26 @@ public class EventDetailsActivity extends AppCompatActivity {
         TextView dateTimeTextView = mDateTimeLayout.findViewById(R.id.tv_primary_content);
 
         String dateTime;
-        if (TimeUtils.isSameDay(mEvent.getStartDate(), mEvent.getEndDate())) {
-            dateTime = TimeUtils.getFormattedDate(mEvent.getStartDate(), "EEEE, MMMM d")
+        long startDate = mEvent.getStartDate();
+        long endDate = mEvent.getDuration() == null ? mEvent.getEndDate() : startDate + TimeUtils.getDurationValue(mEvent.getDuration());
+        if (TimeUtils.isSameDay(startDate, endDate)) {
+            dateTime = TimeUtils.getFormattedDate(startDate, "EEEE, MMMM d")
                     + "\n"
-                    + TimeUtils.getFormattedDate(mEvent.getStartDate(), "hh:mm a")
+                    + TimeUtils.getFormattedDate(startDate, "hh:mm a")
                     + " - "
-                    + TimeUtils.getFormattedDate(mEvent.getEndDate(), "hh:mm a");
+                    + TimeUtils.getFormattedDate(endDate, "hh:mm a");
         } else {
             String format = "EEEE, MMMM d, hh:mm a";
-            dateTime = TimeUtils.getFormattedDate(mEvent.getStartDate(), format);
+            dateTime = TimeUtils.getFormattedDate(startDate, format);
             if (!mEvent.isAllDay()) {
-                dateTime += " -\n" + TimeUtils.getFormattedDate(mEvent.getEndDate(), format);
+                dateTime += " -\n" + TimeUtils.getFormattedDate(endDate, format);
             }
         }
         dateTimeTextView.setText(dateTime);
     }
 
     private void displayLocation() {
-        if (mEvent.getLocation().length() > 0) {
+        if (mEvent.getLocation() != null && mEvent.getLocation().length() > 0) {
             ((ImageView)mLocationLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_location_black_48dp);
             ((TextView)mLocationLayout.findViewById(R.id.tv_primary_content)).setText(mEvent.getLocation());
             mLocationLayout.setVisibility(View.VISIBLE);
@@ -150,7 +151,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     private void displayDescription() {
-        if (mEvent.getDescription().length() > 0) {
+        if (mEvent.getDescription() != null && mEvent.getDescription().length() > 0) {
             ((ImageView)mDescriptionLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_description_black_48dp);
             ((TextView)mDescriptionLayout.findViewById(R.id.tv_primary_content)).setText(mEvent.getDescription());
             mDescriptionLayout.setVisibility(View.VISIBLE);
@@ -159,7 +160,7 @@ public class EventDetailsActivity extends AppCompatActivity {
 
     private void displayAccountDisplayName() {
         String displayName = DataUtils.getAccountDisplayName(mEvent.getCalendarId());
-        if (displayName.length() > 0) {
+        if (displayName != null) {
             ((ImageView)mAccountDisplayNameLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_action_today_black_48dp);
             ((TextView)mAccountDisplayNameLayout.findViewById(R.id.tv_primary_content)).setText(displayName);
             mAccountDisplayNameLayout.setVisibility(View.VISIBLE);

@@ -9,7 +9,6 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,15 +19,13 @@ import android.widget.TableRow;
 import android.widget.TextView;
 
 import java.util.Calendar;
-import java.util.concurrent.TimeUnit;
 
 import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.Entry;
 import tcd.training.com.calendar.Data.Event;
-import tcd.training.com.calendar.Data.TimeUtils;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.ContentView.Day.DayViewFragment;
-import tcd.training.com.calendar.ContentView.ViewUtils;
+import tcd.training.com.calendar.ViewUtils;
 
 /**
  * Created by cpu10661-local on 8/31/17.

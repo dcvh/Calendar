@@ -6,13 +6,13 @@ package tcd.training.com.calendar.Data;
 
 public class Account {
 
-    private int mId;
+    private long mId;
     private String mDisplayName;
     private String mAccountName;
     private String mOwnerAccount;
     private boolean mIsPrimary;
 
-    public Account(int id, String displayName, String accountName, String ownerAccount, boolean isPrimary) {
+    public Account(long id, String displayName, String accountName, String ownerAccount, boolean isPrimary) {
         this.mId = id;
         this.mDisplayName = displayName;
         this.mAccountName = accountName;
@@ -20,7 +20,7 @@ public class Account {
         this.mIsPrimary = isPrimary;
     }
 
-    public int getId() {
+    public long getId() {
         return mId;
     }
 

@@ -9,7 +9,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.provider.CalendarContract;
-import android.provider.ContactsContract;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
@@ -45,7 +44,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
-import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -54,7 +52,7 @@ import tcd.training.com.calendar.Data.Event;
 import tcd.training.com.calendar.Data.Reminder;
 import tcd.training.com.calendar.Data.TimeUtils;
 import tcd.training.com.calendar.R;
-import tcd.training.com.calendar.ContentView.ViewUtils;
+import tcd.training.com.calendar.ViewUtils;
 
 public class AddEventActivity extends AppCompatActivity {
 
@@ -145,7 +143,7 @@ public class AddEventActivity extends AppCompatActivity {
 
         boolean isAllDay = mAllDaySwitch.isChecked();
 
-        int calendarId = DataUtils.getPrimaryAccountId();
+        long calendarId = DataUtils.getPrimaryAccountId();
 
         String location = mLocation != null ? mLocation.getName().toString() : null;
 
@@ -169,12 +167,20 @@ public class AddEventActivity extends AppCompatActivity {
 
         boolean hasAlarm = mNotificationMinutes.get(mNotificationIndex) != 0;
 
+        String rRule = null;
+
+        String duration = null;
+        if (rRule != null) {
+            duration = TimeUtils.getDurationString(endDate.getTimeInMillis() - startDate.getTimeInMillis());
+        }
+
         int displayColor = mColorValues.get(mColorIndex);
 
         int availability = mStatusIndex == 0 ? CalendarContract.Events.AVAILABILITY_BUSY : CalendarContract.Events.AVAILABILITY_FREE;
 
+        // TODO: 9/13/17 RRule
         return new Event(title, calendarId, location, description, timeZone, startDate.getTimeInMillis(), endDate.getTimeInMillis(),
-                isAllDay, hasAlarm, "", displayColor, availability);
+                isAllDay, hasAlarm, "", duration, displayColor, availability);
     }
 
     private void updateActionBar() {

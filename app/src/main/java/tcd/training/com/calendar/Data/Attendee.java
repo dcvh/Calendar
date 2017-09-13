@@ -6,14 +6,14 @@ package tcd.training.com.calendar.Data;
 
 public class Attendee {
 
-    private int mId;
-    private int mEventId;
+    private long mId;
+    private long mEventId;
     private String mName;
     private String mEmail;
     private int mStatus;
     private int mRelationship;
 
-    public Attendee(int id, int eventId, String name, String email, int status, int relationship) {
+    public Attendee(long id, long eventId, String name, String email, int status, int relationship) {
         this.mId = id;
         this.mEventId = eventId;
         this.mName = name;
@@ -22,11 +22,11 @@ public class Attendee {
         this.mRelationship = relationship;
     }
 
-    public int getId() {
+    public long getId() {
         return mId;
     }
 
-    public int getEventId() {
+    public long getEventId() {
         return mEventId;
     }
 
