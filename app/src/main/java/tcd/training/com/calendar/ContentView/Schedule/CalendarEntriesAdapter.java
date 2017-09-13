@@ -2,8 +2,11 @@ package tcd.training.com.calendar.ContentView.Schedule;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
+import android.graphics.Color;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +18,7 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
 import tcd.training.com.calendar.Data.TimeUtils;
@@ -162,6 +166,11 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         // day and month
         holder.mDayOfMonthTextView.setText(TimeUtils.getFormattedDate(entry.getTime(), "d"));
         holder.mDayOfWeekTextView.setText(TimeUtils.getFormattedDate(entry.getTime(), "EEE"));
+        if (TimeUtils.compareDay(entry.getTime(), Calendar.getInstance().getTimeInMillis()) > 0) {
+            int blackColor = Color.rgb(40, 40, 40);
+            holder.mDayOfMonthTextView.setTextColor(blackColor);
+            holder.mDayOfWeekTextView.setTextColor(blackColor);
+        }
 
         holder.mDayOfMonthTextView.setOnClickListener(new View.OnClickListener() {
             @Override

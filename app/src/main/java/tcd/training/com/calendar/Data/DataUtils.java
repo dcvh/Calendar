@@ -425,13 +425,6 @@ public class DataUtils {
             int byMonthDay = rules.containsKey("BYMONTHDAY") ? Integer.valueOf(rules.get("BYMONTHDAY")) : -1;
             String byDay = rules.containsKey("BYDAY") ? rules.get("BYDAY") : null;
 
-            Log.e(TAG, "getEntriesBetween: " + event.getRRule());
-            Log.e(TAG, "getEntriesBetween: " + interval);
-            Log.e(TAG, "getEntriesBetween: " + count);
-            Log.e(TAG, "getEntriesBetween: " + until);
-            Log.e(TAG, "getEntriesBetween: " + byMonthDay);
-            Log.e(TAG, "getEntriesBetween: " + byDay);
-
             boolean isEndOfWeek = false;
             for (int i = 0; startDate.getTimeInMillis() <= end; i++) {
 
@@ -467,20 +460,21 @@ public class DataUtils {
                         if (byDay != null) {
                             if (isEndOfWeek) {
                                 startDate.add(Calendar.DAY_OF_MONTH, 7 * (interval - 1));
+                                isEndOfWeek = false;
                             }
                             startDate.add(Calendar.DAY_OF_MONTH, 1);
                             String[] days = byDay.split(",");
                             while (true) {
                                 int j = 0;
                                 for (; j < days.length; j++) {
-                                    if (startDate.get(Calendar.DAY_OF_MONTH) == getDayOfWeek(days[j])) {
+                                    if (startDate.get(Calendar.DAY_OF_WEEK) == getDayOfWeek(days[j])) {
                                         break;
                                     }
                                 }
                                 if (j < days.length) {
-//                                    if (j == days.length - 1) {
-//                                        isEndOfWeek = true;
-//                                    }
+                                    if (j == days.length - 1) {
+                                        isEndOfWeek = true;
+                                    }
                                     break;
                                 }
                                 startDate.add(Calendar.DAY_OF_MONTH, 1);

@@ -7,7 +7,7 @@
 
     <LinearLayout
         android:layout_width="0dp"
-        android:layout_weight="2"
+        android:layout_weight="1"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
@@ -15,21 +15,20 @@
             android:id="@+id/tv_day_of_month"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/Base.TextAppearance.AppCompat.Large"/>
+            android:textSize="26sp"/>
 
         <TextView
             android:id="@+id/tv_day_of_week"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/black"
-            android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"/>
+            android:textSize="14sp"/>
 
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/ll_events"
         android:layout_width="0dp"
-        android:layout_weight="8"
+        android:layout_weight="6"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
