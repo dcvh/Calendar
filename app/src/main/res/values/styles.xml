@@ -8,6 +8,11 @@
         <item name="colorAccent">@color/colorAccent</item>
 
         <item name="actionMenuTextColor">@android:color/white</item>
+        <item name="android:itemTextAppearance">@style/MyActionBar.MenuTextStyle</item>
+    </style>
+
+    <style name="MyActionBar.MenuTextStyle" parent="style/TextAppearance.AppCompat.Widget.ActionBar.Subtitle">
+        <item name="android:textColor">@android:color/black</item>
     </style>
 
     <style name="AppTheme.NoActionBar">

@@ -53,6 +53,7 @@ import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.Event;
 import tcd.training.com.calendar.Data.Reminder;
 import tcd.training.com.calendar.Data.TimeUtils;
+import tcd.training.com.calendar.EventDetailsActivity;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.ViewUtils;
 
@@ -99,16 +100,20 @@ public class AddEventActivity extends AppCompatActivity {
 
     private Place mLocation;
 
+    private Event mEvent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_event);
 
         updateActionBar();
-
         initializeVariables();
-
         initializeUiComponents();
+
+        if (getIntent().hasExtra(EventDetailsActivity.ARG_CALENDAR_EVENT)) {
+            mEvent = getIntent().getParcelableExtra(EventDetailsActivity.ARG_CALENDAR_EVENT);
+        }
 
         changeActivityThemeColor();
     }
@@ -586,7 +591,7 @@ public class AddEventActivity extends AppCompatActivity {
     private void initializeStatusOption() {
         LinearLayout timeZoneLayout = (LinearLayout) findViewById(R.id.ll_status);
 
-        ((ImageView)timeZoneLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_status_black_48dp);
+        ((ImageView)timeZoneLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_availability_black_48dp);
         final TextView content = timeZoneLayout.findViewById(R.id.tv_primary_content);
         content.setText(mStatusTitles.get(mStatusIndex));
 

@@ -65,7 +65,7 @@ public class ViewUtils {
             @Override
             public void onClick(View view) {
                 Intent showEventDetails = new Intent(context, EventDetailsActivity.class);
-                showEventDetails.putExtra(EventDetailsActivity.ARG_CALENDAR_ENTRY, event);
+                showEventDetails.putExtra(EventDetailsActivity.ARG_CALENDAR_EVENT, event);
                 context.startActivity(showEventDetails);
             }
         });

@@ -42,6 +42,10 @@
             android:id="@+id/ll_account"
             layout="@layout/list_item_event_detail" />
 
+        <include
+            android:id="@+id/ll_availability"
+            layout="@layout/list_item_event_detail" />
+
     </LinearLayout>
 
 </ScrollView>

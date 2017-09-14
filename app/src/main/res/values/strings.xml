@@ -177,5 +177,8 @@
     <string name="discard">DISCARD</string>
     <string name="x_more">%d more</string>
     <string name="show_less">Show less</string>
+    <string name="tentative">Tentative</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
 
 </resources>

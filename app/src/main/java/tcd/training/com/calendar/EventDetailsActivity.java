@@ -1,10 +1,14 @@
 package tcd.training.com.calendar;
 
+import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
+import android.provider.CalendarContract;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
@@ -15,23 +19,29 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import tcd.training.com.calendar.AddEventTask.AddEventActivity;
+import tcd.training.com.calendar.Data.Account;
 import tcd.training.com.calendar.Data.Attendee;
 import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.Event;
+import tcd.training.com.calendar.Data.Reminder;
 import tcd.training.com.calendar.Data.TimeUtils;
 
 public class EventDetailsActivity extends AppCompatActivity {
 
     private static final String TAG = EventDetailsActivity.class.getSimpleName();
 
-    public static final String ARG_CALENDAR_ENTRY = "calendarEntry";
+    public static final String ARG_CALENDAR_EVENT = "calendarEvent";
+    private static final int MENU_EDIT_ID = 1;
+    private static final int MENU_DELETE_ID = 2;
 
     private LinearLayout mDateTimeLayout,
             mLocationLayout,
             mNotificationLayout,
             mGuestsLayout,
             mDescriptionLayout,
-            mAccountDisplayNameLayout;
+            mAccountDisplayNameLayout,
+            mAvailabilityLayout;
     private Event mEvent;
 
     @Override
@@ -41,7 +51,7 @@ public class EventDetailsActivity extends AppCompatActivity {
 
         initializeUiComponents();
 
-        mEvent = getIntent().getParcelableExtra(ARG_CALENDAR_ENTRY);
+        mEvent = getIntent().getParcelableExtra(ARG_CALENDAR_EVENT);
 
         updateActionBar();
 
@@ -49,8 +59,34 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(0, MENU_EDIT_ID, Menu.NONE, R.string.edit).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+
+        for (Account account : DataUtils.getPrimaryAccounts()) {
+            if (account.getId() == mEvent.getCalendarId()) {
+                menu.add(0, MENU_DELETE_ID, Menu.NONE, R.string.delete).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+                break;
+            }
+        }
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        onBackPressed();
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                break;
+            case MENU_EDIT_ID:
+                Intent intent = new Intent(this, AddEventActivity.class);
+                intent.putExtra(ARG_CALENDAR_EVENT, mEvent);
+                startActivity(intent);
+                break;
+            case MENU_DELETE_ID:
+                DataUtils.removeEvent(mEvent.getId(), this);
+                break;
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -75,6 +111,7 @@ public class EventDetailsActivity extends AppCompatActivity {
         mGuestsLayout = (LinearLayout) findViewById(R.id.ll_guests);
         mDescriptionLayout = (LinearLayout) findViewById(R.id.ll_description);
         mAccountDisplayNameLayout = (LinearLayout) findViewById(R.id.ll_account);
+        mAvailabilityLayout = (LinearLayout) findViewById(R.id.ll_availability);
     }
 
     private void showEventInfo() {
@@ -89,6 +126,8 @@ public class EventDetailsActivity extends AppCompatActivity {
         displayDescription();
 
         displayAccountDisplayName();
+
+        displayAvailability();
     }
 
     private void displayDateTime() {
@@ -165,5 +204,18 @@ public class EventDetailsActivity extends AppCompatActivity {
             ((TextView)mAccountDisplayNameLayout.findViewById(R.id.tv_primary_content)).setText(displayName);
             mAccountDisplayNameLayout.setVisibility(View.VISIBLE);
         }
+    }
+
+    private void displayAvailability() {
+        int availability = mEvent.getAvailability();
+        ((ImageView)mAvailabilityLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_availability_black_48dp);
+        int avaiStringId = R.string.busy;
+        switch (availability) {
+            case CalendarContract.Events.AVAILABILITY_BUSY: avaiStringId = R.string.busy; break;
+            case CalendarContract.Events.AVAILABILITY_FREE: avaiStringId = R.string.available; break;
+            case CalendarContract.Events.AVAILABILITY_TENTATIVE: avaiStringId = R.string.tentative; break;
+        }
+        ((TextView)mAvailabilityLayout.findViewById(R.id.tv_primary_content)).setText(avaiStringId);
+        mAvailabilityLayout.setVisibility(View.VISIBLE);
     }
 }
