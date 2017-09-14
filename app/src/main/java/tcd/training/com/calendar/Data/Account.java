@@ -10,13 +10,15 @@ public class Account {
     private String mDisplayName;
     private String mAccountName;
     private String mOwnerAccount;
+    private int mColor;
     private boolean mIsPrimary;
 
-    public Account(long id, String displayName, String accountName, String ownerAccount, boolean isPrimary) {
+    public Account(long id, String displayName, String accountName, String ownerAccount, int color, boolean isPrimary) {
         this.mId = id;
         this.mDisplayName = displayName;
         this.mAccountName = accountName;
         this.mOwnerAccount = ownerAccount;
+        this.mColor = color;
         this.mIsPrimary = isPrimary;
     }
 
@@ -34,6 +36,10 @@ public class Account {
 
     public String getOwnerAccount() {
         return mOwnerAccount;
+    }
+
+    public int getColor() {
+        return mColor;
     }
 
     public boolean isPrimary() {

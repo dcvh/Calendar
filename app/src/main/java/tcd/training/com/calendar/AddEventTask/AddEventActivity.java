@@ -48,6 +48,7 @@ import java.util.LinkedHashMap;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
+import tcd.training.com.calendar.Data.Account;
 import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.Event;
 import tcd.training.com.calendar.Data.Reminder;
@@ -63,6 +64,7 @@ public class AddEventActivity extends AppCompatActivity {
     private static final int TIME_ZONE_DIALOG_TYPE = 3;
     private static final int NOTIFICATION_DIALOG_TYPE = 4;
     private static final int COLOR_DIALOG_TYPE = 5;
+    private static final int ACCOUNT_DIALOG_TYPE = 6;
     private static final String TAG = AddEventActivity.class.getSimpleName();
     private static final int RC_PLACE_AUTOCOMPLETE = 1;
 
@@ -70,6 +72,11 @@ public class AddEventActivity extends AppCompatActivity {
     private EditText mTitleEditText, mNoteEditText;
     private Switch mAllDaySwitch;
     private ImageView mCircleColor;
+
+    private ArrayList<Account> mAccounts;
+    private ArrayList<String> mAccountNames;
+    private ArrayList<Integer> mAccountColors;
+    private int mAccountIndex;
 
     private ArrayList<String> mColorNames;
     private ArrayList<Integer> mColorValues;
@@ -136,8 +143,11 @@ public class AddEventActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        new AlertDialog.Builder(this)
-                .setMessage(R.string.discard_event)
+        AlertDialog.Builder builder = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ?
+                new AlertDialog.Builder(this, android.R.style.Theme_Material_Light_Dialog_NoActionBar) :
+                new AlertDialog.Builder(this);
+        builder
+                .setMessage(getString(R.string.discard_event))
                 .setPositiveButton(R.string.keep_editing, null)
                 .setNegativeButton(R.string.discard, new DialogInterface.OnClickListener() {
                     @Override
@@ -158,7 +168,7 @@ public class AddEventActivity extends AppCompatActivity {
 
         boolean isAllDay = mAllDaySwitch.isChecked();
 
-        long calendarId = DataUtils.getPrimaryAccountId();
+        long calendarId = mAccounts.get(mAccountIndex).getId();
 
         String location = mLocation != null ? mLocation.getName().toString() : null;
 
@@ -183,6 +193,17 @@ public class AddEventActivity extends AppCompatActivity {
         boolean hasAlarm = mNotificationMinutes.get(mNotificationIndex) != 0;
 
         String rRule = null;
+        if (mRepeatIndex > -1) {
+            rRule = "FREQ=";
+            switch (mRepeatIndex) {
+                case 0: break;
+                case 1: rRule += "DAILY"; break;
+                case 2: rRule += "WEEKLY"; break;
+                case 3: rRule += "MONTHLY"; break;
+                case 4: rRule += "YEARLY"; break;
+            }
+            rRule += ";INTERVAL=1";
+        }
 
         String duration = null;
         if (rRule != null) {
@@ -193,7 +214,6 @@ public class AddEventActivity extends AppCompatActivity {
 
         int availability = mStatusIndex == 0 ? CalendarContract.Events.AVAILABILITY_BUSY : CalendarContract.Events.AVAILABILITY_FREE;
 
-        // TODO: 9/13/17 RRule
         return new Event(title, calendarId, location, description, timeZone, startDate.getTimeInMillis(), endDate.getTimeInMillis(),
                 isAllDay, hasAlarm, rRule, duration, displayColor, availability);
     }
@@ -208,9 +228,26 @@ public class AddEventActivity extends AppCompatActivity {
     }
 
     private void initializeVariables() {
+
+        mStatusIndex = 0;
+        mColorIndex = 0;
+        mRepeatIndex = -1;
+        mNotificationIndex = 1;
+        mAccountIndex = 0;
+
+        mAccounts = DataUtils.getPrimaryAccounts();
+        mAccountNames = new ArrayList<>();
+        mAccountColors = new ArrayList<>();
+        for (Account account : mAccounts) {
+            mAccountNames.add(account.getDisplayName());
+            mAccountColors.add(account.getColor());
+        }
+
         LinkedHashMap<String, Integer> colors = DataUtils.getAllColors();
         mColorNames = new ArrayList<>(colors.keySet());
+        mColorNames.add(0, getString(R.string.default_color));
         mColorValues = new ArrayList<>(colors.values());
+        mColorValues.add(0, mAccountColors.get(mAccountIndex));
 
         mStatusTitles = new ArrayList<>();
         mStatusTitles.add(getString(R.string.busy));
@@ -227,11 +264,6 @@ public class AddEventActivity extends AppCompatActivity {
 
         mNotificationTitles = new ArrayList<>();
         mNotificationMinutes = new ArrayList<>(Arrays.asList(0, mDefaultReminderTime, -1));
-
-        mStatusIndex = 0;
-        mColorIndex = 0;
-        mRepeatIndex = 0;
-        mNotificationIndex = 1;
     }
 
     private void createTimeZoneList() {
@@ -276,6 +308,7 @@ public class AddEventActivity extends AppCompatActivity {
     private void initializeUiComponents() {
         mTitleEditText = (EditText) findViewById(R.id.edt_event_title);
 
+        initializeAccountsOption();
         initializePeopleOption();
         initializeDateTimeOption();
         initializeLocationOption();
@@ -308,6 +341,24 @@ public class AddEventActivity extends AppCompatActivity {
         } else {
             mCircleColor.setColorFilter(mColorValues.get(mColorIndex));
         }
+    }
+
+    private void initializeAccountsOption() {
+        LinearLayout colorLayout = (LinearLayout) findViewById(R.id.ll_accounts);
+
+        ((ImageView)colorLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_action_today_black_48dp);
+
+        final TextView content = colorLayout.findViewById(R.id.tv_primary_content);
+        content.setText(mAccountNames.get(0));
+
+        colorLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mAccounts.size() > 1) {
+                    showChoicePickerDialog(ACCOUNT_DIALOG_TYPE, content);
+                }
+            }
+        });
     }
 
     private void initializePeopleOption() {
@@ -447,6 +498,8 @@ public class AddEventActivity extends AppCompatActivity {
         LinearLayout repeatLayout = (LinearLayout) findViewById(R.id.ll_repeat);
         repeatLayout.setVisibility(View.VISIBLE);
 
+        mRepeatIndex = 0;
+
         ((ImageView)repeatLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_repeat_black_48dp);
         final TextView content = repeatLayout.findViewById(R.id.tv_primary_content);
         content.setText(mRepeatChoiceTitles.get(mRepeatIndex));
@@ -551,7 +604,6 @@ public class AddEventActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         ArrayAdapter adapter;
-        int startIndex;
         switch (type) {
             case STATUS_DIALOG_TYPE:
                 adapter = new DialogListAdapter(AddEventActivity.this, R.layout.list_item_dialog, mStatusTitles, mStatusIndex);
@@ -567,6 +619,9 @@ public class AddEventActivity extends AppCompatActivity {
                 break;
             case COLOR_DIALOG_TYPE:
                 adapter = new ColorAdapter(this, mColorNames, mColorValues, mColorIndex);
+                break;
+            case ACCOUNT_DIALOG_TYPE:
+                adapter = new ColorAdapter(this, mAccountNames, mAccountColors, mAccountIndex);
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown dialog type");
@@ -607,6 +662,12 @@ public class AddEventActivity extends AppCompatActivity {
                     case COLOR_DIALOG_TYPE:
                         mColorIndex = i;
                         displayView.setText(mColorNames.get(i));
+                        changeActivityThemeColor();
+                        break;
+                    case ACCOUNT_DIALOG_TYPE:
+                        mAccountIndex = i;
+                        displayView.setText(mAccountNames.get(i));
+                        mColorValues.set(0, mAccountColors.get(i));
                         changeActivityThemeColor();
                         break;
                 }

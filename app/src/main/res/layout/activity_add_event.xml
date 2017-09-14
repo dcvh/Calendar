@@ -28,8 +28,13 @@
             android:paddingBottom="32dp">
 
             <include
-                android:id="@+id/ll_invite_people"
+                android:id="@+id/ll_accounts"
                 layout="@layout/list_item_event_detail" />
+
+            <include
+                android:id="@+id/ll_invite_people"
+                layout="@layout/list_item_event_detail"
+                android:visibility="gone"/>
 
             <include layout="@layout/line_separator" />
 

@@ -169,7 +169,8 @@ public class DataUtils {
                 CalendarContract.Calendars._ID,                           // 0
                 CalendarContract.Calendars.ACCOUNT_NAME,                  // 1
                 CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,         // 2
-                CalendarContract.Calendars.OWNER_ACCOUNT                  // 3
+                CalendarContract.Calendars.OWNER_ACCOUNT,                 // 3
+                CalendarContract.Calendars.CALENDAR_COLOR                 // 4
         ));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             projection.add(CalendarContract.Calendars.IS_PRIMARY);
@@ -180,7 +181,8 @@ public class DataUtils {
         int PROJECTION_ACCOUNT_NAME_INDEX = 1;
         int PROJECTION_DISPLAY_NAME_INDEX = 2;
         int PROJECTION_OWNER_ACCOUNT_INDEX = 3;
-        int PROJECTION_IS_PRIMARY_INDEX = 3;
+        int PROJECTION_COLOR_INDEX = 4;
+        int PROJECTION_IS_PRIMARY_INDEX = 5;
 
         // Run query
         ContentResolver cr = context.getContentResolver();
@@ -200,18 +202,15 @@ public class DataUtils {
                 String displayName = cursor.getString(PROJECTION_DISPLAY_NAME_INDEX);
                 String accountName = cursor.getString(PROJECTION_ACCOUNT_NAME_INDEX);
                 String ownerName = cursor.getString(PROJECTION_OWNER_ACCOUNT_INDEX);
+                int color = cursor.getInt(PROJECTION_COLOR_INDEX);
+
                 boolean isPrimary = false;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                    isPrimary = cursor.getInt(PROJECTION_IS_PRIMARY_INDEX) == 1;
-                }
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+//                    isPrimary = cursor.getInt(PROJECTION_IS_PRIMARY_INDEX) == 1;
+//                }
+                isPrimary = displayName.equals(accountName) && displayName.equals(ownerName);
 
-                Log.e(TAG, "readCalendarAccounts: " + id);
-                Log.e(TAG, "readCalendarAccounts: " + displayName);
-                Log.e(TAG, "readCalendarAccounts: " + accountName);
-                Log.e(TAG, "readCalendarAccounts: " + ownerName);
-                Log.e(TAG, "readCalendarAccounts: " + isPrimary);
-
-                Account account = new Account(id, displayName, accountName, ownerName, isPrimary);
+                Account account = new Account(id, displayName, accountName, ownerName, color, isPrimary);
                 if (isThisDuplicateHoliday(account)) {
                     continue;
                 }
@@ -480,13 +479,14 @@ public class DataUtils {
         return mDefaultColors;
     }
 
-    public static long getPrimaryAccountId() {
+    public static ArrayList<Account> getPrimaryAccounts() {
+        ArrayList<Account> accounts = new ArrayList<>();
         for (Account account : mAccounts) {
             if (account.isPrimary()) {
-                return account.getId();
+                accounts.add(account);
             }
         }
-        return mAccounts.get(0).getId();
+        return accounts;
     }
 
     public static String getAccountDisplayName(long id) {
