@@ -271,7 +271,7 @@ public class MainActivity extends AppCompatActivity
             protected void onPostExecute(Void aVoid) {
                 mDialog.dismiss();
                 mDialog = null;
-                replaceFragment(ScheduleViewFragment.class);
+                replaceFragment(MonthViewFragment.class);
             }
 
         }.execute();

@@ -3,12 +3,14 @@ package tcd.training.com.calendar.ContentView.Month;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,6 +36,8 @@ import tcd.training.com.calendar.ViewUtils;
 public class MonthFragment extends Fragment {
 
     private static final String TAG = MonthFragment.class.getSimpleName();
+    private static final int DEFAULT_TEXT_SIZE = 10;
+    private static final int NUMBER_OF_DISPLAY_EVENTS = 2;
 
     public final static String ARG_DISPLAY_MONTH = "ARG_DISPLAY_MONTH";
 
@@ -187,29 +191,41 @@ public class MonthFragment extends Fragment {
     }
 
     private View createDateView(final Calendar calendar, int dateColor) {
-        final TextView dateTextView = createDateTextView(dateColor);
-        dateTextView.setText(String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)));
+
+        final TextView dateTextView = getTextView(String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)), DEFAULT_TEXT_SIZE, dateColor, Typeface.NORMAL);
 
         final Entry entry = DataUtils.findEntryWithDate(calendar.getTimeInMillis());
 
         View resultView;
         if (entry == null) {
+            dateTextView.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT, 1f));
             resultView = dateTextView;
         } else {
-            LinearLayout layout = new LinearLayout(mContext);
-            layout.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, TableRow.LayoutParams.WRAP_CONTENT, 1f));
-            layout.setOrientation(LinearLayout.VERTICAL);
-            layout.addView(dateTextView);
-            for (Event event : entry.getEvents()) {
-                TextView eventTextView = ViewUtils.getStandardTextView(event.getTitle(), mContext);
-                eventTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
+            dateTextView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
+            LinearLayout layout = new LinearLayout(mContext);
+            layout.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.MATCH_PARENT, 1f));
+            layout.setOrientation(LinearLayout.VERTICAL);
+
+            layout.addView(dateTextView);
+
+            for (int i = 0; i < entry.getEvents().size(); i++) {
+
+                if (i >= NUMBER_OF_DISPLAY_EVENTS) {
+                    String x_more = String.format(getString(R.string.x_more), entry.getEvents().size() - NUMBER_OF_DISPLAY_EVENTS);
+                    layout.addView(getTextView(x_more, DEFAULT_TEXT_SIZE, Color.BLACK, Typeface.BOLD));
+                    break;
+                }
+
+                TextView eventTextView = ViewUtils.getStandardTextView(entry.getEvents().get(i).getTitle(), mContext);
+                eventTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, DEFAULT_TEXT_SIZE);
                 eventTextView.setBackgroundResource(R.drawable.layout_round_corner);
                 GradientDrawable drawable = (GradientDrawable) eventTextView.getBackground();
-                drawable.setColor(event.getDisplayColor());
+                drawable.setColor(entry.getEvents().get(i).getDisplayColor());
 
                 layout.addView(eventTextView);
             }
+
             resultView = layout;
         }
 
@@ -230,6 +246,17 @@ public class MonthFragment extends Fragment {
         return resultView;
     }
 
+    private TextView getTextView(String content, int size, int color, int style) {
+        TextView textView = new TextView(mContext);
+
+        textView.setText(content);
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, size);
+        textView.setTextColor(color);
+        textView.setTypeface(null, style);
+
+        return textView;
+    }
+
     private TableRow getRow(int index) {
         switch (index) {
             case 0: return mTableRow1;
@@ -241,22 +268,6 @@ public class MonthFragment extends Fragment {
             default:
                 throw new UnsupportedOperationException("Unknown index");
         }
-    }
-
-    private TextView createDateTextView(int color) {
-
-        TableRow.LayoutParams layoutParams =
-                new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.MATCH_PARENT, 1f);
-
-        // create the text view
-        TextView dateTextView = new TextView(mContext);
-        dateTextView.setLayoutParams(layoutParams);
-
-        // customize it
-        dateTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
-        dateTextView.setTextColor(color);
-
-        return dateTextView;
     }
 
     @Override

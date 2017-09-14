@@ -175,5 +175,7 @@
     <string name="discard_event">Are you sure you want to discard this event?</string>
     <string name="keep_editing">KEEP EDITING</string>
     <string name="discard">DISCARD</string>
+    <string name="x_more">%d more</string>
+    <string name="show_less">Show less</string>
 
 </resources>
