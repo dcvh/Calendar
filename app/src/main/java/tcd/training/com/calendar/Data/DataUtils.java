@@ -73,8 +73,6 @@ public class DataUtils {
         LinkedHashMap<String, Integer> projections = new LinkedHashMap<>();
         int i = 0;
         projections.put(CalendarContract.Events._ID, i++);
-
-
         projections.put(CalendarContract.Events.TITLE, i++);
         projections.put(CalendarContract.Events.CALENDAR_ID, i++);
         projections.put(CalendarContract.Events.EVENT_LOCATION, i++);
@@ -125,9 +123,9 @@ public class DataUtils {
 
                 if (rRule != null) {
                     mFreqEvent.add(event);
+                } else {
+                    addEventToEntries(event);
                 }
-
-                addEventToEntries(event);
 
             } while (cursor.moveToNext());
         }
@@ -207,6 +205,12 @@ public class DataUtils {
                     isPrimary = cursor.getInt(PROJECTION_IS_PRIMARY_INDEX) == 1;
                 }
 
+                Log.e(TAG, "readCalendarAccounts: " + id);
+                Log.e(TAG, "readCalendarAccounts: " + displayName);
+                Log.e(TAG, "readCalendarAccounts: " + accountName);
+                Log.e(TAG, "readCalendarAccounts: " + ownerName);
+                Log.e(TAG, "readCalendarAccounts: " + isPrimary);
+
                 Account account = new Account(id, displayName, accountName, ownerName, isPrimary);
                 if (isThisDuplicateHoliday(account)) {
                     continue;
@@ -228,6 +232,51 @@ public class DataUtils {
             }
         }
         return false;
+    }
+
+    private static ArrayList<Long> readCalendarInstances(Context context, long eventId, long startMillis, long endMillis) {
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
+            return null;
+        }
+
+        ArrayList<Long> instances = new ArrayList<>();
+
+        String[] projection = new String[]{
+                CalendarContract.Instances.BEGIN,
+                CalendarContract.Instances.END
+        };
+
+        // The indices for the projection array above.
+        int PROJECTION_BEGIN_INDEX = 0;
+        int PROJECTION_END_INDEX = 1;
+
+        String selection = CalendarContract.Instances.EVENT_ID + " = ?";
+        String[] selectionArgs = new String[] {String.valueOf(eventId)};
+
+        // Construct the query with the desired date range.
+        Uri.Builder builder = CalendarContract.Instances.CONTENT_URI.buildUpon();
+        ContentUris.appendId(builder, startMillis);
+        ContentUris.appendId(builder, endMillis);
+
+        // Run query
+        Cursor cursor = context.getContentResolver().query(builder.build(), projection, selection, selectionArgs, null);
+        if (cursor == null) {
+            Log.e(TAG, "readCalendarInstances: There was a problem handling the cursor");
+        } else if (!cursor.moveToFirst()) {
+            Log.e(TAG, "readCalendarInstances: No instance found");
+        } else {
+            while (cursor.moveToNext()) {
+                long begin = cursor.getLong(PROJECTION_BEGIN_INDEX);
+                long end = cursor.getLong(PROJECTION_END_INDEX);
+
+                instances.add(begin);
+                instances.add(end);
+            }
+
+            cursor.close();
+        }
+
+        return instances;
     }
 
     private static void createDefaultColors(Context context) {
@@ -356,12 +405,18 @@ public class DataUtils {
         values.put(CalendarContract.Events.DESCRIPTION, event.getDescription());
         values.put(CalendarContract.Events.EVENT_TIMEZONE, event.getTimeZone());
         values.put(CalendarContract.Events.DTSTART, event.getStartDate());
-        values.put(CalendarContract.Events.DTEND, event.getEndDate());
         values.put(CalendarContract.Events.ALL_DAY, event.isAllDay());
         values.put(CalendarContract.Events.HAS_ALARM, event.hasAlarm());
-        values.put(CalendarContract.Events.RRULE, event.getRRule());
-        if (event.getDisplayColor() != -1) {
-            values.put(CalendarContract.Events.EVENT_COLOR, event.getDisplayColor());
+        values.put(CalendarContract.Events.EVENT_COLOR, event.getDisplayColor());
+
+        Log.e(TAG, "addEvent: " + event.getCalendarId());
+
+        // check if this is a recurring event
+        if (event.getRRule() == null) {
+            values.put(CalendarContract.Events.DTEND, event.getEndDate());
+        } else {
+            values.put(CalendarContract.Events.RRULE, event.getRRule());
+            values.put(CalendarContract.Events.DURATION, event.getDuration());
         }
 
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
@@ -397,7 +452,7 @@ public class DataUtils {
         return mEntries;
     }
 
-    public static ArrayList<Entry> getEntriesBetween(long start, long end) {
+    public static ArrayList<Entry> getEntriesBetween(Context context, long start, long end) {
         ArrayList<Entry> entries = new ArrayList<>();
 
         for (Entry entry : mEntries) {
@@ -407,106 +462,18 @@ public class DataUtils {
         }
 
         for (Event event : mFreqEvent) {
-
-            Calendar startDate = Calendar.getInstance();
-            startDate.setTimeInMillis(event.getStartDate());
-
-            // generate rules
-            HashMap<String, String> rules = new HashMap<>();
-            String[] values = event.getRRule().replace(';', '=').split("=");
-            for (int i = 0; i < values.length; i += 2) {
-                rules.put(values[i], values[i + 1]);
-            }
-
-            int interval = rules.containsKey("INTERVAL") ? Integer.parseInt(rules.get("INTERVAL")) : 1;
-            int count = rules.containsKey("COUNT") ? Integer.parseInt(rules.get("COUNT")) : 0;
-            long until = rules.containsKey("UNTIL") ? TimeUtils.getMillis(rules.get("UNTIL").substring(0, 8) + "2359", "yyyyMMddHHmm") : 0;
-
-            int byMonthDay = rules.containsKey("BYMONTHDAY") ? Integer.valueOf(rules.get("BYMONTHDAY")) : -1;
-            String byDay = rules.containsKey("BYDAY") ? rules.get("BYDAY") : null;
-
-            boolean isEndOfWeek = false;
-            for (int i = 0; startDate.getTimeInMillis() <= end; i++) {
-
-                if ((count > 0 && i >= count) || (until > 0 && startDate.getTimeInMillis() >= until)) {
-                    break;
-                }
-
-                if (i > 0 && startDate.getTimeInMillis() >= start) {
-                    Event newEvent = new Event(event);
-                    newEvent.setStartDate(startDate.getTimeInMillis());
-                    addEventToEntries(entries, newEvent);
-                }
-
-                switch (rules.get("FREQ")) {
-                    case "YEARLY":
-                        startDate.add(Calendar.YEAR, interval);
-                        break;
-                    case "MONTHLY":
-                        startDate.add(Calendar.MONTH, interval);
-                        if (byDay != null) {
-                            startDate.set(Calendar.DAY_OF_MONTH, 1);
-                            int dayOfWeek = getDayOfWeek(byDay.substring(1));
-                            while ((int)startDate.get(Calendar.DAY_OF_WEEK) != dayOfWeek) {
-                                startDate.add(Calendar.DAY_OF_MONTH, 1);
-                            }
-                            int dayOfWeekInMonth = Character.getNumericValue(byDay.charAt(0));
-                            while (startDate.get(Calendar.DAY_OF_WEEK_IN_MONTH) < dayOfWeekInMonth) {
-                                startDate.add(Calendar.DAY_OF_MONTH, 7);
-                            }
-                        }
-                        break;
-                    case "WEEKLY":
-                        if (byDay != null) {
-                            if (isEndOfWeek) {
-                                startDate.add(Calendar.DAY_OF_MONTH, 7 * (interval - 1));
-                                isEndOfWeek = false;
-                            }
-                            startDate.add(Calendar.DAY_OF_MONTH, 1);
-                            String[] days = byDay.split(",");
-                            while (true) {
-                                int j = 0;
-                                for (; j < days.length; j++) {
-                                    if (startDate.get(Calendar.DAY_OF_WEEK) == getDayOfWeek(days[j])) {
-                                        break;
-                                    }
-                                }
-                                if (j < days.length) {
-                                    if (j == days.length - 1) {
-                                        isEndOfWeek = true;
-                                    }
-                                    break;
-                                }
-                                startDate.add(Calendar.DAY_OF_MONTH, 1);
-                            }
-                        } else {
-                            startDate.add(Calendar.DAY_OF_MONTH, 7 * interval);
-                        }
-                        break;
-                    case "DAILY":
-                        startDate.add(Calendar.DAY_OF_MONTH, interval);
-                        break;
-                    default:
-                        throw new UnsupportedOperationException("Unknown frequency");
+            ArrayList<Long> instances = readCalendarInstances(context, event.getId(), start, end);
+            if (instances != null) {
+                for (int i = 0; i < instances.size(); i += 2) {
+                    Event newInstance = new Event(event);
+                    event.setStartDate(instances.get(i));
+                    event.setEndDate(instances.get(i + 1));
+                    addEventToEntries(entries, newInstance);
                 }
             }
         }
 
         return entries;
-    }
-
-    public static int getDayOfWeek(String name) {
-        switch (name) {
-            case "MO": return Calendar.MONDAY;
-            case "TU": return Calendar.TUESDAY;
-            case "WE": return Calendar.WEDNESDAY;
-            case "TH": return Calendar.THURSDAY;
-            case "FR": return Calendar.FRIDAY;
-            case "SA": return Calendar.SATURDAY;
-            case "SU": return Calendar.SUNDAY;
-            default:
-                throw new UnsupportedOperationException("Unknown day of week name");
-        }
     }
 
     public static LinkedHashMap<String, Integer> getAllColors() {

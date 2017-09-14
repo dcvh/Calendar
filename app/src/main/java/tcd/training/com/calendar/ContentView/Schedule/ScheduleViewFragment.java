@@ -74,7 +74,7 @@ public class ScheduleViewFragment extends Fragment {
             }
         }
 
-        mEntriesList = DataUtils.getEntriesBetween(mWeekPeriods.get(mStartWeekIndex), mWeekPeriods.get(mEndWeekIndex));
+        mEntriesList = DataUtils.getEntriesBetween(getContext(), mWeekPeriods.get(mStartWeekIndex), mWeekPeriods.get(mEndWeekIndex));
         if (mEntriesList != null) {
             // insert today (if it doesn't exist)
             mEntriesList = (ArrayList<Entry>) mEntriesList.clone();
@@ -225,7 +225,7 @@ public class ScheduleViewFragment extends Fragment {
                 if (dy < 0) {
                     if (position < 3) {
                         int newStartIndex = mStartWeekIndex - 52 >= 0 ? mStartWeekIndex - 52 : 0;
-                        ArrayList<Entry> newEntries = DataUtils.getEntriesBetween(mWeekPeriods.get(newStartIndex), mWeekPeriods.get(mStartWeekIndex));
+                        ArrayList<Entry> newEntries = DataUtils.getEntriesBetween(getContext(), mWeekPeriods.get(newStartIndex), mWeekPeriods.get(mStartWeekIndex));
                         insertMonthAndWeekEntries(newEntries, mWeekPeriods.get(newStartIndex), mWeekPeriods.get(mStartWeekIndex));
                         mEntriesList.addAll(0, newEntries);
                         mAdapter.notifyDataSetChanged();
@@ -235,7 +235,7 @@ public class ScheduleViewFragment extends Fragment {
                 } else {
                     if (mEntriesList.size() - position < 10) {
                         int newEndIndex = mEndWeekIndex + 52 < mWeekPeriods.size() ? mEndWeekIndex + 52 : mWeekPeriods.size() - 1;
-                        ArrayList<Entry> newEntries = DataUtils.getEntriesBetween(mWeekPeriods.get(mEndWeekIndex), mWeekPeriods.get(newEndIndex));
+                        ArrayList<Entry> newEntries = DataUtils.getEntriesBetween(getContext(), mWeekPeriods.get(mEndWeekIndex), mWeekPeriods.get(newEndIndex));
                         insertMonthAndWeekEntries(newEntries, mWeekPeriods.get(mEndWeekIndex), mWeekPeriods.get(newEndIndex));
                         mEntriesList.addAll(newEntries);
                         mAdapter.notifyDataSetChanged();

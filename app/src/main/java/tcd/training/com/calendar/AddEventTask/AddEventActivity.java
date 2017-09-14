@@ -195,7 +195,7 @@ public class AddEventActivity extends AppCompatActivity {
 
         // TODO: 9/13/17 RRule
         return new Event(title, calendarId, location, description, timeZone, startDate.getTimeInMillis(), endDate.getTimeInMillis(),
-                isAllDay, hasAlarm, "", duration, displayColor, availability);
+                isAllDay, hasAlarm, rRule, duration, displayColor, availability);
     }
 
     private void updateActionBar() {

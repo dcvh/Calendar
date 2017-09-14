@@ -129,6 +129,10 @@ public class Event implements Parcelable{
         return mEndDate;
     }
 
+    public void setEndDate(long millis) {
+        mEndDate = millis;
+    }
+
     public boolean isAllDay() {
         return mAllDay;
     }
