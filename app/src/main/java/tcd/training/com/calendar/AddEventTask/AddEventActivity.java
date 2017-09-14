@@ -69,7 +69,7 @@ public class AddEventActivity extends AppCompatActivity {
     private static final String TAG = AddEventActivity.class.getSimpleName();
     private static final int RC_PLACE_AUTOCOMPLETE = 1;
 
-    private TextView mStartDateTextView, mEndDateTextView, mStartTimeTextView, mEndTimeTextView, mLocationTextView;
+    private TextView mStartDateTextView, mEndDateTextView, mStartTimeTextView, mEndTimeTextView, mLocationTextView, mTimeZoneTextView;
     private EditText mTitleEditText, mNoteEditText;
     private Switch mAllDaySwitch;
     private ImageView mCircleColor;
@@ -83,8 +83,8 @@ public class AddEventActivity extends AppCompatActivity {
     private ArrayList<Integer> mColorValues;
     private int mColorIndex;
 
-    private ArrayList<String> mStatusTitles;
-    private int mStatusIndex;
+    private ArrayList<String> mAvailabilityTitles;
+    private int mAvailabilityIndex;
 
     private ArrayList<String> mRepeatChoiceTitles;
     private int mRepeatIndex;
@@ -113,6 +113,7 @@ public class AddEventActivity extends AppCompatActivity {
 
         if (getIntent().hasExtra(EventDetailsActivity.ARG_CALENDAR_EVENT)) {
             mEvent = getIntent().getParcelableExtra(EventDetailsActivity.ARG_CALENDAR_EVENT);
+            initializeValuesFromEvent();
         }
 
         changeActivityThemeColor();
@@ -134,11 +135,19 @@ public class AddEventActivity extends AppCompatActivity {
                 Event event = getEventFromInput();
                 if (event != null) {
                     Snackbar.make(findViewById(android.R.id.content), R.string.wait_message, Snackbar.LENGTH_INDEFINITE);
-                    Reminder reminder = null;
-                    if (event.hasAlarm()) {
-                        reminder = new Reminder(mNotificationMinutes.get(mNotificationIndex), CalendarContract.Reminders.METHOD_DEFAULT);
+                    Reminder reminder = event.hasAlarm() ?
+                        new Reminder(mNotificationMinutes.get(mNotificationIndex), CalendarContract.Reminders.METHOD_DEFAULT) : null;
+
+                    if (mEvent != null) {
+                        long id = mEvent.getId();
+                        mEvent = new Event(event);
+                        mEvent.setId(id);
+                        DataUtils.modifyEvent(mEvent, reminder, this);
+                        setResult(RESULT_OK);
+                    } else {
+                        DataUtils.addEvent(event, reminder, this);
                     }
-                    DataUtils.addEvent(event, reminder, this);
+
                     finish();
                 }
                 break;
@@ -217,7 +226,7 @@ public class AddEventActivity extends AppCompatActivity {
 
         int displayColor = mColorValues.get(mColorIndex);
 
-        int availability = mStatusIndex == 0 ? CalendarContract.Events.AVAILABILITY_BUSY : CalendarContract.Events.AVAILABILITY_FREE;
+        int availability = mAvailabilityIndex == 0 ? CalendarContract.Events.AVAILABILITY_BUSY : CalendarContract.Events.AVAILABILITY_FREE;
 
         return new Event(title, calendarId, location, description, timeZone, startDate.getTimeInMillis(), endDate.getTimeInMillis(),
                 isAllDay, hasAlarm, rRule, duration, displayColor, availability);
@@ -234,7 +243,7 @@ public class AddEventActivity extends AppCompatActivity {
 
     private void initializeVariables() {
 
-        mStatusIndex = 0;
+        mAvailabilityIndex = 0;
         mColorIndex = 0;
         mRepeatIndex = -1;
         mNotificationIndex = 1;
@@ -254,9 +263,9 @@ public class AddEventActivity extends AppCompatActivity {
         mColorValues = new ArrayList<>(colors.values());
         mColorValues.add(0, mAccountColors.get(mAccountIndex));
 
-        mStatusTitles = new ArrayList<>();
-        mStatusTitles.add(getString(R.string.busy));
-        mStatusTitles.add(getString(R.string.available));
+        mAvailabilityTitles = new ArrayList<>();
+        mAvailabilityTitles.add(getString(R.string.busy));
+        mAvailabilityTitles.add(getString(R.string.available));
 
         mRepeatChoiceTitles = new ArrayList<>();
         mRepeatChoiceTitles.add(getString(R.string.does_not_repeat));
@@ -269,6 +278,84 @@ public class AddEventActivity extends AppCompatActivity {
 
         mNotificationTitles = new ArrayList<>();
         mNotificationMinutes = new ArrayList<>(Arrays.asList(0, mDefaultReminderTime, -1));
+    }
+    
+    private void initializeValuesFromEvent() {
+
+        // start date and time
+        mStartDateTextView.setText(TimeUtils.getFormattedDate(mEvent.getStartDate(), ViewUtils.getAddEventDateFormat()));
+        mStartTimeTextView.setText(TimeUtils.getFormattedDate(mEvent.getStartDate(), TimeUtils.getStandardTimeFormat()));
+
+        // end date and time
+        long endMillis = mEvent.getRRule() == null ? mEvent.getEndDate() :
+                mEvent.getStartDate() + TimeUtils.getDurationValue(mEvent.getDuration());
+        mEndDateTextView.setText(TimeUtils.getFormattedDate(endMillis, ViewUtils.getAddEventDateFormat()));
+        mEndTimeTextView.setText(TimeUtils.getFormattedDate(endMillis, TimeUtils.getStandardTimeFormat()));
+
+        // availability
+        mAvailabilityIndex = mEvent.getAvailability() == CalendarContract.Events.AVAILABILITY_BUSY ? 0 : 1;
+
+        // display color
+        for (int i = 0; i < mColorValues.size(); i++) {
+            if (mEvent.getDisplayColor() == mColorValues.get(i)) {
+                mColorIndex = i;
+                break;
+            }
+        }
+
+        // repeat options
+        if (mEvent.getRRule() == null) {
+            mRepeatIndex = 0;
+        } else {
+            switch (mEvent.getRRule().charAt(5)) {
+                case 'D': mRepeatIndex = 1; break;
+                case 'W': mRepeatIndex = 2; break;
+                case 'M': mRepeatIndex = 3; break;
+                case 'Y': mRepeatIndex = 4; break;
+            }
+        }
+
+        // title
+        if (mEvent.getTitle() != null) {
+            mTitleEditText.setText(mEvent.getTitle());
+        }
+
+        // all-day
+        mAllDaySwitch.setChecked(mEvent.isAllDay());
+
+        // location
+        mLocationTextView.setText(mEvent.getLocation());
+
+        // note
+        mNoteEditText.setText(mEvent.getDescription());
+
+        // notification
+        int minutes = DataUtils.getReminderMinutes(mEvent.getId());
+        if (minutes > -1) {
+            if (minutes != mDefaultReminderTime  && minutes != 0) {
+                mNotificationMinutes.add(mNotificationMinutes.size() - 1, minutes);
+            }
+        }
+
+        // timezone
+        for (int i = 0; i < mTimeZoneTitles.size(); i++) {
+            if (mTimeZoneTitles.get(i).equals(mEvent.getTimeZone())) {
+                mTimeZoneIndex = i;
+                break;
+            }
+        }
+
+        // limit to that account
+        while (true){
+            if (mEvent.getCalendarId() != mAccounts.get(0).getId()) {
+                mAccounts.remove(0);
+                continue;
+            }
+            for (int i = 1; i < mAccounts.size();) {
+                mAccounts.remove(1);
+            }
+            break;
+        }
     }
 
     private void createTimeZoneList() {
@@ -488,13 +575,13 @@ public class AddEventActivity extends AppCompatActivity {
         timeZoneLayout.setVisibility(View.VISIBLE);
 
         ((ImageView)timeZoneLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_time_zone_black_48dp);
-        final TextView content = timeZoneLayout.findViewById(R.id.tv_primary_content);
-        content.setText(mTimeZoneTitles.get(mTimeZoneIndex));
+        mTimeZoneTextView = timeZoneLayout.findViewById(R.id.tv_primary_content);
+        mTimeZoneTextView.setText(mTimeZoneTitles.get(mTimeZoneIndex));
 
         timeZoneLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showChoicePickerDialog(TIME_ZONE_DIALOG_TYPE, content);
+                showChoicePickerDialog(TIME_ZONE_DIALOG_TYPE, mTimeZoneTextView);
             }
         });
     }
@@ -593,7 +680,7 @@ public class AddEventActivity extends AppCompatActivity {
 
         ((ImageView)timeZoneLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_availability_black_48dp);
         final TextView content = timeZoneLayout.findViewById(R.id.tv_primary_content);
-        content.setText(mStatusTitles.get(mStatusIndex));
+        content.setText(mAvailabilityTitles.get(mAvailabilityIndex));
 
         timeZoneLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -611,7 +698,7 @@ public class AddEventActivity extends AppCompatActivity {
         ArrayAdapter adapter;
         switch (type) {
             case STATUS_DIALOG_TYPE:
-                adapter = new DialogListAdapter(AddEventActivity.this, R.layout.list_item_dialog, mStatusTitles, mStatusIndex);
+                adapter = new DialogListAdapter(AddEventActivity.this, R.layout.list_item_dialog, mAvailabilityTitles, mAvailabilityIndex);
                 break;
             case REPEAT_DIALOG_TYPE:
                 adapter = new DialogListAdapter(AddEventActivity.this, R.layout.list_item_dialog, mRepeatChoiceTitles, mRepeatIndex);
@@ -646,8 +733,8 @@ public class AddEventActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 switch (type) {
                     case STATUS_DIALOG_TYPE:
-                        mStatusIndex = i;
-                        displayView.setText(mStatusTitles.get(i));
+                        mAvailabilityIndex = i;
+                        displayView.setText(mAvailabilityTitles.get(i));
                         break;
                     case REPEAT_DIALOG_TYPE:
                         mRepeatIndex = i;

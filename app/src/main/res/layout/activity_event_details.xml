@@ -1,51 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="@android:color/white"
     tools:context="tcd.training.com.calendar.EventDetailsActivity">
 
     <LinearLayout
+        android:id="@+id/ll_event_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginTop="16dp"
-        android:paddingBottom="48dp">
+        android:orientation="horizontal">
 
-        <include
-            android:id="@+id/ll_date_time"
-            layout="@layout/list_item_event_detail" />
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_weight="1"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_access_black_48dp"
+            android:visibility="invisible"/>
 
-        <include
-            android:id="@+id/ll_location"
-            layout="@layout/list_item_event_detail"
-            android:visibility="gone"/>
-
-        <include
-            android:id="@+id/ll_notification"
-            layout="@layout/list_item_event_detail"
-            android:visibility="gone"/>
-
-        <include
-            android:id="@+id/ll_guests"
-            layout="@layout/list_item_event_detail"
-            android:visibility="gone"/>
-
-        <include
-            android:id="@+id/ll_description"
-            layout="@layout/list_item_event_detail"
-            android:visibility="gone"/>
-
-        <include
-            android:id="@+id/ll_account"
-            layout="@layout/list_item_event_detail" />
-
-        <include
-            android:id="@+id/ll_availability"
-            layout="@layout/list_item_event_detail" />
+        <TextView
+            android:id="@+id/tv_event_title"
+            android:layout_width="0dp"
+            android:layout_weight="8"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:lines="1"
+            android:ellipsize="end"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"
+            android:paddingRight="16dp"/>
 
     </LinearLayout>
 
-</ScrollView>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="16dp"
+            android:paddingBottom="48dp">
+
+            <include
+                android:id="@+id/ll_date_time"
+                layout="@layout/list_item_event_detail" />
+
+            <include
+                android:id="@+id/ll_location"
+                layout="@layout/list_item_event_detail"
+                android:visibility="gone"/>
+
+            <include
+                android:id="@+id/ll_notification"
+                layout="@layout/list_item_event_detail"
+                android:visibility="gone"/>
+
+            <include
+                android:id="@+id/ll_guests"
+                layout="@layout/list_item_event_detail"
+                android:visibility="gone"/>
+
+            <include
+                android:id="@+id/ll_description"
+                layout="@layout/list_item_event_detail"
+                android:visibility="gone"/>
+
+            <include
+                android:id="@+id/ll_account"
+                layout="@layout/list_item_event_detail" />
+
+            <include
+                android:id="@+id/ll_availability"
+                layout="@layout/list_item_event_detail" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

@@ -34,6 +34,7 @@ public class EventDetailsActivity extends AppCompatActivity {
     public static final String ARG_CALENDAR_EVENT = "calendarEvent";
     private static final int MENU_EDIT_ID = 1;
     private static final int MENU_DELETE_ID = 2;
+    private static final int RC_EDIT_COMPLETE = 3;
 
     private LinearLayout mDateTimeLayout,
             mLocationLayout,
@@ -81,7 +82,7 @@ public class EventDetailsActivity extends AppCompatActivity {
             case MENU_EDIT_ID:
                 Intent intent = new Intent(this, AddEventActivity.class);
                 intent.putExtra(ARG_CALENDAR_EVENT, mEvent);
-                startActivity(intent);
+                startActivityForResult(intent, RC_EDIT_COMPLETE);
                 break;
             case MENU_DELETE_ID:
                 DataUtils.removeEvent(mEvent.getId(), this);
@@ -90,11 +91,27 @@ public class EventDetailsActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case RC_EDIT_COMPLETE:
+                if (resultCode == RESULT_OK) {
+                    finish();
+                }
+                break;
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
     private void updateActionBar() {
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setTitle(mEvent.getTitle());
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setBackgroundDrawable(new ColorDrawable(mEvent.getDisplayColor()));
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setDisplayShowTitleEnabled(false);
+            actionBar.setElevation(0);
+            actionBar.setBackgroundDrawable(new ColorDrawable(mEvent.getDisplayColor()));
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             Window window = getWindow();
@@ -115,6 +132,10 @@ public class EventDetailsActivity extends AppCompatActivity {
     }
 
     private void showEventInfo() {
+
+        ((TextView)findViewById(R.id.tv_event_title)).setText(mEvent.getTitle());
+        findViewById(R.id.ll_event_title).setBackgroundColor(mEvent.getDisplayColor());
+
         displayDateTime();
 
         displayLocation();

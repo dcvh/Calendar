@@ -397,26 +397,7 @@ public class DataUtils {
     public static long addEvent(Event event, Reminder reminder, Context context) {
 
         ContentResolver cr = context.getContentResolver();
-        ContentValues values = new ContentValues();
-        values.put(CalendarContract.Events.TITLE, event.getTitle());
-        values.put(CalendarContract.Events.CALENDAR_ID, event.getCalendarId());
-        values.put(CalendarContract.Events.EVENT_LOCATION, event.getLocation());
-        values.put(CalendarContract.Events.DESCRIPTION, event.getDescription());
-        values.put(CalendarContract.Events.EVENT_TIMEZONE, event.getTimeZone());
-        values.put(CalendarContract.Events.DTSTART, event.getStartDate());
-        values.put(CalendarContract.Events.ALL_DAY, event.isAllDay());
-        values.put(CalendarContract.Events.HAS_ALARM, event.hasAlarm());
-        values.put(CalendarContract.Events.EVENT_COLOR, event.getDisplayColor());
-
-        Log.e(TAG, "addEvent: " + event.getCalendarId());
-
-        // check if this is a recurring event
-        if (event.getRRule() == null) {
-            values.put(CalendarContract.Events.DTEND, event.getEndDate());
-        } else {
-            values.put(CalendarContract.Events.RRULE, event.getRRule());
-            values.put(CalendarContract.Events.DURATION, event.getDuration());
-        }
+        ContentValues values = getContentValuesFromEvent(event);
 
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
             return -1;
@@ -432,11 +413,82 @@ public class DataUtils {
             values.put(CalendarContract.Reminders.MINUTES, reminder.getMinutes());
             values.put(CalendarContract.Reminders.METHOD, reminder.getMethod());
 
-            cr.insert(CalendarContract.Reminders.CONTENT_URI, values);
+            uri = cr.insert(CalendarContract.Reminders.CONTENT_URI, values);
+            reminder.setId(uri != null ? Long.parseLong(uri.getLastPathSegment()) : -1);
             mReminders.add(reminder);
         }
 
         return id;
+    }
+
+    public static int modifyEvent(Event event, Reminder reminder, Context context) {
+
+        ContentValues values = getContentValuesFromEvent(event);
+        values.put(CalendarContract.Events._ID, event.getId());
+
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.WRITE_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
+            return -1;
+        }
+
+        // update in provider
+        Uri updateUri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, event.getId());
+        int rows = context.getContentResolver().update(updateUri, values, null, null);
+
+        // update in mEntries
+        for (Entry entry : mEntries) {
+            for (int i = 0; i < entry.getEvents().size(); i++) {
+                if (entry.getEvents().get(i).getId() == event.getId()) {
+                    entry.getEvents().remove(i);
+                    entry.getEvents().add(i, event);
+                }
+            }
+        }
+
+        // update reminder
+        if (reminder != null) {
+            values = new ContentValues();
+            values.put(CalendarContract.Reminders.EVENT_ID, event.getId());
+            values.put(CalendarContract.Reminders.MINUTES, reminder.getMinutes());
+            values.put(CalendarContract.Reminders.METHOD, reminder.getMethod());
+
+            // remove all current reminder with the event id
+            for (int i = 0; i < mReminders.size(); i++) {
+                if (mReminders.get(i).getEventId() == event.getId()) {
+                    mReminders.remove(i);
+                    i--;
+                }
+            }
+
+            // add the new one
+            Uri uri = context.getContentResolver().insert(CalendarContract.Reminders.CONTENT_URI, values);
+            reminder.setId(uri != null ? Long.parseLong(uri.getLastPathSegment()) : -1);
+            mReminders.add(reminder);
+        }
+
+        return rows;
+    }
+
+    private static ContentValues getContentValuesFromEvent(Event event) {
+        ContentValues values = new ContentValues();
+        values.put(CalendarContract.Events.TITLE, event.getTitle());
+        values.put(CalendarContract.Events.CALENDAR_ID, event.getCalendarId());
+        values.put(CalendarContract.Events.EVENT_LOCATION, event.getLocation());
+        values.put(CalendarContract.Events.DESCRIPTION, event.getDescription());
+        values.put(CalendarContract.Events.EVENT_TIMEZONE, event.getTimeZone());
+        values.put(CalendarContract.Events.DTSTART, event.getStartDate());
+        values.put(CalendarContract.Events.ALL_DAY, event.isAllDay());
+        values.put(CalendarContract.Events.HAS_ALARM, event.hasAlarm());
+        values.put(CalendarContract.Events.EVENT_COLOR, event.getDisplayColor());
+
+        // check if this is a recurring event
+        if (event.getRRule() == null) {
+            values.put(CalendarContract.Events.DTEND, event.getEndDate());
+        } else {
+            values.put(CalendarContract.Events.RRULE, event.getRRule());
+            values.put(CalendarContract.Events.DURATION, event.getDuration());
+        }
+
+        return values;
     }
 
     public static int removeEvent(long id, Context context) {

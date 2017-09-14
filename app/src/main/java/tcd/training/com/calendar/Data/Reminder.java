@@ -26,6 +26,10 @@ public class Reminder {
         return mId;
     }
 
+    public void setId(long id) {
+        mId = id;
+    }
+
     public long getEventId() {
         return mEventId;
     }
