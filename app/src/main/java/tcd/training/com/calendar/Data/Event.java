@@ -23,6 +23,8 @@ public class Event implements Parcelable{
     private int mDisplayColor;
     private int mAvailability;
 
+    private int mPriority;
+
     public Event(String title, long calendarId, String location, String description, String timeZone, long startDate, long endDate,
                  boolean allDay, boolean hasAlarm, String rRule, String duration, int displayColor, int availability) {
         this.mTitle = title;
@@ -75,6 +77,8 @@ public class Event implements Parcelable{
         mDuration = in.readString();
         mDisplayColor = in.readInt();
         mAvailability = in.readInt();
+
+        mPriority = in.readInt();
     }
 
     public static final Creator<Event> CREATOR = new Creator<Event>() {
@@ -157,6 +161,14 @@ public class Event implements Parcelable{
         return mAvailability;
     }
 
+    public int getPriority() {
+        return mPriority;
+    }
+
+    public void setPriority(int priority) {
+        mPriority = priority;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -178,5 +190,7 @@ public class Event implements Parcelable{
         parcel.writeString(mDuration);
         parcel.writeInt(mDisplayColor);
         parcel.writeInt(mAvailability);
+
+        parcel.writeInt(mPriority);
     }
 }

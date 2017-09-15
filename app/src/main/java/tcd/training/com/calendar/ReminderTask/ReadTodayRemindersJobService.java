@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.Entry;
 import tcd.training.com.calendar.Data.Event;
+import tcd.training.com.calendar.Data.TimeUtils;
 
 /**
  * Created by cpu10661-local on 9/7/17.
@@ -33,6 +34,7 @@ public class ReadTodayRemindersJobService extends JobService {
     public static final String ARG_EVENT_ID = "eventId";
     public static final String ARG_EVENT_TITLE = "eventTitle";
     public static final String ARG_EVENT_START_TIME = "eventStartTime";
+    public static final String ARG_EVENT_PRIORITY= "eventPriority";
 
     private AsyncTask mBackgroundTask;
 
@@ -42,6 +44,8 @@ public class ReadTodayRemindersJobService extends JobService {
         mBackgroundTask = new AsyncTask() {
             @Override
             protected Object doInBackground(Object[] objects) {
+
+                DataUtils.readEventPrioritiesFromFile(ReadTodayRemindersJobService.this);
 
                 ArrayList<Event> events = getTodayAndTomorrowEvents();
                 if (events != null) {
@@ -78,22 +82,16 @@ public class ReadTodayRemindersJobService extends JobService {
 
     private ArrayList<Event> getTodayAndTomorrowEvents() {
 
-        // today events
-        Entry todayEntry = DataUtils.findEntryWithDate(Calendar.getInstance().getTimeInMillis());
+        Calendar start = Calendar.getInstance();
+        start.set(Calendar.HOUR_OF_DAY, 0);
+        start.set(Calendar.MINUTE, 0);
 
-        // tomorrow events
-        Calendar tomorrow = Calendar.getInstance();
-        tomorrow.add(Calendar.DAY_OF_MONTH, 1);
-        Entry tomorrowEntry = DataUtils.findEntryWithDate(tomorrow.getTimeInMillis());
+        ArrayList<Entry> entries = DataUtils.getEntriesBetween(this, start.getTimeInMillis(), start.getTimeInMillis() + TimeUnit.DAYS.toMillis(2));
 
         // assign to result
-        ArrayList<Event> events = todayEntry != null ? todayEntry.getEvents() : null;
-        if (tomorrowEntry != null) {
-            if (events != null) {
-                events.addAll(tomorrowEntry.getEvents());
-            } else {
-                events = tomorrowEntry.getEvents();
-            }
+        ArrayList<Event> events = new ArrayList<>();
+        for (Entry entry : entries) {
+            events.addAll(entry.getEvents());
         }
 
         return events;
@@ -107,7 +105,7 @@ public class ReadTodayRemindersJobService extends JobService {
         if (event.isAllDay()) {
             Calendar cal = Calendar.getInstance();
             cal.setTimeInMillis(event.getStartDate());
-            cal.set(Calendar.HOUR, 0);
+            cal.set(Calendar.HOUR_OF_DAY, 0);
             cal.set(Calendar.MINUTE, 0);
             cal.set(Calendar.SECOND, 0);
             time = cal.getTimeInMillis();
@@ -118,7 +116,11 @@ public class ReadTodayRemindersJobService extends JobService {
         time = TimeUnit.MILLISECONDS.toSeconds(time - Calendar.getInstance().getTimeInMillis());
 
         int beforeTime = (int) TimeUnit.MINUTES.toSeconds(DataUtils.getReminderMinutes(event.getId()));
-        time -= beforeTime;
+        if (time > 0 && time - beforeTime < 0) {
+            time = 0;
+        } else {
+            time -= beforeTime;
+        }
 
         return (int) time;
     }
@@ -130,6 +132,7 @@ public class ReadTodayRemindersJobService extends JobService {
         bundle.putLong(ARG_EVENT_ID, event.getId());
         bundle.putString(ARG_EVENT_TITLE, event.getTitle());
         bundle.putLong(ARG_EVENT_START_TIME, event.getStartDate());
+        bundle.putInt(ARG_EVENT_PRIORITY, event.getPriority());
 
         // prepare dispatcher
         Driver driver = new GooglePlayDriver(ReadTodayRemindersJobService.this);

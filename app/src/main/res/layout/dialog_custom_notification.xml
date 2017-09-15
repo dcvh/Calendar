@@ -18,10 +18,21 @@
     <ListView
         android:id="@+id/lv_unit"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
         android:divider="@null"
         android:dividerHeight="0dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="24dp"/>
+
+    <include layout="@layout/line_separator" />
+
+    <ListView
+        android:id="@+id/lv_priority"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:divider="@null"
+        android:dividerHeight="0dp"
+        android:layout_marginTop="16dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="24dp"/>
 

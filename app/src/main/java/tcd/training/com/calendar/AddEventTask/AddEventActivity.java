@@ -3,6 +3,7 @@ package tcd.training.com.calendar.AddEventTask;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ColorStateList;
@@ -16,6 +17,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -55,6 +57,7 @@ import tcd.training.com.calendar.Data.Reminder;
 import tcd.training.com.calendar.Data.TimeUtils;
 import tcd.training.com.calendar.EventDetailsActivity;
 import tcd.training.com.calendar.R;
+import tcd.training.com.calendar.ReminderTask.ReminderUtils;
 import tcd.training.com.calendar.ViewUtils;
 
 public class AddEventActivity extends AppCompatActivity {
@@ -69,6 +72,9 @@ public class AddEventActivity extends AppCompatActivity {
     private static final String TAG = AddEventActivity.class.getSimpleName();
     private static final int RC_PLACE_AUTOCOMPLETE = 1;
 
+    public static final int PRIORITY_NOTIFICATION = 0;
+    public static final int PRIORITY_POPUP = 1;
+
     private TextView mStartDateTextView, mEndDateTextView, mStartTimeTextView, mEndTimeTextView, mLocationTextView, mTimeZoneTextView;
     private EditText mTitleEditText, mNoteEditText;
     private Switch mAllDaySwitch;
@@ -82,6 +88,9 @@ public class AddEventActivity extends AppCompatActivity {
     private ArrayList<String> mColorNames;
     private ArrayList<Integer> mColorValues;
     private int mColorIndex;
+
+    private ArrayList<String> mPriorityTitles;
+    private int mPriorityIndex;
 
     private ArrayList<String> mAvailabilityTitles;
     private int mAvailabilityIndex;
@@ -136,7 +145,7 @@ public class AddEventActivity extends AppCompatActivity {
                 if (event != null) {
                     Snackbar.make(findViewById(android.R.id.content), R.string.wait_message, Snackbar.LENGTH_INDEFINITE);
                     Reminder reminder = event.hasAlarm() ?
-                        new Reminder(mNotificationMinutes.get(mNotificationIndex), CalendarContract.Reminders.METHOD_DEFAULT) : null;
+                            new Reminder(mNotificationMinutes.get(mNotificationIndex), CalendarContract.Reminders.METHOD_DEFAULT) : null;
 
                     if (mEvent != null) {
                         long id = mEvent.getId();
@@ -148,6 +157,7 @@ public class AddEventActivity extends AppCompatActivity {
                         DataUtils.addEvent(event, reminder, this);
                     }
 
+                    ReminderUtils.scheduleForReadingReminders(this);
                     finish();
                 }
                 break;
@@ -207,10 +217,9 @@ public class AddEventActivity extends AppCompatActivity {
         boolean hasAlarm = mNotificationMinutes.get(mNotificationIndex) != 0;
 
         String rRule = null;
-        if (mRepeatIndex > -1) {
+        if (mRepeatIndex > 0) {
             rRule = "FREQ=";
             switch (mRepeatIndex) {
-                case 0: break;
                 case 1: rRule += "DAILY"; break;
                 case 2: rRule += "WEEKLY"; break;
                 case 3: rRule += "MONTHLY"; break;
@@ -228,8 +237,10 @@ public class AddEventActivity extends AppCompatActivity {
 
         int availability = mAvailabilityIndex == 0 ? CalendarContract.Events.AVAILABILITY_BUSY : CalendarContract.Events.AVAILABILITY_FREE;
 
-        return new Event(title, calendarId, location, description, timeZone, startDate.getTimeInMillis(), endDate.getTimeInMillis(),
+        Event event = new Event(title, calendarId, location, description, timeZone, startDate.getTimeInMillis(), endDate.getTimeInMillis(),
                 isAllDay, hasAlarm, rRule, duration, displayColor, availability);
+        event.setPriority(mPriorityIndex);
+        return event;
     }
 
     private void updateActionBar() {
@@ -263,6 +274,10 @@ public class AddEventActivity extends AppCompatActivity {
         mColorValues = new ArrayList<>(colors.values());
         mColorValues.add(0, mAccountColors.get(mAccountIndex));
 
+        mPriorityTitles = new ArrayList<>();
+        mPriorityTitles.add(getString(R.string.notification));
+        mPriorityTitles.add(getString(R.string.popup));
+
         mAvailabilityTitles = new ArrayList<>();
         mAvailabilityTitles.add(getString(R.string.busy));
         mAvailabilityTitles.add(getString(R.string.available));
@@ -279,7 +294,7 @@ public class AddEventActivity extends AppCompatActivity {
         mNotificationTitles = new ArrayList<>();
         mNotificationMinutes = new ArrayList<>(Arrays.asList(0, mDefaultReminderTime, -1));
     }
-    
+
     private void initializeValuesFromEvent() {
 
         // start date and time
@@ -305,7 +320,7 @@ public class AddEventActivity extends AppCompatActivity {
 
         // repeat options
         if (mEvent.getRRule() == null) {
-            mRepeatIndex = 0;
+            mRepeatIndex = -1;
         } else {
             switch (mEvent.getRRule().charAt(5)) {
                 case 'D': mRepeatIndex = 1; break;
@@ -403,6 +418,7 @@ public class AddEventActivity extends AppCompatActivity {
         initializeAccountsOption();
         initializePeopleOption();
         initializeDateTimeOption();
+        initializePriorityOption();
         initializeLocationOption();
         initializeNotificationOption();
         initializeColorOption();
@@ -494,7 +510,7 @@ public class AddEventActivity extends AppCompatActivity {
         });
 
         // default date time values
-        long curTime = Calendar.getInstance().getTimeInMillis();
+        long curTime = Calendar.getInstance().getTimeInMillis() + TimeUnit.MINUTES.toMillis(10);
 
         String today = TimeUtils.getFormattedDate(curTime, ViewUtils.getAddEventDateFormat());
         mStartDateTextView.setText(today);
@@ -600,6 +616,23 @@ public class AddEventActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 showChoicePickerDialog(REPEAT_DIALOG_TYPE, content);
+            }
+        });
+    }
+
+    private void initializePriorityOption() {
+        LinearLayout colorLayout = (LinearLayout) findViewById(R.id.ll_default_color);
+
+        mCircleColor = colorLayout.findViewById(R.id.iv_icon);
+        mCircleColor.setImageResource(R.drawable.ic_filled_circle_48dp);
+
+        final TextView content = colorLayout.findViewById(R.id.tv_primary_content);
+        content.setText(R.string.default_color);
+
+        colorLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showChoicePickerDialog(COLOR_DIALOG_TYPE, content);
             }
         });
     }
@@ -722,7 +755,7 @@ public class AddEventActivity extends AppCompatActivity {
         listView.setAdapter(adapter);
         listView.setDivider(null);
         listView.setDividerHeight(0);
-        listView.setPadding(0, 0, 0, ViewUtils.dpToPixel(24));
+        listView.setPadding(0, ViewUtils.dpToPixel(24), 0, 0);
         builder.setView(listView);
 
         dialog = builder.create();
@@ -779,15 +812,28 @@ public class AddEventActivity extends AppCompatActivity {
         valueTextView.setText(String.valueOf(mDefaultReminderTime));
 
         // list view
-        ListView listView = dialog.findViewById(R.id.lv_unit);
+        ListView unitListView = dialog.findViewById(R.id.lv_unit);
         ArrayList<String> units = new ArrayList<>(Arrays.asList(getString(R.string.minutes), getString(R.string.hours), getString(R.string.days), getString(R.string.weeks)));
         mUnitIndex = 0;
-        final DialogListAdapter adapter = new DialogListAdapter(this, R.layout.list_item_dialog, units, mUnitIndex);
-        listView.setAdapter(adapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        DialogListAdapter adapter = new DialogListAdapter(this, R.layout.list_item_dialog, units, mUnitIndex);
+        unitListView.setAdapter(adapter);
+        unitListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 mUnitIndex = i;
+            }
+        });
+
+        // list view
+        ListView priorityListView = dialog.findViewById(R.id.lv_priority);
+        ArrayList<String> priorities = new ArrayList<>(Arrays.asList(getString(R.string.notification), getString(R.string.popup)));
+        mPriorityIndex = 0;
+        adapter = new DialogListAdapter(this, R.layout.list_item_dialog, priorities, mPriorityIndex);
+        priorityListView.setAdapter(adapter);
+        priorityListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                mPriorityIndex = i;
             }
         });
 

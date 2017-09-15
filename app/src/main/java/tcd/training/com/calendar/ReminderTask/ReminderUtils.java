@@ -15,15 +15,21 @@
  */
 package tcd.training.com.calendar.ReminderTask;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
+import android.view.WindowManager;
 
 import com.firebase.jobdispatcher.Driver;
 import com.firebase.jobdispatcher.FirebaseJobDispatcher;
@@ -84,7 +90,7 @@ public class ReminderUtils {
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context)
                 .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
-                .setSmallIcon(R.drawable.ic_action_today_black_48dp)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(title)
                 .setContentText(content)
                 .setDefaults(Notification.DEFAULT_VIBRATE)
@@ -99,5 +105,12 @@ public class ReminderUtils {
 
         /* WATER_REMINDER_NOTIFICATION_ID allows you to update or cancel the notification later on */
         notificationManager.notify(REMINDER_NOTIFICATION_ID, notificationBuilder.build());
+    }
+
+    public static void showReminderPopup(Context context, final String title, final String message) {
+        Intent intent = new Intent(context, EventPopup.class);
+        intent.putExtra(EventPopup.ARG_EVENT_TITLE, title);
+        intent.putExtra(EventPopup.ARG_EVENT_MESSAGE, message);
+        context.startActivity(intent);
     }
 }

@@ -10,11 +10,19 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.provider.CalendarContract;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +34,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import tcd.training.com.calendar.AddEventTask.AddEventActivity;
 import tcd.training.com.calendar.R;
 
 /**
@@ -392,6 +401,32 @@ public class DataUtils {
         }
     }
 
+    public static void readEventPrioritiesFromFile(Context context) {
+
+        if (context.getFilesDir().exists()) {
+
+            try {
+                FileInputStream fis = context.openFileInput("popup");
+                InputStreamReader isr = new InputStreamReader(fis);
+                BufferedReader bufferedReader = new BufferedReader(isr);
+                String line;
+                while ((line = bufferedReader.readLine()) != null) {
+                    int id = Integer.parseInt(line);
+                    Log.e(TAG, "readEventPrioritiesFromFile: 3 - " + id);
+                    for (Entry entry : mEntries) {
+                        for (Event event : entry.getEvents()) {
+                            if (event.getId() == id) {
+                                event.setPriority(AddEventActivity.PRIORITY_POPUP);
+                            }
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 
 
     public static long addEvent(Event event, Reminder reminder, Context context) {
@@ -404,8 +439,11 @@ public class DataUtils {
         }
 
         addEventToEntries(event);
+
         Uri uri = cr.insert(CalendarContract.Events.CONTENT_URI, values);
         long id = uri != null ? Long.parseLong(uri.getLastPathSegment()) : -1;
+
+        writeEventPriorityToFile(id, event.getPriority(), context);
 
         if (event.hasAlarm() && id != -1) {
             values = new ContentValues();
@@ -419,6 +457,27 @@ public class DataUtils {
         }
 
         return id;
+    }
+
+    private static void writeEventPriorityToFile(long eventId, int priority, Context context) {
+        String fileName = null;
+        switch (priority) {
+            case AddEventActivity.PRIORITY_NOTIFICATION: fileName = "notification"; break;
+            case AddEventActivity.PRIORITY_POPUP: fileName = "popup"; break;
+            default:
+                throw new UnsupportedOperationException("Unknown priority");
+        }
+
+        FileOutputStream outputStream;
+        try {
+            String content = String.valueOf(eventId) + "\n";
+            outputStream = context.openFileOutput(fileName, Context.MODE_APPEND);
+            outputStream.write(content.getBytes());
+            outputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     public static int modifyEvent(Event event, Reminder reminder, Context context) {
@@ -476,7 +535,7 @@ public class DataUtils {
         values.put(CalendarContract.Events.DESCRIPTION, event.getDescription());
         values.put(CalendarContract.Events.EVENT_TIMEZONE, event.getTimeZone());
         values.put(CalendarContract.Events.DTSTART, event.getStartDate());
-        values.put(CalendarContract.Events.ALL_DAY, event.isAllDay());
+        values.put(CalendarContract.Events.ALL_DAY, event.isAllDay() ? 1 : 0);
         values.put(CalendarContract.Events.HAS_ALARM, event.hasAlarm());
         values.put(CalendarContract.Events.EVENT_COLOR, event.getDisplayColor());
 

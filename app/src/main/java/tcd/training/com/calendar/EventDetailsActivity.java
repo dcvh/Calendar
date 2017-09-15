@@ -86,6 +86,7 @@ public class EventDetailsActivity extends AppCompatActivity {
                 break;
             case MENU_DELETE_ID:
                 DataUtils.removeEvent(mEvent.getId(), this);
+                finish();
                 break;
         }
         return super.onOptionsItemSelected(item);

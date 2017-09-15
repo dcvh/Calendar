@@ -23,6 +23,8 @@
     <string name="no_calendar_events_error">No event found!</string>
     <string name="no_title">No title</string>
     <string name="wait_load_events_message">Please wait while system loads events</string>
+    <string name="x_more">%d more</string>
+    <string name="show_less">Show less</string>
 
     <!--list events-->
     <string-array name="first_day_saturday">
@@ -86,6 +88,17 @@
     <string name="custom">Custom...</string>
     <string name="before">before</string>
     <string name="done">Done</string>
+    <string name="no_event">Nothing planned. Tap to create.</string>
+    <string name="title_empty_error">Title cannot be blank</string>
+    <string name="wait_message">Please wait until the process is completed</string>
+    <string name="discard_event">Are you sure you want to discard this event?</string>
+    <string name="keep_editing">KEEP EDITING</string>
+    <string name="discard">DISCARD</string>
+    <string name="tentative">Tentative</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="notification">As notification</string>
+    <string name="popup">As popup</string>
 
     <!--permissions-->
     <string name="grant">Grant</string>
@@ -169,16 +182,6 @@
     <string-array name="multi_select_list_preference_default_value" />
 
     <string name="pref_title_system_sync_settings">System sync settings</string>
-    <string name="no_event">Nothing planned. Tap to create.</string>
-    <string name="title_empty_error">Title cannot be blank</string>
-    <string name="wait_message">Please wait until the process is completed</string>
-    <string name="discard_event">Are you sure you want to discard this event?</string>
-    <string name="keep_editing">KEEP EDITING</string>
-    <string name="discard">DISCARD</string>
-    <string name="x_more">%d more</string>
-    <string name="show_less">Show less</string>
-    <string name="tentative">Tentative</string>
-    <string name="edit">Edit</string>
-    <string name="delete">Delete</string>
+    <string name="ok">OK</string>
 
 </resources>

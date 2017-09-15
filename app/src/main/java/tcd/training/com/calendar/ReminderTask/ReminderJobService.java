@@ -1,11 +1,13 @@
 package tcd.training.com.calendar.ReminderTask;
 
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.firebase.jobdispatcher.JobParameters;
 import com.firebase.jobdispatcher.JobService;
 
+import tcd.training.com.calendar.AddEventTask.AddEventActivity;
 import tcd.training.com.calendar.Data.TimeUtils;
 
 /**
@@ -25,15 +27,29 @@ public class ReminderJobService extends JobService {
             @Override
             protected Object doInBackground(Object[] objects) {
 
-                if (job.getExtras() != null) {
-                    int id = job.getExtras().getInt(ReadTodayRemindersJobService.ARG_EVENT_ID);
-                    String title = job.getExtras().getString(ReadTodayRemindersJobService.ARG_EVENT_TITLE);
-                    long startTime = job.getExtras().getLong(ReadTodayRemindersJobService.ARG_EVENT_START_TIME);
-                    ReminderUtils.showReminderNotification(
-                            ReminderJobService.this,
-                            title,
-                            TimeUtils.getFormattedDate(startTime, TimeUtils.getStandardTimeFormat())
-                    );
+                Bundle bundle = job.getExtras();
+
+                if (bundle != null) {
+                    int id = bundle.getInt(ReadTodayRemindersJobService.ARG_EVENT_ID);
+                    String title = bundle.getString(ReadTodayRemindersJobService.ARG_EVENT_TITLE);
+                    long startTime = bundle.getLong(ReadTodayRemindersJobService.ARG_EVENT_START_TIME);
+                    long priority = bundle.getInt(ReadTodayRemindersJobService.ARG_EVENT_PRIORITY);
+
+                    if (priority == AddEventActivity.PRIORITY_NOTIFICATION) {
+                        Log.e(TAG, "doInBackground: notification");
+                        ReminderUtils.showReminderNotification(
+                                ReminderJobService.this,
+                                title,
+                                TimeUtils.getFormattedDate(startTime, TimeUtils.getStandardTimeFormat())
+                        );
+                    } else if (priority == AddEventActivity.PRIORITY_POPUP) {
+                        Log.e(TAG, "doInBackground: popup");
+                        ReminderUtils.showReminderPopup(
+                                ReminderJobService.this,
+                                title,
+                                TimeUtils.getFormattedDate(startTime, TimeUtils.getStandardTimeFormat())
+                        );
+                    }
                 } else {
                     Log.e(TAG, "doInBackground: There was a problem retrieving the event data");
                 }
