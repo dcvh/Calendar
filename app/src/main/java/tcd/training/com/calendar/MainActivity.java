@@ -42,6 +42,7 @@ import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.Entry;
 import tcd.training.com.calendar.Data.Event;
 import tcd.training.com.calendar.Data.TimeUtils;
+import tcd.training.com.calendar.ReminderTask.EventPopup;
 import tcd.training.com.calendar.ReminderTask.ReminderUtils;
 import tcd.training.com.calendar.Settings.SettingsActivity;
 import tcd.training.com.calendar.ContentView.Day.DayViewFragment;
@@ -76,9 +77,6 @@ public class MainActivity extends AppCompatActivity
 
         ReminderUtils.clearAllNotifications(this);
         ReminderUtils.scheduleForReadingReminders(this);
-
-//        Intent intent = new Intent(this, AddEventActivity.class);
-//        startActivity(intent);
     }
 
     @Override

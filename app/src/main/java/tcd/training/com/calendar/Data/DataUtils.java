@@ -562,6 +562,47 @@ public class DataUtils {
         return mEntries;
     }
 
+    public static Entry getEntryIn(long millis, Context context) {
+
+        Entry entry = findEntryWithDate(millis);
+
+        // start of the date
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(millis);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        long start = cal.getTimeInMillis();
+
+        // end of the date
+        cal.add(Calendar.DAY_OF_MONTH, 1);
+        long end = cal.getTimeInMillis();
+
+        // TODO: 9/15/17 this is temporary walkaround, must be fixed in the future
+        start -= TimeUnit.DAYS.toMillis(30);
+        end += TimeUnit.DAYS.toMillis(30);
+
+        for (Event event : mFreqEvent) {
+            ArrayList<Long> instances = readCalendarInstances(context, event.getId(), start, end);
+            if (instances != null) {
+                if (entry == null) {
+                    entry = new Entry(millis, new ArrayList<Event>());
+                }
+                for (int i = 0; i < instances.size(); i += 2) {
+                    Event newInstance = new Event(event);
+                    newInstance.setStartDate(instances.get(i));
+                    newInstance.setEndDate(instances.get(i + 1));
+
+                    // TODO: 9/15/17 this too
+                    if (TimeUtils.isSameDay(millis, newInstance.getStartDate())) {
+                        entry.addEvent(newInstance);
+                    }
+                }
+            }
+        }
+
+        return entry;
+    }
+
     public static ArrayList<Entry> getEntriesBetween(Context context, long start, long end) {
         ArrayList<Entry> entries = new ArrayList<>();
 
@@ -576,8 +617,8 @@ public class DataUtils {
             if (instances != null) {
                 for (int i = 0; i < instances.size(); i += 2) {
                     Event newInstance = new Event(event);
-                    event.setStartDate(instances.get(i));
-                    event.setEndDate(instances.get(i + 1));
+                    newInstance.setStartDate(instances.get(i));
+                    newInstance.setEndDate(instances.get(i + 1));
                     addEventToEntries(entries, newInstance);
                 }
             }
@@ -640,23 +681,16 @@ public class DataUtils {
         return index < 0 ? null : mEntries.get(index);
     }
 
+    public static Entry findEntryWithDate(ArrayList<Entry> entries, long millis) {
+        int index = findEntryIndexWithDate(entries, millis);
+        return index < 0 ? null : entries.get(index);
+    }
+
     private static int findEntryIndexWithDate(final long millis) {
         return findEntryIndexWithDate(mEntries, millis);
     }
 
     private static int findEntryIndexWithDate(ArrayList<Entry> entries, final long millis) {
-//            int low = 0;
-//            int high = mEntries.size() - 1;
-//            while (low <= high) {
-//                int mid = low + (high - low) / 2;
-//                if (TimeUtils.compareDay(millis, mEntries.get(mid).getTime()) < 0) {
-//                    high = mid - 1;
-//                } else if (TimeUtils.compareDay(millis, mEntries.get(mid).getTime()) > 0) {
-//                    low = mid + 1;
-//                } else {
-//                    return mid;
-//                }
-//            }
         Comparator<Entry> comparator = new Comparator<Entry>() {
             @Override
             public int compare(Entry entry, Entry t1) {

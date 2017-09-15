@@ -31,13 +31,17 @@ public class DayFragment extends Fragment {
     private static final String TAG = DayFragment.class.getSimpleName();
 
     public final static String ARG_DISPLAY_DAY = "ARG_DISPLAY_DAY";
+    private static final int NUMBER_OF_SHOWN_EVENTS  = 2;
 
     private Calendar mCurDay;
     private Context mContext;
+    private Entry mEntry;
 
-    private TextView mDayOfMonthTextView;
-    private TextView mDayOfWeekTextView;
+    private LinearLayout mHeaderLayout;
     private LinearLayout mAllDayEventsLayout;
+
+    private LinearLayout mShowHideLayout;
+    private TextView mShowHideTextView;
 
     public static DayFragment newInstance(Calendar date) {
         Bundle args = new Bundle();
@@ -62,62 +66,79 @@ public class DayFragment extends Fragment {
 
         mContext = view.getContext();
 
+
+
         initializeUiComponents(view);
+        createHeader();
+        createShowHideLayout();
+        initializeTimelineRecyclerView(view);
 
         return view;
     }
 
     private void initializeUiComponents(View view) {
+        mShowHideLayout = view.findViewById(R.id.ll_show_hide);
+        mShowHideTextView = view.findViewById(R.id.tv_show_hide);
 
-        LinearLayout entryLayout = view.findViewById(R.id.ll_entry);
-        mDayOfMonthTextView = entryLayout.findViewById(R.id.tv_day_of_month);
-        mDayOfWeekTextView = entryLayout.findViewById(R.id.tv_day_of_week);
-        mAllDayEventsLayout = entryLayout.findViewById(R.id.ll_events);
-        LinearLayout showHideLayout = view.findViewById(R.id.ll_show_hide);
-        final ImageView arrowImageView = view.findViewById(R.id.iv_arrow);
-        final TextView showHideTextView = view.findViewById(R.id.tv_show_hide);
-        RecyclerView eventsListRecyclerView = view.findViewById(R.id.rv_events_list);
+        mHeaderLayout = view.findViewById(R.id.ll_entry);
+        mAllDayEventsLayout = mHeaderLayout.findViewById(R.id.ll_events);
+    }
 
-        // header
+    private void createHeader() {
+
+        TextView dayOfMonthTextView = mHeaderLayout.findViewById(R.id.tv_day_of_month);
+        TextView dayOfWeekTextView = mHeaderLayout.findViewById(R.id.tv_day_of_week);
+
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         params.setMargins(0, ViewUtils.dpToPixel(16), 0, 0);
-        entryLayout.setLayoutParams(params);
-        mDayOfMonthTextView.setText(String.valueOf(mCurDay.get(Calendar.DAY_OF_MONTH)));
-        mDayOfWeekTextView.setText(TimeUtils.getFormattedDate(mCurDay.getTimeInMillis(), "EEE"));
-        final Entry entry = DataUtils.findEntryWithDate(mCurDay.getTimeInMillis());
-        if (entry != null) {
+        mHeaderLayout.setLayoutParams(params);
+
+        dayOfMonthTextView.setText(String.valueOf(mCurDay.get(Calendar.DAY_OF_MONTH)));
+        dayOfWeekTextView.setText(TimeUtils.getFormattedDate(mCurDay.getTimeInMillis(), "EEE"));
+
+        mEntry = DataUtils.getEntryIn(mCurDay.getTimeInMillis(), mContext);
+        if (mEntry != null) {
+
             params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             params.setMargins(0, 0, 0, ViewUtils.dpToPixel(0));
-            for (int i = 0; i < entry.getEvents().size(); i++) {
-                if (entry.getEvents().get(i).isAllDay()) {
-                    View eventTileView = ViewUtils.getEventTileView(entry.getEvents().get(i), mContext);
+
+            // create event tiles
+            for (int i = 0; i < mEntry.getEvents().size(); i++) {
+                if (mEntry.getEvents().get(i).isAllDay()) {
+                    View eventTileView = ViewUtils.getEventTileView(mEntry.getEvents().get(i), mContext);
                     eventTileView.setLayoutParams(params);
-                    if (i >= 2) {
+                    if (i >= NUMBER_OF_SHOWN_EVENTS) {
                         eventTileView.setVisibility(View.GONE);
                     }
                     mAllDayEventsLayout.addView(eventTileView);
                 }
             }
-            if (entry.getEvents().size() > 2) {
-                showHideTextView.setText(String.format(getString(R.string.x_more), entry.getEvents().size() - 2));
-                showHideLayout.setVisibility(View.VISIBLE);
+
+            // hide some if number of events exceeds limit
+            if (mEntry.getEvents().size() > NUMBER_OF_SHOWN_EVENTS) {
+                mShowHideTextView.setText(String.format(getString(R.string.x_more), mEntry.getEvents().size() - NUMBER_OF_SHOWN_EVENTS));
+                mShowHideLayout.setVisibility(View.VISIBLE);
             }
         }
+    }
 
-        // show more or less events
+    private void createShowHideLayout() {
+
+        final ImageView arrowImageView = mShowHideLayout.findViewById(R.id.iv_arrow);
+
         final boolean[] isExpanded = {false};
-        showHideLayout.setOnClickListener(new View.OnClickListener() {
+        mShowHideLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 int showState;
                 if (isExpanded[0]) {
                     showState = View.GONE;
                     arrowImageView.setImageResource(R.drawable.ic_arrow_down_black_24dp);
-                    showHideTextView.setText(String.format(getString(R.string.x_more), entry.getEvents().size() - 2));
+                    mShowHideTextView.setText(String.format(getString(R.string.x_more), mEntry.getEvents().size() - 2));
                 } else {
                     showState = View.VISIBLE;
                     arrowImageView.setImageResource(R.drawable.ic_arrow_up_black_24dp);
-                    showHideTextView.setText(R.string.show_less);
+                    mShowHideTextView.setText(R.string.show_less);
                 }
                 isExpanded[0] = !isExpanded[0];
                 for (int i = 2; i < mAllDayEventsLayout.getChildCount(); i++) {
@@ -125,12 +146,17 @@ public class DayFragment extends Fragment {
                 }
             }
         });
+    }
+
+    private void initializeTimelineRecyclerView(View view) {
+
+        RecyclerView eventsListRecyclerView = view.findViewById(R.id.rv_events_list);
 
         // recycler view
         LinearLayoutManager layoutManager = new LinearLayoutManager(mContext);
         eventsListRecyclerView.setLayoutManager(layoutManager);
         eventsListRecyclerView.setItemAnimator(new DefaultItemAnimator());
-        DayEventsAdapter adapter = new DayEventsAdapter(entry, mContext);
+        DayEventsAdapter adapter = new DayEventsAdapter(mEntry, mContext);
         eventsListRecyclerView.setAdapter(adapter);
     }
 

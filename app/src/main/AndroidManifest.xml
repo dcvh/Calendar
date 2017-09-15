@@ -54,6 +54,7 @@
             android:theme="@style/AppTheme.ColorActionBar" ></activity>
 
         <activity android:name=".ReminderTask.EventPopup"
+            android:theme="@style/Theme.Transparent"
             android:launchMode="singleTop"/>
     </application>
 

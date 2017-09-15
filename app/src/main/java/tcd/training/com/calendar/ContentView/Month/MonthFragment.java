@@ -20,11 +20,14 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.concurrent.TimeUnit;
 
 import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.Entry;
 import tcd.training.com.calendar.Data.Event;
+import tcd.training.com.calendar.Data.TimeUtils;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.ContentView.Day.DayViewFragment;
 import tcd.training.com.calendar.ViewUtils;
@@ -41,11 +44,13 @@ public class MonthFragment extends Fragment {
 
     public final static String ARG_DISPLAY_MONTH = "ARG_DISPLAY_MONTH";
 
-    private Calendar mCurMonth;
     private Context mContext;
     private int mFirstDayOfWeek;
+    private Calendar mCurMonth;
+    private String[] mDayOrder;
+    private Calendar mStartDate, mEndDate;
+    private ArrayList<Entry> mEntries;
 
-    private TableLayout mCalendarTable;
     private TableRow mTableHeader;
     private TableRow mTableRow1;
     private TableRow mTableRow2;
@@ -77,8 +82,13 @@ public class MonthFragment extends Fragment {
 
         mContext = view.getContext();
 
-        initializeUiComponents(view);
+        generateDisplayDays();
 
+        // for some unknown reason, the result is missing some recurring events in early of month
+        // a workaround method is pushing off one month
+        mEntries = DataUtils.getEntriesBetween(mContext, mStartDate.getTimeInMillis() - TimeUnit.DAYS.toMillis(30), mEndDate.getTimeInMillis());
+
+        initializeUiComponents(view);
         createCalendarHeader();
         createCalendarDates();
 
@@ -86,7 +96,6 @@ public class MonthFragment extends Fragment {
     }
 
     private void initializeUiComponents(View view) {
-        mCalendarTable = view.findViewById(R.id.tl_month_view);
         mTableHeader = view.findViewById(R.id.tr_header);
         mTableRow1 = view.findViewById(R.id.tr_1);
         mTableRow2 = view.findViewById(R.id.tr_2);
@@ -96,14 +105,43 @@ public class MonthFragment extends Fragment {
         mTableRow6 = view.findViewById(R.id.tr_6);
     }
 
+    private void generateDisplayDays() {
+
+        mDayOrder = getDayOfWeekOrder();
+
+        // get the number of days in previous month
+        mStartDate = (Calendar) mCurMonth.clone();
+        mStartDate.set(Calendar.DAY_OF_MONTH, 1);
+        int previousMonthDay = mStartDate.get(Calendar.DAY_OF_WEEK) - mFirstDayOfWeek;
+        if (previousMonthDay < 0) {
+            previousMonthDay += 7;
+        }
+        mStartDate.add(Calendar.DAY_OF_MONTH, -previousMonthDay);
+        mStartDate.set(Calendar.HOUR_OF_DAY, 0);
+        mStartDate.set(Calendar.MINUTE, 0);
+
+        // get the number of days in next month
+        int daysInMonth = mCurMonth.getActualMaximum(Calendar.DAY_OF_MONTH);
+        mEndDate = (Calendar) mCurMonth.clone();
+        mEndDate.add(Calendar.MONTH, 1);
+        mEndDate.set(Calendar.DAY_OF_MONTH, 1);
+        for (int i = 1; ; i++) {
+            int index = (i + daysInMonth + previousMonthDay - 1) / 7;
+            if (index >= 6) {
+                break;
+            }
+            mEndDate.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        mStartDate.set(Calendar.HOUR_OF_DAY, 23);
+        mStartDate.set(Calendar.MINUTE, 59);
+    }
+
     private void createCalendarHeader() {
 
         TableRow.LayoutParams layoutParams =
                 new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT, 1f);
 
-        String[] daysOfWeek = getDayOfWeekOrder();
-
-        for (String dayOfWeek : daysOfWeek) {
+        for (String dayOfWeek : mDayOrder) {
             TextView dayTextView = new TextView(mContext);
             dayTextView.setText(dayOfWeek);
             dayTextView.setLayoutParams(layoutParams);
@@ -115,6 +153,7 @@ public class MonthFragment extends Fragment {
     }
 
     private String[] getDayOfWeekOrder() {
+
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
         String firstDay = sharedPreferences.getString(getString(R.string.pref_key_start_of_the_week), "Monday");
 
@@ -141,47 +180,31 @@ public class MonthFragment extends Fragment {
 
     private void createCalendarDates() {
 
-        // TODO: 8/31/17 clean this mess
-
-        // determine number of days of the previous month will be shown
-        Calendar curMonth = (Calendar) mCurMonth.clone();
-        curMonth.set(Calendar.DAY_OF_MONTH, 1);
-        int previousMonthDay = curMonth.get(Calendar.DAY_OF_WEEK) - mFirstDayOfWeek;
-        if (previousMonthDay < 0) {
-            previousMonthDay += 7;
-        }
+        Calendar curDate = (Calendar) mStartDate.clone();
+        int index = 0;
 
         // days of previous month
-        Calendar lastMonth = (Calendar) curMonth.clone();
-        assert Integer.valueOf(lastMonth.get(Calendar.DAY_OF_MONTH)) == 1;
-        lastMonth.add(Calendar.DAY_OF_MONTH, -previousMonthDay);
-        for (int i = 0; i < previousMonthDay; i++) {
-            getRow(0).addView(createDateView(lastMonth, Color.GRAY));
-            lastMonth.add(Calendar.DAY_OF_MONTH, 1);
+        int previousMonth = mCurMonth.get(Calendar.MONTH) - 1;
+        while ((int)curDate.get(Calendar.MONTH) == previousMonth) {
+            getRow(0).addView(createDateView(curDate, Color.GRAY));
+            curDate.add(Calendar.DAY_OF_MONTH, 1);
+            index++;
         }
 
-        // days of current month
-        int daysInMonth = curMonth.getActualMaximum(Calendar.DAY_OF_MONTH);
-        curMonth.set(Calendar.DAY_OF_MONTH, 1);
-        for (int i = 1; i <= daysInMonth; i++) {
-            TableRow row = getRow((i + previousMonthDay - 1) / 7);
 
-            curMonth.set(Calendar.DAY_OF_MONTH, i);
-            row.addView(createDateView(curMonth, Color.BLACK));
+        // days of current month
+        int curMonth = mCurMonth.get(Calendar.MONTH);
+        while (curDate.get(Calendar.MONTH) == curMonth) {
+            TableRow row = getRow(index++ / 7);
+            row.addView(createDateView(curDate, Color.BLACK));
+            curDate.add(Calendar.DAY_OF_MONTH, 1);
         }
 
         // days of the next month
-        Calendar nextMonth = (Calendar) mCurMonth.clone();
-        nextMonth.add(Calendar.MONTH, 1);
-        nextMonth.set(Calendar.DAY_OF_MONTH, 1);
-        for (int i = 1; ; i++) {
-            int index = (i + daysInMonth + previousMonthDay - 1) / 7;
-            if (index >= 6) {
-                break;
-            }
-            TableRow row = getRow(index);
-            row.addView(createDateView(nextMonth, Color.GRAY));
-            nextMonth.add(Calendar.DAY_OF_MONTH, 1);
+        while (index < 42) {
+            TableRow row = getRow(index++ / 7);
+            row.addView(createDateView(curDate, Color.GRAY));
+            curDate.add(Calendar.DAY_OF_MONTH, 1);
         }
 
 //        TextView textView = new TextView(mContext);
@@ -194,7 +217,7 @@ public class MonthFragment extends Fragment {
 
         final TextView dateTextView = getTextView(String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)), DEFAULT_TEXT_SIZE, dateColor, Typeface.NORMAL);
 
-        final Entry entry = DataUtils.findEntryWithDate(calendar.getTimeInMillis());
+        Entry entry = DataUtils.findEntryWithDate(mEntries, calendar.getTimeInMillis());
 
         View resultView;
         if (entry == null) {
