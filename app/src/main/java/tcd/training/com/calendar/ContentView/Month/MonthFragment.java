@@ -83,10 +83,7 @@ public class MonthFragment extends Fragment {
         mContext = view.getContext();
 
         generateDisplayDays();
-
-        // for some unknown reason, the result is missing some recurring events in early of month
-        // a workaround method is pushing off one month
-        mEntries = DataUtils.getEntriesBetween(mContext, mStartDate.getTimeInMillis() - TimeUnit.DAYS.toMillis(30), mEndDate.getTimeInMillis());
+        mEntries = DataUtils.getEntriesBetween(mContext, mStartDate.getTimeInMillis(), mEndDate.getTimeInMillis());
 
         initializeUiComponents(view);
         createCalendarHeader();
