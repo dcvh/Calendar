@@ -103,8 +103,10 @@ public class DayFragment extends Fragment {
             params.setMargins(0, 0, 0, ViewUtils.dpToPixel(0));
 
             // create event tiles
+            int allDayEventsNumber = 0;
             for (int i = 0; i < mEntry.getEvents().size(); i++) {
                 if (mEntry.getEvents().get(i).isAllDay()) {
+                    allDayEventsNumber++;
                     View eventTileView = ViewUtils.getEventTileView(mEntry.getEvents().get(i), mContext);
                     eventTileView.setLayoutParams(params);
                     if (i >= NUMBER_OF_SHOWN_EVENTS) {
@@ -115,7 +117,7 @@ public class DayFragment extends Fragment {
             }
 
             // hide some if number of events exceeds limit
-            if (mEntry.getEvents().size() > NUMBER_OF_SHOWN_EVENTS) {
+            if (allDayEventsNumber > NUMBER_OF_SHOWN_EVENTS) {
                 mShowHideTextView.setText(String.format(getString(R.string.x_more), mEntry.getEvents().size() - NUMBER_OF_SHOWN_EVENTS));
                 mShowHideLayout.setVisibility(View.VISIBLE);
             }

@@ -22,9 +22,13 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
@@ -88,12 +92,16 @@ public class ReminderUtils {
         Intent startActivityIntent = new Intent(context, MainActivity.class);
         PendingIntent intent = PendingIntent.getActivity(context, REMINDER_PENDING_INTENT_ID, startActivityIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+        String ringtone =  PreferenceManager.getDefaultSharedPreferences(context).getString("ring_tone_pref", "DEFAULT_SOUND");
+        Uri ringtoneUri = Uri.parse(ringtone);
+
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context)
                 .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(title)
                 .setContentText(content)
                 .setDefaults(Notification.DEFAULT_VIBRATE)
+                .setSound(ringtoneUri)
                 .setContentIntent(intent)
                 .setAutoCancel(true);
 
@@ -108,6 +116,16 @@ public class ReminderUtils {
     }
 
     public static void showReminderPopup(Context context, final String title, final String message) {
+
+        try {
+            String ringtone =  PreferenceManager.getDefaultSharedPreferences(context).getString("ring_tone_pref", "DEFAULT_SOUND");
+            Uri ringtoneUri = Uri.parse(ringtone);
+            Ringtone r = RingtoneManager.getRingtone(context.getApplicationContext(), ringtoneUri);
+            r.play();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         Intent intent = new Intent(context, EventPopup.class);
         intent.putExtra(EventPopup.ARG_EVENT_TITLE, title);
         intent.putExtra(EventPopup.ARG_EVENT_MESSAGE, message);

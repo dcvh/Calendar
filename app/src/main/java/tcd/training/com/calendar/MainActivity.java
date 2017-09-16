@@ -6,11 +6,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -76,7 +78,6 @@ public class MainActivity extends AppCompatActivity
         readCalendarEntries();
 
         ReminderUtils.clearAllNotifications(this);
-        ReminderUtils.scheduleForReadingReminders(this);
     }
 
     @Override
@@ -253,14 +254,6 @@ public class MainActivity extends AppCompatActivity
                             Toast.makeText(MainActivity.this, R.string.no_calendar_events_error, Toast.LENGTH_LONG).show();
                         }
                     });
-                } else {
-//                    Log.e(TAG, "doInBackground: " + DataUtils.getAllEntries().size());
-//                    for (Entry entry : DataUtils.getAllEntries()) {
-//                        for (Event event : entry.getEvents()) {
-//                            Log.e(TAG, "doInBackground: " + event.getTitle());
-//                            Log.e(TAG, "doInBackground: " + TimeUtils.getFormattedDate(event.getStartDate(), "dd/MM/yyyy"));
-//                        }
-//                    }
                 }
                 return null;
             }
@@ -269,6 +262,7 @@ public class MainActivity extends AppCompatActivity
             protected void onPostExecute(Void aVoid) {
                 mDialog.dismiss();
                 mDialog = null;
+                ReminderUtils.scheduleForReadingReminders(MainActivity.this);
                 replaceFragment(ScheduleViewFragment.class);
             }
 

@@ -2,6 +2,7 @@ package tcd.training.com.calendar.ReminderTask;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.firebase.jobdispatcher.Driver;
@@ -21,6 +22,7 @@ import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.Entry;
 import tcd.training.com.calendar.Data.Event;
 import tcd.training.com.calendar.Data.TimeUtils;
+import tcd.training.com.calendar.R;
 
 /**
  * Created by cpu10661-local on 9/7/17.
@@ -36,14 +38,15 @@ public class ReadTodayRemindersJobService extends JobService {
     public static final String ARG_EVENT_START_TIME = "eventStartTime";
     public static final String ARG_EVENT_PRIORITY= "eventPriority";
 
-    private AsyncTask mBackgroundTask;
+    private AsyncTask<Void, Void, Void> mBackgroundTask;
 
     @Override
     public boolean onStartJob(final JobParameters job) {
 
-        mBackgroundTask = new AsyncTask() {
+        mBackgroundTask = new AsyncTask<Void, Void, Void>() {
+
             @Override
-            protected Object doInBackground(Object[] objects) {
+            protected Void doInBackground(Void... voids) {
 
                 DataUtils.readEventPrioritiesFromFile(ReadTodayRemindersJobService.this);
 
@@ -51,7 +54,6 @@ public class ReadTodayRemindersJobService extends JobService {
                 if (events != null) {
                     for (Event event : events) {
                         int reminderTime = calculateReminderTime(event);
-                        Log.e(TAG, "doInBackground: " + reminderTime);
                         if (reminderTime < 0) {
                             continue;
                         }
@@ -63,12 +65,16 @@ public class ReadTodayRemindersJobService extends JobService {
             }
 
             @Override
-            protected void onPostExecute(Object o) {
+            protected void onPostExecute(Void aVoid) {
                 jobFinished(job, false);
             }
         };
 
-        mBackgroundTask.execute();
+        boolean notifyOnThisDevice = PreferenceManager.getDefaultSharedPreferences(this)
+                .getBoolean(getString(R.string.pref_key_notify_on_this_device), true);
+        if (notifyOnThisDevice) {
+            mBackgroundTask.execute();
+        }
         return true;
     }
 
@@ -122,6 +128,7 @@ public class ReadTodayRemindersJobService extends JobService {
             time -= beforeTime;
         }
 
+        Log.d(TAG, "calculateReminderTime: " + time);
         return (int) time;
     }
 

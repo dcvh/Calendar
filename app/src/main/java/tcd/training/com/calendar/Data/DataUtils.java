@@ -412,7 +412,6 @@ public class DataUtils {
                 String line;
                 while ((line = bufferedReader.readLine()) != null) {
                     int id = Integer.parseInt(line);
-                    Log.e(TAG, "readEventPrioritiesFromFile: 3 - " + id);
                     for (Entry entry : mEntries) {
                         for (Event event : entry.getEvents()) {
                             if (event.getId() == id) {
@@ -564,8 +563,6 @@ public class DataUtils {
 
     public static Entry getEntryIn(long millis, Context context) {
 
-        Entry entry = findEntryWithDate(millis);
-
         // start of the date
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(millis);
@@ -574,52 +571,44 @@ public class DataUtils {
         long start = cal.getTimeInMillis();
 
         // end of the date
-        cal.add(Calendar.DAY_OF_MONTH, 1);
-        long end = cal.getTimeInMillis();
+        long end = start + TimeUnit.DAYS.toMillis(1) - TimeUnit.MINUTES.toMillis(1);
 
-        // TODO: 9/15/17 this is temporary walkaround, must be fixed in the future
-        start -= TimeUnit.DAYS.toMillis(30);
-        end += TimeUnit.DAYS.toMillis(30);
-
-        for (Event event : mFreqEvent) {
-            ArrayList<Long> instances = readCalendarInstances(context, event.getId(), start, end);
-            if (instances != null) {
-                if (entry == null) {
-                    entry = new Entry(millis, new ArrayList<Event>());
-                }
-                for (int i = 0; i < instances.size(); i += 2) {
-                    Event newInstance = new Event(event);
-                    newInstance.setStartDate(instances.get(i));
-                    newInstance.setEndDate(instances.get(i + 1));
-
-                    // TODO: 9/15/17 this too
-                    if (TimeUtils.isSameDay(millis, newInstance.getStartDate())) {
-                        entry.addEvent(newInstance);
-                    }
-                }
-            }
+        Entry entry = null;
+        ArrayList<Entry> entries = getEntriesBetween(context, start, end);
+        if (entries.size() == 1) {
+            entry = entries.get(0);
         }
 
         return entry;
     }
 
     public static ArrayList<Entry> getEntriesBetween(Context context, long start, long end) {
+
         ArrayList<Entry> entries = new ArrayList<>();
 
         for (Entry entry : mEntries) {
             if (entry.getTime() > start && entry.getTime() < end) {
-                entries.add(entry);
+                entries.add(new Entry(entry));
             }
         }
 
         for (Event event : mFreqEvent) {
-            ArrayList<Long> instances = readCalendarInstances(context, event.getId(), start, end);
+
+            // TODO: 16/09/2017 the expanded time is a temporary walk-around, this must be fixed in the future
+            int expandedTime = 30;
+            ArrayList<Long> instances = readCalendarInstances(context, event.getId(),
+                    start - TimeUnit.DAYS.toMillis(expandedTime), end + TimeUnit.DAYS.toMillis(expandedTime));
+
             if (instances != null) {
                 for (int i = 0; i < instances.size(); i += 2) {
                     Event newInstance = new Event(event);
                     newInstance.setStartDate(instances.get(i));
                     newInstance.setEndDate(instances.get(i + 1));
-                    addEventToEntries(entries, newInstance);
+
+                    // TODO: 16/09/2017 this too
+                    if (TimeUtils.compareDay(instances.get(i), start) >= 0 && TimeUtils.compareDay(instances.get(i), end) <= 0) {
+                        addEventToEntries(entries, newInstance);
+                    }
                 }
             }
         }

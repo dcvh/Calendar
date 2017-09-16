@@ -1,7 +1,11 @@
 package tcd.training.com.calendar.ReminderTask;
 
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.firebase.jobdispatcher.JobParameters;
@@ -9,6 +13,7 @@ import com.firebase.jobdispatcher.JobService;
 
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
 import tcd.training.com.calendar.Data.TimeUtils;
+import tcd.training.com.calendar.R;
 
 /**
  * Created by cpu10661-local on 9/7/17.
@@ -18,14 +23,16 @@ public class ReminderJobService extends JobService {
 
     private static final String TAG = ReminderJobService.class.getSimpleName();
 
-    private AsyncTask mBackgroundTask;
+    private static final int VIBRATE_DURATION = 150;
+
+    private AsyncTask<Void, Void, Void> mBackgroundTask;
 
     @Override
     public boolean onStartJob(final JobParameters job) {
 
-        mBackgroundTask = new AsyncTask() {
+        mBackgroundTask = new AsyncTask<Void, Void, Void>() {
             @Override
-            protected Object doInBackground(Object[] objects) {
+            protected Void doInBackground(Void... voids) {
 
                 Bundle bundle = job.getExtras();
 
@@ -35,15 +42,24 @@ public class ReminderJobService extends JobService {
                     long startTime = bundle.getLong(ReadTodayRemindersJobService.ARG_EVENT_START_TIME);
                     long priority = bundle.getInt(ReadTodayRemindersJobService.ARG_EVENT_PRIORITY);
 
+                    boolean vibrate = PreferenceManager.getDefaultSharedPreferences(ReminderJobService.this)
+                            .getBoolean(getString(R.string.pref_key_vibrate), false);
+                    if (vibrate) {
+                        Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+                        if (Build.VERSION.SDK_INT >= 26) {
+                            vibrator.vibrate(VibrationEffect.createOneShot(VIBRATE_DURATION, VibrationEffect.DEFAULT_AMPLITUDE));
+                        } else {
+                            vibrator.vibrate(VIBRATE_DURATION);
+                        }
+                    }
+
                     if (priority == AddEventActivity.PRIORITY_NOTIFICATION) {
-                        Log.e(TAG, "doInBackground: notification");
                         ReminderUtils.showReminderNotification(
                                 ReminderJobService.this,
                                 title,
                                 TimeUtils.getFormattedDate(startTime, TimeUtils.getStandardTimeFormat())
                         );
                     } else if (priority == AddEventActivity.PRIORITY_POPUP) {
-                        Log.e(TAG, "doInBackground: popup");
                         ReminderUtils.showReminderPopup(
                                 ReminderJobService.this,
                                 title,
@@ -58,7 +74,7 @@ public class ReminderJobService extends JobService {
             }
 
             @Override
-            protected void onPostExecute(Object o) {
+            protected void onPostExecute(Void aVoid) {
                 jobFinished(job, false);
             }
         };

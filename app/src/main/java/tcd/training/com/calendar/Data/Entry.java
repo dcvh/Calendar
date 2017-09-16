@@ -15,14 +15,24 @@ public class Entry implements Comparable<Entry> {
     private ArrayList<Event> mEvents;
 
     public Entry(long millis, ArrayList<Event> events) {
-        this.mMillis = millis;
-        this.mEvents = events;
+        mMillis = millis;
+        mEvents = events;
     }
 
     public Entry(long millis, String description, ArrayList<Event> events) {
-        this.mMillis = millis;
-        this.mDescription = description;
-        this.mEvents = events;
+        mMillis = millis;
+        mDescription = description;
+        mEvents = events;
+    }
+
+    public Entry(Entry entry) {
+        mMillis = entry.getTime();
+        mDescription = entry.getDescription();
+
+        mEvents = new ArrayList<>();
+        for (Event event : entry.getEvents()) {
+            mEvents.add(event);
+        }
     }
 
     public long getTime() {

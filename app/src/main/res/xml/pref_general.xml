@@ -4,7 +4,7 @@
      dismiss it. -->
     <!-- NOTE: ListPreference's summary should be set to its value by the activity code. -->
     <ListPreference
-        android:defaultValue="-1"
+        android:defaultValue="@string/pref_start_of_the_week_default"
         android:entries="@array/pref_start_of_the_week_list_titles"
         android:entryValues="@array/pref_start_of_the_week_list_titles"
         android:key="@string/pref_key_start_of_the_week"
@@ -20,7 +20,7 @@
     <!-- NOTE: EditTextPreference accepts EditText attributes. -->
     <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
     <ListPreference
-        android:defaultValue="3"
+        android:defaultValue="@string/pref_default_event_duration_values_default"
         android:entries="@array/pref_default_event_duration_titles"
         android:entryValues="@array/pref_default_event_duration_values"
         android:key="@string/pref_key_default_event_duration"
