@@ -2,11 +2,9 @@ package tcd.training.com.calendar.ContentView.Schedule;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.Color;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,8 +12,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -67,8 +63,10 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 viewHolder = new WeekViewHolder(view);
                 break;
             case TYPE_MONTH:
-                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_schedule_month, parent, false);
-                viewHolder = new MonthViewHolder(view);
+//                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_schedule_month, parent, false);
+//                viewHolder = new MonthViewHolder(view);
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_schedule_month_parallex, parent, false);
+                viewHolder = new ParallaxViewHolder(view);
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown type");
@@ -154,10 +152,15 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 break;
 
             case TYPE_MONTH:
-                MonthViewHolder monthHolder = (MonthViewHolder) viewHolder;
+//                MonthViewHolder monthHolder = (MonthViewHolder) viewHolder;
+                ParallaxViewHolder monthHolder = (ParallaxViewHolder) viewHolder;
+                monthHolder.mMonthImageView.reuse();
+
                 int resId = ViewUtils.getMonthImageResourceId(entry.getDescription().substring(0, entry.getDescription().indexOf(" ")));
-                Glide.with(mContext).load(resId).into(monthHolder.mMonthImageView);
+                monthHolder.mMonthImageView.setImageResource(resId);
+
                 monthHolder.mMonthTextView.setText(entry.getDescription());
+
                 break;
         }
     }
@@ -234,6 +237,41 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             super(itemView);
             mMonthImageView = itemView.findViewById(R.id.iv_month_image);
             mMonthTextView = itemView.findViewById(R.id.tv_month);
+        }
+    }
+
+    class ParallaxViewHolder extends RecyclerView.ViewHolder implements ParallaxImageView.ParallaxImageListener {
+
+        private ParallaxImageView mMonthImageView;
+        private TextView mMonthTextView;
+
+        ParallaxViewHolder(View itemView) {
+            super(itemView);
+
+            mMonthImageView = itemView.findViewById(R.id.iv_month_image);
+            mMonthImageView.setListener(this);
+
+            mMonthTextView = itemView.findViewById(R.id.tv_month);
+        }
+
+        @Override
+        public int[] requireValuesForTranslate() {
+            if (itemView.getParent() == null) {
+                // Not added to parent yet!
+                return null;
+            } else {
+                int[] itemPosition = new int[2];
+                itemView.getLocationOnScreen(itemPosition);
+
+                int[] recyclerPosition = new int[2];
+                ((RecyclerView) itemView.getParent()).getLocationOnScreen(recyclerPosition);
+
+                return new int[]{itemPosition[1], ((RecyclerView) itemView.getParent()).getMeasuredHeight(), recyclerPosition[1]};
+            }
+        }
+
+        void animateImage() {
+            mMonthImageView.doTranslate();
         }
     }
 }

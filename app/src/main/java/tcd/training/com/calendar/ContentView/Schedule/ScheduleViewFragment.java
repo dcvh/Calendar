@@ -19,6 +19,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import tcd.training.com.calendar.ContentView.Schedule.CalendarEntriesAdapter.ParallaxViewHolder;
 import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.Entry;
 import tcd.training.com.calendar.Data.Event;
@@ -242,6 +243,13 @@ public class ScheduleViewFragment extends Fragment {
                         mEndWeekIndex = newEndIndex;
                     }
                 }
+
+                for (int i = 0; i < recyclerView.getChildCount(); i++) {
+                    RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(recyclerView.getChildAt(i));
+                    if (viewHolder instanceof ParallaxViewHolder) {
+                        ((ParallaxViewHolder) viewHolder).animateImage();
+                    }
+                }
             }
         });
 
@@ -263,7 +271,7 @@ public class ScheduleViewFragment extends Fragment {
         // TODO: 09/09/2017 this is temporary, must be fixed in the future for better performance
         for (int i = 0; i < mEntriesList.size(); i++) {
             if (TimeUtils.isSameDay(mEntriesList.get(i).getTime(), today)) {
-                if (Math.abs(mCurrentPosition - i) > 100) {
+                if (Math.abs(mCurrentPosition - i) > 50) {
                     mLayoutManager.scrollToPositionWithOffset(i, 0);
                 } else {
                     smoothScroller.setTargetPosition(i);
