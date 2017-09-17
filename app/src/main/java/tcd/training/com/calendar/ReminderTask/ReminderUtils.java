@@ -87,7 +87,7 @@ public class ReminderUtils {
         notificationManager.cancelAll();
     }
 
-    public static void showReminderNotification(Context context, String title, String content) {
+    public static void showReminderNotification(Context context, String title, String message) {
 
         Intent startActivityIntent = new Intent(context, MainActivity.class);
         PendingIntent intent = PendingIntent.getActivity(context, REMINDER_PENDING_INTENT_ID, startActivityIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -99,8 +99,9 @@ public class ReminderUtils {
                 .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(title)
-                .setContentText(content)
+                .setContentText(message)
                 .setDefaults(Notification.DEFAULT_VIBRATE)
+                .setColor(ContextCompat.getColor(context, R.color.colorAccent))
                 .setSound(ringtoneUri)
                 .setContentIntent(intent)
                 .setAutoCancel(true);

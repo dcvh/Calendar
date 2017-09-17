@@ -266,7 +266,6 @@ public class MainActivity extends AppCompatActivity
             protected void onPostExecute(Void aVoid) {
                 mDialog.dismiss();
                 mDialog = null;
-                ReminderUtils.scheduleForReadingReminders(MainActivity.this);
                 selectItemNavigation(R.id.nav_schedule);
             }
 

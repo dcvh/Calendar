@@ -427,7 +427,6 @@ public class DataUtils {
     }
 
 
-
     public static long addEvent(Event event, Reminder reminder, Context context) {
 
         ContentResolver cr = context.getContentResolver();
@@ -659,6 +658,17 @@ public class DataUtils {
     }
 
 
+    public static Event findEventById(long id) {
+        Event result = null;
+        for (Entry entry : mEntries) {
+            for (Event event : entry.getEvents()) {
+                if (event.getId() == id) {
+                    result = new Event(event);
+                }
+            }
+        }
+        return result;
+    }
 
     /**
      *

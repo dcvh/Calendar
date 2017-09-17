@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
+import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.TimeUtils;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.Data.Entry;
@@ -84,10 +85,10 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 return TYPE_MONTH;
             }
         } else {
-            if (entry.getEvents().size() > 0) {
-                return TYPE_EVENT;
-            } else {
+            if (TimeUtils.isSameDay(entry.getTime(), Calendar.getInstance().getTimeInMillis())) {
                 return TYPE_TODAY;
+            } else {
+                return TYPE_EVENT;
             }
         }
     }
@@ -144,6 +145,7 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                     }
                 }
 
+                todayHolder.setIsRecyclable(false);
                 break;
 
             case TYPE_WEEK:

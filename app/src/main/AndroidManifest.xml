@@ -57,6 +57,14 @@
         <activity android:name=".ReminderTask.EventPopup"
             android:theme="@style/Theme.Transparent"
             android:launchMode="singleTop"/>
+
+        <receiver android:name=".ReminderTask.EventReminderReceiver"  android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.EVENT_REMINDER" />
+                <data android:scheme="content"/>
+                <data android:host="com.android.calendar"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
