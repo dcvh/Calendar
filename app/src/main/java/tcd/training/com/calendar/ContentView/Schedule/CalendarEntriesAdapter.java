@@ -3,6 +3,7 @@ package tcd.training.com.calendar.ContentView.Schedule;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.RecyclerView;
@@ -40,10 +41,14 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
     private ArrayList<Entry> mEntriesList;
     private Context mContext;
+    private boolean mShowLunarDate;
 
     public CalendarEntriesAdapter(Context context, ArrayList<Entry> mEntriesList) {
         this.mContext = context;
         this.mEntriesList = mEntriesList;
+
+        mShowLunarDate = PreferenceManager.getDefaultSharedPreferences(mContext)
+                .getBoolean(mContext.getString(R.string.pref_key_show_lunar_calendar), false);
     }
 
     @Override
@@ -168,6 +173,7 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     }
 
     private void createDateTextViews(EntryViewHolder holder, final Entry entry) {
+
         // day and month
         holder.mDayOfMonthTextView.setText(TimeUtils.getFormattedDate(entry.getTime(), "d"));
         holder.mDayOfWeekTextView.setText(TimeUtils.getFormattedDate(entry.getTime(), "EEE"));
@@ -176,6 +182,10 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             holder.mDayOfMonthTextView.setTextColor(blackColor);
             holder.mDayOfWeekTextView.setTextColor(blackColor);
         }
+
+        // lunar day
+        holder.mLunarDayTextView.setText(TimeUtils.getLunarString(entry.getTime()));
+        holder.mLunarDayTextView.setVisibility(View.VISIBLE);
 
         holder.mDayOfMonthTextView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -196,12 +206,14 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
         protected TextView mDayOfMonthTextView;
         protected TextView mDayOfWeekTextView;
+        protected TextView mLunarDayTextView;
         protected LinearLayout mEventsLinearLayout;
 
         EntryViewHolder(View itemView) {
             super(itemView);
             mDayOfMonthTextView = itemView.findViewById(R.id.tv_day_of_month);
             mDayOfWeekTextView = itemView.findViewById(R.id.tv_day_of_week);
+            mLunarDayTextView = itemView.findViewById(R.id.tv_lunar_day);
             mEventsLinearLayout= itemView.findViewById(R.id.ll_events);
         }
     }

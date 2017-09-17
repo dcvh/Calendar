@@ -427,6 +427,7 @@ public class DataUtils {
     }
 
 
+
     public static long addEvent(Event event, Reminder reminder, Context context) {
 
         ContentResolver cr = context.getContentResolver();
@@ -658,12 +659,15 @@ public class DataUtils {
     }
 
 
+
     public static Event findEventById(long id) {
         Event result = null;
-        for (Entry entry : mEntries) {
-            for (Event event : entry.getEvents()) {
-                if (event.getId() == id) {
-                    result = new Event(event);
+        if (mEntries != null) {
+            for (Entry entry : mEntries) {
+                for (Event event : entry.getEvents()) {
+                    if (event.getId() == id) {
+                        result = new Event(event);
+                    }
                 }
             }
         }
@@ -681,6 +685,9 @@ public class DataUtils {
     }
 
     public static Entry findEntryWithDate(ArrayList<Entry> entries, long millis) {
+        if (entries == null) {
+            return null;
+        }
         int index = findEntryIndexWithDate(entries, millis);
         return index < 0 ? null : entries.get(index);
     }

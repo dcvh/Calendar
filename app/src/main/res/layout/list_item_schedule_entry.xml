@@ -25,12 +25,19 @@
             android:layout_height="wrap_content"
             android:textSize="14sp"/>
 
+        <TextView
+            android:id="@+id/tv_lunar_day"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:visibility="gone"/>
+
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/ll_events"
         android:layout_width="0dp"
-        android:layout_weight="6"
+        android:layout_weight="5"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_marginLeft="16dp"

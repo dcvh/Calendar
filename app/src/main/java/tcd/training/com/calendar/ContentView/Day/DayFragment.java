@@ -2,6 +2,7 @@ package tcd.training.com.calendar.ContentView.Day;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -36,6 +37,7 @@ public class DayFragment extends Fragment {
     private Calendar mCurDay;
     private Context mContext;
     private Entry mEntry;
+    private boolean mShowLunarDate;
 
     private LinearLayout mHeaderLayout;
     private LinearLayout mAllDayEventsLayout;
@@ -57,16 +59,16 @@ public class DayFragment extends Fragment {
         if (getArguments() != null) {
             mCurDay = (Calendar) getArguments().getSerializable(ARG_DISPLAY_DAY);
         }
+
+        mContext = getContext();
+        mShowLunarDate = PreferenceManager.getDefaultSharedPreferences(mContext)
+                .getBoolean(getString(R.string.pref_key_show_lunar_calendar), false);
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.content_day, container, false);
-
-        mContext = view.getContext();
-
-
 
         initializeUiComponents(view);
         createHeader();
@@ -95,6 +97,12 @@ public class DayFragment extends Fragment {
 
         dayOfMonthTextView.setText(String.valueOf(mCurDay.get(Calendar.DAY_OF_MONTH)));
         dayOfWeekTextView.setText(TimeUtils.getFormattedDate(mCurDay.getTimeInMillis(), "EEE"));
+
+        if (mShowLunarDate) {
+            TextView lunarDateTextView = mHeaderLayout.findViewById(R.id.tv_lunar_day);
+            lunarDateTextView.setText(TimeUtils.getLunarString(mCurDay.getTimeInMillis()));
+            lunarDateTextView.setVisibility(View.VISIBLE);
+        }
 
         mEntry = DataUtils.getEntryIn(mCurDay.getTimeInMillis(), mContext);
         if (mEntry != null) {

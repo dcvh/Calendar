@@ -68,7 +68,7 @@
 
     <!--add event activity-->
     <string name="save">Save</string>
-    <string name="enter_title">Enter title, times, people, places...</string>
+    <string name="enter_title">Enter title, times, people, places…</string>
     <string name="invite_people">Invite people</string>
     <string name="does_not_repeat">Does not repeat</string>
     <string name="add_location">Add location</string>
@@ -85,7 +85,7 @@
     <string name="every_month">Every month</string>
     <string name="every_year">Every year</string>
     <string name="no_notification">No notification</string>
-    <string name="custom">Custom...</string>
+    <string name="custom">Custom…</string>
     <string name="before">before</string>
     <string name="done">Done</string>
     <string name="no_event">Nothing planned. Tap to create.</string>
@@ -136,6 +136,8 @@
         <item>120</item>
     </string-array>
     <string name="pref_default_event_duration_values_default">60</string>
+    <string name="pref_key_show_lunar_calendar" translatable="false">show_lunar_calendar</string>
+    <string name="pref_title_show_lunar_calendar">Show lunar calendar</string>
     <!-- notifications -->
     <string name="pref_header_notifications">Notifications</string>
     <string name="pref_key_notify_on_this_device" translatable="false">notify_on_this_device</string>

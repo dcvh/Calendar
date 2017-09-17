@@ -68,6 +68,37 @@ public class TimeUtils {
         return "hh:mm a";
     }
 
+    public static String getLunarString(long millis) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(millis);
+        return getLunarString(calendar);
+    }
+
+    public static String getLunarString(Calendar calendar){
+
+        LunarDay lunarDay = new LunarDay(calendar);
+
+        String lunarString;
+        if (lunarDay.isHoliday()) {
+            lunarString = lunarDay.getLunar().getLunarHoliday();
+            if (lunarString == null) {
+                lunarString = lunarDay.getLunar().getSolarHolidy();
+                if (lunarString == null) {
+                    lunarString = lunarDay.getLunarDay();
+                    if (lunarDay.isFirstDay()) {
+                        lunarString += "/" + lunarDay.getLunar().getLunarMonth();
+                    }
+                }
+            }
+        } else {
+            lunarString = lunarDay.getLunarDay();
+            if (lunarDay.getLunar().getLunarDayNum() == 1) {
+                lunarString += "/" + lunarDay.getLunar().getLunarMonth();
+            }
+        }
+        return lunarString;
+    }
+
     public static long getMillis(String date, String pattern) {
         Calendar cal = Calendar.getInstance();
         SimpleDateFormat format = new SimpleDateFormat(pattern, Locale.getDefault());

@@ -11,23 +11,19 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.concurrent.TimeUnit;
 
 import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.Entry;
-import tcd.training.com.calendar.Data.Event;
 import tcd.training.com.calendar.Data.TimeUtils;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.ContentView.Day.DayViewFragment;
@@ -51,6 +47,7 @@ public class MonthFragment extends Fragment {
     private String[] mDayOrder;
     private Calendar mStartDate, mEndDate;
     private ArrayList<Entry> mEntries;
+    private boolean mShowLunarDate;
 
     private TableRow mTableHeader;
     private TableRow mTableRow1;
@@ -74,14 +71,16 @@ public class MonthFragment extends Fragment {
         if (getArguments() != null) {
             mCurMonth = (Calendar) getArguments().getSerializable(ARG_DISPLAY_MONTH);
         }
+
+        mContext = getContext();
+        mShowLunarDate = PreferenceManager.getDefaultSharedPreferences(mContext)
+                .getBoolean(getString(R.string.pref_key_show_lunar_calendar), false);
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.content_month, container, false);
-
-        mContext = view.getContext();
 
         generateDisplayDays();
         mEntries = DataUtils.getEntriesBetween(mContext, mStartDate.getTimeInMillis(), mEndDate.getTimeInMillis());
@@ -213,7 +212,12 @@ public class MonthFragment extends Fragment {
 
     private View createDateView(final Calendar calendar, int dateColor) {
 
-        final TextView dateTextView = getTextView(String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)), DEFAULT_TEXT_SIZE, dateColor, Typeface.NORMAL);
+        // prepare date and lunar date
+        String dateString = String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
+        if (mShowLunarDate) {
+            dateString += "\n" + TimeUtils.getLunarString(calendar);
+        }
+        final TextView dateTextView = getTextView(dateString, DEFAULT_TEXT_SIZE, dateColor, Typeface.NORMAL);
 
         // tint today
         long today = Calendar.getInstance().getTimeInMillis();
