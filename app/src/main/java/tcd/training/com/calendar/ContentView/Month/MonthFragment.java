@@ -10,6 +10,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -213,6 +214,12 @@ public class MonthFragment extends Fragment {
     private View createDateView(final Calendar calendar, int dateColor) {
 
         final TextView dateTextView = getTextView(String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)), DEFAULT_TEXT_SIZE, dateColor, Typeface.NORMAL);
+
+        // tint today
+        long today = Calendar.getInstance().getTimeInMillis();
+        if (TimeUtils.isSameDay(calendar.getTimeInMillis(), today)) {
+            dateTextView.setTextColor(ContextCompat.getColor(mContext, R.color.colorAccent));
+        }
 
         Entry entry = DataUtils.findEntryWithDate(mEntries, calendar.getTimeInMillis());
 

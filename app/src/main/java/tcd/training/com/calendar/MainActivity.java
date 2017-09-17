@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity
     private static final int RC_CALENDAR_PERMISSION = 1;
 
     private DrawerLayout mDrawerLayout;
+    private NavigationView mNavigationView;
 
     private FragmentManager mFragmentManager;
     private Fragment mCurrentFragment;
@@ -170,7 +171,10 @@ public class MainActivity extends AppCompatActivity
             Window window = getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-            window.setStatusBarColor(ViewUtils.getDarkerColor(Color.WHITE));
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimaryDark));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+            }
         }
 
         // toolbar
@@ -194,8 +198,8 @@ public class MainActivity extends AppCompatActivity
         mDrawerLayout.setDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        mNavigationView = (NavigationView) findViewById(R.id.nav_view);
+        mNavigationView.setNavigationItemSelectedListener(this);
     }
 
     private void initializeBasicComponents() {
@@ -263,10 +267,15 @@ public class MainActivity extends AppCompatActivity
                 mDialog.dismiss();
                 mDialog = null;
                 ReminderUtils.scheduleForReadingReminders(MainActivity.this);
-                replaceFragment(ScheduleViewFragment.class);
+                selectItemNavigation(R.id.nav_schedule);
             }
 
         }.execute();
+    }
+
+    private void selectItemNavigation(int id) {
+        mNavigationView.setCheckedItem(id);
+        mNavigationView.getMenu().performIdentifierAction(id, 0);
     }
 
     private boolean requestWriteCalendarPermission() {
