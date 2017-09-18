@@ -43,6 +43,10 @@ public class Entry implements Comparable<Entry> {
         return mDescription;
     }
 
+    public void setDescription(String description) {
+        mDescription = description;
+    }
+
     public ArrayList<Event> getEvents() {
         return mEvents;
     }

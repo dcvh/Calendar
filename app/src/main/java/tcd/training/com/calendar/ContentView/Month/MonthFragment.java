@@ -1,6 +1,7 @@
 package tcd.training.com.calendar.ContentView.Month;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -11,6 +12,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,7 +26,9 @@ import java.util.Calendar;
 
 import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.Entry;
+import tcd.training.com.calendar.Data.Event;
 import tcd.training.com.calendar.Data.TimeUtils;
+import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.ContentView.Day.DayViewFragment;
 import tcd.training.com.calendar.ViewUtils;
@@ -37,7 +41,7 @@ public class MonthFragment extends Fragment {
 
     private static final String TAG = MonthFragment.class.getSimpleName();
     private static final int DEFAULT_TEXT_SIZE = 10;
-    private static final int NUMBER_OF_DISPLAY_EVENTS = 2;
+    private static final int NUMBER_OF_DISPLAY_EVENTS = 3;
 
     public final static String ARG_DISPLAY_MONTH = "ARG_DISPLAY_MONTH";
 
@@ -240,7 +244,10 @@ public class MonthFragment extends Fragment {
 
             layout.addView(dateTextView);
 
+            int dpToPx_4 = ViewUtils.dpToPixel(4);
             for (int i = 0; i < entry.getEvents().size(); i++) {
+
+                Event event = entry.getEvents().get(i);
 
                 if (i >= NUMBER_OF_DISPLAY_EVENTS) {
                     String x_more = String.format(getString(R.string.x_more), entry.getEvents().size() - NUMBER_OF_DISPLAY_EVENTS);
@@ -248,29 +255,30 @@ public class MonthFragment extends Fragment {
                     break;
                 }
 
-                TextView eventTextView = ViewUtils.getStandardTextView(entry.getEvents().get(i).getTitle(), mContext);
+                String title = event.getTitle() != null && event.getTitle().length() > 0  ?
+                        event.getTitle() : mContext.getString(R.string.no_title);
+                TextView eventTextView = ViewUtils.getStandardTextView(title, mContext);
                 eventTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, DEFAULT_TEXT_SIZE);
+//                eventTextView.setBackgroundColor(event.getDisplayColor());
                 eventTextView.setBackgroundResource(R.drawable.layout_round_corner);
                 GradientDrawable drawable = (GradientDrawable) eventTextView.getBackground();
-                drawable.setColor(entry.getEvents().get(i).getDisplayColor());
+                drawable.setColor(event.getDisplayColor());
 
+                eventTextView.setPadding(dpToPx_4, 0, dpToPx_4, 0);
                 layout.addView(eventTextView);
             }
 
             resultView = layout;
         }
 
-        final long date = calendar.getTimeInMillis();
+        final long timeInMillis = calendar.getTimeInMillis();
         resultView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                DayViewFragment newFragment = DayViewFragment.newInstance(date);
-                FragmentTransaction transaction = getParentFragment().getFragmentManager().beginTransaction();
-                transaction
-                        .addToBackStack(null)
-                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-                        .replace(R.id.fl_content, newFragment)
-                        .commit();
+                Intent intent = new Intent(MainActivity.UPDATE_CONTENT_VIEW_ACTION);
+                intent.putExtra(MainActivity.ARG_CONTENT_VIEW_TYPE, R.id.nav_day);
+                intent.putExtra(MainActivity.ARG_TIME_IN_MILLIS, timeInMillis);
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             }
         });
 

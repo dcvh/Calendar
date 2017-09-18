@@ -21,7 +21,7 @@
 
     <!--calendar events-->
     <string name="no_calendar_events_error">No event found!</string>
-    <string name="no_title">No title</string>
+    <string name="no_title">(No title)</string>
     <string name="wait_load_events_message">Please wait while system loads events</string>
     <string name="x_more">%d more</string>
     <string name="show_less">Show less</string>
@@ -99,6 +99,7 @@
     <string name="delete">Delete</string>
     <string name="notification">As notification</string>
     <string name="popup">As popup</string>
+    <string name="ok">OK</string>
 
     <!--permissions-->
     <string name="grant">Grant</string>
@@ -184,6 +185,4 @@
     <string-array name="multi_select_list_preference_default_value" />
 
     <string name="pref_title_system_sync_settings">System sync settings</string>
-    <string name="ok">OK</string>
-
 </resources>

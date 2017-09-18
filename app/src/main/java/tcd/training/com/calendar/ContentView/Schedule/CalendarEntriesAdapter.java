@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +21,7 @@ import java.util.Calendar;
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
 import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.TimeUtils;
+import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.Data.Entry;
 import tcd.training.com.calendar.Data.Event;
@@ -39,13 +41,13 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     private static final int TYPE_TODAY = 3;
     private static final int TYPE_MONTH = 4;
 
-    private ArrayList<Entry> mEntriesList;
+    private ArrayList<Entry> mEntries;
     private Context mContext;
     private boolean mShowLunarDate;
 
-    public CalendarEntriesAdapter(Context context, ArrayList<Entry> mEntriesList) {
+    public CalendarEntriesAdapter(Context context, ArrayList<Entry> mEntries) {
         this.mContext = context;
-        this.mEntriesList = mEntriesList;
+        this.mEntries = mEntries;
 
         mShowLunarDate = PreferenceManager.getDefaultSharedPreferences(mContext)
                 .getBoolean(mContext.getString(R.string.pref_key_show_lunar_calendar), false);
@@ -82,19 +84,16 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
     @Override
     public int getItemViewType(int position) {
-        Entry entry = mEntriesList.get(position);
-        if (entry.getEvents() == null) {
-            if (entry.getDescription().contains("-")){
-                return TYPE_WEEK;
-            } else {
-                return TYPE_MONTH;
-            }
-        } else {
-            if (TimeUtils.isSameDay(entry.getTime(), Calendar.getInstance().getTimeInMillis())) {
-                return TYPE_TODAY;
-            } else {
+        String description = mEntries.get(position).getDescription();
+        if (description == null) {
+            return TYPE_EVENT;
+        }
+        switch (description) {
+            case "t": return TYPE_TODAY;
+            case "w": return TYPE_WEEK;
+            case "m": return TYPE_MONTH;
+            default:
                 return TYPE_EVENT;
-            }
         }
     }
 
@@ -105,13 +104,13 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
     @Override
     public int getItemCount() {
-        return mEntriesList.size();
+        return mEntries.size();
     }
 
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder viewHolder, int position) {
 
-        final Entry entry = mEntriesList.get(position);
+        final Entry entry = mEntries.get(position);
 
         switch (viewHolder.getItemViewType()) {
             case TYPE_EVENT:
@@ -155,7 +154,23 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
             case TYPE_WEEK:
                 WeekViewHolder weekHolder = (WeekViewHolder) viewHolder;
-                weekHolder.mWeekTextView.setText(entry.getDescription());
+
+                Calendar curTime = Calendar.getInstance();
+                Calendar week = Calendar.getInstance();
+                week.setTimeInMillis(entry.getTime());
+
+                String dateString = TimeUtils.getFormattedDate(entry.getTime(), "MMM, d") + " - ";
+                week.add(Calendar.DAY_OF_MONTH, 6);
+
+                dateString += week.get(Calendar.MONTH) == curTime.get(Calendar.MONTH) ?
+                    TimeUtils.getFormattedDate(week.getTimeInMillis(), "d") : TimeUtils.getFormattedDate(week.getTimeInMillis(), "MMM, d");
+
+                if (week.get(Calendar.YEAR) != curTime.get(Calendar.YEAR)) {
+                    dateString += ", " + week.get(Calendar.YEAR);
+                }
+
+
+                weekHolder.mWeekTextView.setText(dateString);
                 break;
 
             case TYPE_MONTH:
@@ -163,10 +178,11 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 ParallaxViewHolder monthHolder = (ParallaxViewHolder) viewHolder;
                 monthHolder.mMonthImageView.reuse();
 
-                int resId = ViewUtils.getMonthImageResourceId(entry.getDescription().substring(0, entry.getDescription().indexOf(" ")));
+//                int resId = ViewUtils.getMonthImageResourceId(entry.getDescription().substring(0, entry.getDescription().indexOf(" ")));
+                int resId = ViewUtils.getMonthImageResourceId(entry.getTime());
                 monthHolder.mMonthImageView.setImageResource(resId);
 
-                monthHolder.mMonthTextView.setText(entry.getDescription());
+                monthHolder.mMonthTextView.setText(TimeUtils.getFormattedDate(entry.getTime(), "MMMM"));
 
                 break;
         }
@@ -184,19 +200,18 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         }
 
         // lunar day
-        holder.mLunarDayTextView.setText(TimeUtils.getLunarString(entry.getTime()));
-        holder.mLunarDayTextView.setVisibility(View.VISIBLE);
+        if (mShowLunarDate) {
+            holder.mLunarDayTextView.setText(TimeUtils.getLunarString(entry.getTime()));
+            holder.mLunarDayTextView.setVisibility(View.VISIBLE);
+        }
 
         holder.mDayOfMonthTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                DayViewFragment newFragment = DayViewFragment.newInstance(entry.getTime());
-                FragmentTransaction transaction = ((FragmentActivity) mContext).getSupportFragmentManager().beginTransaction();
-                transaction
-                        .addToBackStack(null)
-                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-                        .replace(R.id.fl_content, newFragment)
-                        .commit();
+                Intent intent = new Intent(MainActivity.UPDATE_CONTENT_VIEW_ACTION);
+                intent.putExtra(MainActivity.ARG_CONTENT_VIEW_TYPE, R.id.nav_day);
+                intent.putExtra(MainActivity.ARG_TIME_IN_MILLIS, entry.getTime());
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             }
         });
 

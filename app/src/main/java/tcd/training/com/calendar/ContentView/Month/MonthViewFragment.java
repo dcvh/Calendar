@@ -2,6 +2,7 @@ package tcd.training.com.calendar.ContentView.Month;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -12,12 +13,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.prefs.PreferenceChangeListener;
 
-import tcd.training.com.calendar.Data.Entry;
+import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
 import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.TimeUtils;
 import tcd.training.com.calendar.MainActivity;
@@ -29,7 +29,7 @@ import static tcd.training.com.calendar.MainActivity.ARG_ENTRIES_LIST;
  * Created by cpu10661-local on 8/31/17.
  */
 
-public class MonthViewFragment extends Fragment {
+public class MonthViewFragment extends Fragment implements ContentViewBehaviors{
 
     private static final String TAG = MonthViewFragment.class.getSimpleName();
 
@@ -37,6 +37,7 @@ public class MonthViewFragment extends Fragment {
     private Context mContext;
 
     private ViewPager mMonthViewPager;
+    private MonthPagerAdapter mAdapter;
 
     public MonthViewFragment() {
     }
@@ -86,8 +87,8 @@ public class MonthViewFragment extends Fragment {
 
     private void initializeUiComponents(View view) {
         mMonthViewPager = view.findViewById(R.id.vp_month_view);
-        final MonthPagerAdapter adapter = new MonthPagerAdapter(getChildFragmentManager(), mMonths);
-        mMonthViewPager.setAdapter(adapter);
+        mAdapter = new MonthPagerAdapter(getChildFragmentManager(), mMonths);
+        mMonthViewPager.setAdapter(mAdapter);
 
         mMonthViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -99,10 +100,10 @@ public class MonthViewFragment extends Fragment {
             public void onPageSelected(int position) {
                 if (position == mMonths.size() - 1) {
                     addOneMoreYear(mMonths.get(mMonths.size() - 1).get(Calendar.YEAR) + 1, false);
-                    adapter.notifyDataSetChanged();
+                    mAdapter.notifyDataSetChanged();
                 } else if (position == 0) {
                     addOneMoreYear(mMonths.get(0).get(Calendar.YEAR) - 1, true);
-                    adapter.notifyDataSetChanged();
+                    mAdapter.notifyDataSetChanged();
                     mMonthViewPager.setCurrentItem(12, false);
                 }
                 sendUpdateMonthAction(mContext, position);
@@ -143,6 +144,7 @@ public class MonthViewFragment extends Fragment {
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
+    @Override
     public void scrollToToday() {
         long today = Calendar.getInstance().getTimeInMillis();
         int low = 0;
@@ -159,5 +161,20 @@ public class MonthViewFragment extends Fragment {
                 return;
             }
         }
+    }
+
+    @Override
+    public void addEvent() {
+        mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void removeEvent() {
+        mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void invalidate() {
+        mMonthViewPager.invalidate();
     }
 }

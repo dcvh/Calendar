@@ -134,8 +134,7 @@ public class EventDetailsActivity extends AppCompatActivity {
 
     private void showEventInfo() {
 
-        ((TextView)findViewById(R.id.tv_event_title)).setText(mEvent.getTitle());
-        findViewById(R.id.ll_event_title).setBackgroundColor(mEvent.getDisplayColor());
+        displayTitle();
 
         displayDateTime();
 
@@ -150,6 +149,13 @@ public class EventDetailsActivity extends AppCompatActivity {
         displayAccountDisplayName();
 
         displayAvailability();
+    }
+
+    private void displayTitle() {
+        String title = mEvent.getTitle() != null && mEvent.getTitle().length() > 0 ? mEvent.getTitle() : getString(R.string.no_title);
+        ((TextView)findViewById(R.id.tv_event_title)).setText(title);
+
+        findViewById(R.id.ll_event_title).setBackgroundColor(mEvent.getDisplayColor());
     }
 
     private void displayDateTime() {

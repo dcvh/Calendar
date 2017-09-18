@@ -8,25 +8,36 @@ import android.os.Parcelable;
  */
 
 public class Event implements Parcelable{
+
     private long mId;
     private String mTitle;
     private long mCalendarId;
     private String mLocation;
     private String mDescription;
     private String mTimeZone;
+
     private long mStartDate;
     private long mEndDate;
     private boolean mAllDay;
+
     private boolean mHasAlarm;
     private String mRRule;
     private String mDuration;
+
     private int mDisplayColor;
     private int mAvailability;
 
     private int mPriority;
 
-    public Event(String title, long calendarId, String location, String description, String timeZone, long startDate, long endDate,
-                 boolean allDay, boolean hasAlarm, String rRule, String duration, int displayColor, int availability) {
+    private boolean mIsDirty;
+    private boolean mIsDeleted;
+
+    public Event() {}
+
+    public Event(String title, long calendarId, String location, String description, String timeZone,
+                 long startDate, long endDate, boolean allDay,
+                 boolean hasAlarm, String rRule, String duration,
+                 int displayColor, int availability) {
         this.mTitle = title;
         this.mCalendarId = calendarId;
         this.mLocation = location;
@@ -42,10 +53,15 @@ public class Event implements Parcelable{
         this.mAvailability = availability;
     }
 
-    public Event(long id, String title, long calendarId, String location, String description, String timeZone, long startDate, long endDate,
-                 boolean allDay, boolean hasAlarm, String rRule, String duration, int displayColor, int availability) {
+    public Event(long id, String title, long calendarId, String location, String description, String timeZone,
+                 long startDate, long endDate, boolean allDay,
+                 boolean hasAlarm, String rRule, String duration,
+                 int displayColor, int availability,
+                 boolean isDirty, boolean isDeleted) {
         this(title, calendarId, location, description, timeZone, startDate, endDate, allDay, hasAlarm, rRule, duration, displayColor, availability);
         mId = id;
+        mIsDirty = isDirty;
+        mIsDeleted = isDeleted;
     }
 
     public Event(Event event) {
@@ -60,7 +76,10 @@ public class Event implements Parcelable{
                 event.hasAlarm(),
                 event.getRRule(), event.getDuration(),
                 event.getDisplayColor(),
-                event.getAvailability());
+                event.getAvailability(),
+                event.isDirty(),
+                event.isDeleted()
+        );
     }
 
     protected Event(Parcel in) {
@@ -69,6 +88,7 @@ public class Event implements Parcelable{
         mCalendarId = in.readLong();
         mLocation = in.readString();
         mDescription = in.readString();
+        mTimeZone = in.readString();
         mStartDate = in.readLong();
         mEndDate = in.readLong();
         mAllDay = in.readByte() != 0;
@@ -77,8 +97,9 @@ public class Event implements Parcelable{
         mDuration = in.readString();
         mDisplayColor = in.readInt();
         mAvailability = in.readInt();
-
         mPriority = in.readInt();
+        mIsDirty = in.readByte() != 0;
+        mIsDeleted = in.readByte() != 0;
     }
 
     public static final Creator<Event> CREATOR = new Creator<Event>() {
@@ -103,6 +124,10 @@ public class Event implements Parcelable{
 
     public String getTitle() {
         return mTitle;
+    }
+
+    public void setTitle(String title) {
+        mTitle = title;
     }
 
     public long getCalendarId() {
@@ -169,6 +194,14 @@ public class Event implements Parcelable{
         mPriority = priority;
     }
 
+    public boolean isDirty() {
+        return mIsDirty;
+    }
+
+    public boolean isDeleted() {
+        return mIsDeleted;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -176,12 +209,12 @@ public class Event implements Parcelable{
 
     @Override
     public void writeToParcel(Parcel parcel, int i) {
-
         parcel.writeLong(mId);
         parcel.writeString(mTitle);
         parcel.writeLong(mCalendarId);
         parcel.writeString(mLocation);
         parcel.writeString(mDescription);
+        parcel.writeString(mTimeZone);
         parcel.writeLong(mStartDate);
         parcel.writeLong(mEndDate);
         parcel.writeByte((byte) (mAllDay ? 1 : 0));
@@ -190,7 +223,8 @@ public class Event implements Parcelable{
         parcel.writeString(mDuration);
         parcel.writeInt(mDisplayColor);
         parcel.writeInt(mAvailability);
-
         parcel.writeInt(mPriority);
+        parcel.writeByte((byte) (mIsDirty ? 1 : 0));
+        parcel.writeByte((byte) (mIsDeleted ? 1 : 0));
     }
 }

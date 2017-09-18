@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
 import tcd.training.com.calendar.Data.DataUtils;
@@ -48,7 +49,9 @@ public class ViewUtils {
         drawable.setColor(event.getDisplayColor());
 
         // title
-        TextView titleTextView = getStandardTextView(event.getTitle(), context);
+        String title = event.getTitle() != null && event.getTitle().length() > 0  ?
+                event.getTitle() : context.getString(R.string.no_title);
+        TextView titleTextView = getStandardTextView(title, context);
         eventLayout.addView(titleTextView);
 
         // duration
@@ -101,6 +104,29 @@ public class ViewUtils {
             case "October": return R.drawable.bkg_10_october ;
             case "November": return R.drawable.bkg_11_november ;
             case "December": return R.drawable.bkg_12_december ;
+            default:
+                throw new UnsupportedOperationException("Unknown month");
+        }
+    }
+
+    public static int getMonthImageResourceId(long millis) {
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(millis);
+
+        switch (calendar.get(Calendar.MONTH)) {
+            case 0: return R.drawable.bkg_01_january ;
+            case 1: return R.drawable.bkg_02_february ;
+            case 2: return R.drawable.bkg_03_march ;
+            case 3: return R.drawable.bkg_04_april ;
+            case 4: return R.drawable.bkg_05_may ;
+            case 5: return R.drawable.bkg_06_june ;
+            case 6: return R.drawable.bkg_07_july ;
+            case 7: return R.drawable.bkg_08_august ;
+            case 8: return R.drawable.bkg_09_september ;
+            case 9: return R.drawable.bkg_10_october ;
+            case 10: return R.drawable.bkg_11_november ;
+            case 11: return R.drawable.bkg_12_december ;
             default:
                 throw new UnsupportedOperationException("Unknown month");
         }

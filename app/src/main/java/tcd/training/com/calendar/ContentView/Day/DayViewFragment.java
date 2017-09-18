@@ -7,7 +7,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +14,7 @@ import android.view.ViewGroup;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
 import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.Entry;
 import tcd.training.com.calendar.Data.TimeUtils;
@@ -27,7 +27,7 @@ import static tcd.training.com.calendar.MainActivity.ARG_ENTRIES_LIST;
  * Created by cpu10661-local on 9/1/17.
  */
 
-public class DayViewFragment extends Fragment{
+public class DayViewFragment extends Fragment implements ContentViewBehaviors {
 
     private static final String TAG = DayViewFragment.class.getSimpleName();
     private static final String ARG_SPECIFIED_DATE = "specificDate";
@@ -38,6 +38,7 @@ public class DayViewFragment extends Fragment{
     private Context mContext;
 
     private ViewPager mDayViewPager;
+    private DayPagerAdapter mAdapter;
 
     public DayViewFragment() {
     }
@@ -100,8 +101,8 @@ public class DayViewFragment extends Fragment{
 
     private void initializeUiComponents(View view) {
         mDayViewPager = view.findViewById(R.id.vp_day_view);
-        final DayPagerAdapter adapter = new DayPagerAdapter(getChildFragmentManager(), mDays);
-        mDayViewPager.setAdapter(adapter);
+        mAdapter = new DayPagerAdapter(getChildFragmentManager(), mDays);
+        mDayViewPager.setAdapter(mAdapter);
 
         mDayViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -113,10 +114,10 @@ public class DayViewFragment extends Fragment{
             public void onPageSelected(int position) {
                 if (position == mDays.size() - 1) {
                     addOneMoreYear(mDays.get(mDays.size() - 1).get(Calendar.YEAR) + 1, false);
-                    adapter.notifyDataSetChanged();
+                    mAdapter.notifyDataSetChanged();
                 } else if (position == 0) {
                     int daysOfYear = addOneMoreYear(mDays.get(0).get(Calendar.YEAR) - 1, true);
-                    adapter.notifyDataSetChanged();
+                    mAdapter.notifyDataSetChanged();
                     mDayViewPager.setCurrentItem(daysOfYear - 1, false);
                 }
                 // change month
@@ -161,24 +162,46 @@ public class DayViewFragment extends Fragment{
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
-    private void scrollTo(long millis) {
-        int low = 0;
-        int high = mDays.size() - 1;
-        while (low <= high) {
-            int mid = low + (high - low) / 2;
-            if (TimeUtils.compareDay(millis, mDays.get(mid).getTimeInMillis()) < 0) {
-                high = mid - 1;
-            } else if (TimeUtils.compareDay(millis, mDays.get(mid).getTimeInMillis()) > 0) {
-                low = mid + 1;
-            } else {
-                mDayViewPager.setCurrentItem(mid);
-                sendUpdateMonthAction(mContext, mid);
-                return;
+    public void scrollTo(long millis) {
+        scrollTo(millis, true);
+    }
+
+    public void scrollTo(long millis, boolean smoothScroll) {
+        if (mDays != null) {
+            int low = 0;
+            int high = mDays.size() - 1;
+            while (low <= high) {
+                int mid = low + (high - low) / 2;
+                if (TimeUtils.compareDay(millis, mDays.get(mid).getTimeInMillis()) < 0) {
+                    high = mid - 1;
+                } else if (TimeUtils.compareDay(millis, mDays.get(mid).getTimeInMillis()) > 0) {
+                    low = mid + 1;
+                } else {
+                    mDayViewPager.setCurrentItem(mid, smoothScroll);
+                    sendUpdateMonthAction(mContext, mid);
+                    return;
+                }
             }
         }
     }
 
+    @Override
     public void scrollToToday() {
         scrollTo(Calendar.getInstance().getTimeInMillis());
+    }
+
+    @Override
+    public void addEvent() {
+        mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void removeEvent() {
+        mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void invalidate() {
+        mDayViewPager.invalidate();
     }
 }

@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,7 +48,7 @@ public class DataUtils {
 
     private static final LinkedHashMap<String, Integer> mDefaultColors = new LinkedHashMap<>();
     private static ArrayList<Entry> mEntries;
-    private static ArrayList<Event> mFreqEvent;
+    private static ArrayList<Event> mFreqEvents;
     private static ArrayList<Account> mAccounts;
     private static ArrayList<Reminder> mReminders;
     private static ArrayList<Attendee> mAttendees;
@@ -55,7 +56,7 @@ public class DataUtils {
 
     public static void readCalendarEventsInfo(Context context) {
         mEntries = new ArrayList<>();
-        mFreqEvent = new ArrayList<>();
+        mFreqEvents = new ArrayList<>();
         mAccounts = new ArrayList<>();
         mReminders = new ArrayList<>();
         mAttendees = new ArrayList<>();
@@ -63,17 +64,38 @@ public class DataUtils {
         createDefaultColors(context);
         readCalendarAccounts(context);
 
-        readCalendarEntries(context);
+        readCalendarEntries(null, context);
 
         readCalendarReminders(context);
 
         readCalendarEventAttendees(context);
     }
+    
+    private static ArrayList<Entry> readCalendarEntries(String selection, Context context) {
 
-    private static ArrayList<Entry> readCalendarEntries(Context context) {
+        ArrayList<Event> events = readCalendarEvents(selection, context);
+
+        for (Event event : events) {
+            if (event.isDeleted()) {
+                removeEventFromEntries(event.getId());
+            } else {
+                if (event.getRRule() != null) {
+                    mFreqEvents.add(event);
+                } else {
+                    addEventToEntries(event);
+                }
+            }
+        }
+
+        return mEntries;
+    }
+
+    public static ArrayList<Event> readCalendarEvents(String selection, Context context) {
+
+        ArrayList<Event> events = new ArrayList<>();
 
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
-            return mEntries;
+            return events;
         }
 
         // prepare Uri
@@ -95,9 +117,11 @@ public class DataUtils {
         projections.put(CalendarContract.Events.DURATION, i++);
         projections.put(CalendarContract.Events.DISPLAY_COLOR, i++);
         projections.put(CalendarContract.Events.AVAILABILITY, i++);
+        projections.put(CalendarContract.Events.DIRTY, i++);
+        projections.put(CalendarContract.Events.DELETED, i++);
 
         // querying
-        Cursor cursor = contentResolver.query(uri, projections.keySet().toArray(new String[0]), null, null, null);
+        Cursor cursor = contentResolver.query(uri, projections.keySet().toArray(new String[0]), selection, null, null);
         if (cursor == null) {
             Log.e(TAG, "readCalendarEvents: There was a problem handling the cursor");
         } else if (!cursor.moveToFirst()) {
@@ -109,7 +133,7 @@ public class DataUtils {
                     continue;
                 }
 
-                long id = cursor.getInt(projections.get(CalendarContract.Events._ID));
+                long id = cursor.getLong(projections.get(CalendarContract.Events._ID));
                 String title = cursor.getString(projections.get(CalendarContract.Events.TITLE));
                 String location = cursor.getString(projections.get(CalendarContract.Events.EVENT_LOCATION));
                 String description = cursor.getString(projections.get(CalendarContract.Events.DESCRIPTION));
@@ -122,19 +146,17 @@ public class DataUtils {
                 String duration = cursor.getString(projections.get(CalendarContract.Events.DURATION));
                 int displayColor = cursor.getInt(projections.get(CalendarContract.Events.DISPLAY_COLOR));
                 int availability = cursor.getInt(projections.get(CalendarContract.Events.AVAILABILITY));
-
-                if (title == null || title.length() == 0) {
-                    title = context.getString(R.string.no_title);
-                }
+                boolean isDirty = cursor.getInt(projections.get(CalendarContract.Events.DIRTY)) == 1;
+                boolean isDeleted = cursor.getInt(projections.get(CalendarContract.Events.DELETED)) == 1;
 
                 Event event = new Event(id, title, calendarId, location, description, timezone,
-                        startDate, endDate, allDay, hasAlarm, rRule, duration, displayColor, availability);
+                        startDate, endDate, allDay,
+                        hasAlarm, rRule, duration,
+                        displayColor, availability,
+                        isDirty, isDeleted
+                );
 
-                if (rRule != null) {
-                    mFreqEvent.add(event);
-                } else {
-                    addEventToEntries(event);
-                }
+                events.add(event);
 
             } while (cursor.moveToNext());
         }
@@ -144,10 +166,12 @@ public class DataUtils {
             cursor.close();
         }
 
-        return mEntries;
+        return events;
     }
 
+
     private static void addEventToEntries(ArrayList<Entry> entries, Event event) {
+
         if (getAccountDisplayName(event.getCalendarId()).length() == 0) {
             return;
         }
@@ -164,6 +188,77 @@ public class DataUtils {
 
     private static void addEventToEntries(Event event) {
         addEventToEntries(mEntries, event);
+    }
+
+    private static void removeEventFromEntries(long id) {
+        if (mEntries != null) {
+            for (Entry entry : mEntries) {
+                for (int i = 0; i < entry.getEvents().size(); i++) {
+                    if (entry.getEvents().get(i).getId() == id) {
+                        entry.getEvents().remove(i);
+                        break;
+                    }
+                }
+            }
+        }
+        if (mFreqEvents != null) {
+            for (int i = 0; i < mFreqEvents.size(); i++) {
+                if (mFreqEvents.get(i).getId() == id) {
+                    mFreqEvents.remove(i);
+                    break;
+                }
+            }
+        }
+    }
+
+    public static Event readSimpleEventById(long id, Context context) {
+
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_CALENDAR) != PackageManager.PERMISSION_GRANTED) {
+            return null;
+        }
+
+        // preparation
+        String[] projection = new String[]{
+                CalendarContract.Events.TITLE,
+                CalendarContract.Events.DTSTART,
+                CalendarContract.Events.DTEND,
+                CalendarContract.Events.CALENDAR_ID
+        };
+        int PROJECTION_TITLE_INDEX = 0;
+        int PROJECTION_START_INDEX = 1;
+        int PROJECTION_END_INDEX = 2;
+        int PROJECTION_CALENDAR_ID_INDEX = 3;
+        
+        String selection = CalendarContract.Events._ID + "=" + id;
+        
+        // querying
+        Cursor cursor = context.getContentResolver().query(CalendarContract.Events.CONTENT_URI, projection, selection, null, null);
+        if (cursor == null) {
+            Log.e(TAG, "readSimpleEventById: There was a problem handling the cursor");
+        } else if (!cursor.moveToFirst()) {
+            Log.d(TAG, "readSimpleEventById: No event found");
+        } else {
+
+            long calendarId = cursor.getLong(PROJECTION_CALENDAR_ID_INDEX);
+            if (getAccountDisplayName(calendarId).length() > 0) {
+
+                String title = cursor.getString(PROJECTION_TITLE_INDEX);
+                long startDate = cursor.getLong(PROJECTION_START_INDEX);
+                long endDate = cursor.getLong(PROJECTION_END_INDEX);
+
+                Event event = new Event();
+                event.setTitle(title);
+                event.setStartDate(startDate);
+                event.setEndDate(endDate);
+
+                return event;
+            }
+        }
+        
+        if (cursor != null) {
+            cursor.close();
+        }
+        return null;
     }
 
     private static void readCalendarAccounts(Context context) {
@@ -437,8 +532,6 @@ public class DataUtils {
             return -1;
         }
 
-        addEventToEntries(event);
-
         Uri uri = cr.insert(CalendarContract.Events.CONTENT_URI, values);
         long id = uri != null ? Long.parseLong(uri.getLastPathSegment()) : -1;
 
@@ -592,13 +685,19 @@ public class DataUtils {
             }
         }
 
-        for (Event event : mFreqEvent) {
+        for (Event event : mFreqEvents) {
+
+            // the original events
+            if (TimeUtils.compareDay(event.getStartDate(), start) >= 0 && TimeUtils.compareDay(event.getStartDate(), end) <= 0) {
+                addEventToEntries(entries, event);
+            }
 
             // TODO: 16/09/2017 the expanded time is a temporary walk-around, this must be fixed in the future
             int expandedTime = 30;
             ArrayList<Long> instances = readCalendarInstances(context, event.getId(),
                     start - TimeUnit.DAYS.toMillis(expandedTime), end + TimeUnit.DAYS.toMillis(expandedTime));
 
+            // and its follow instances
             if (instances != null) {
                 for (int i = 0; i < instances.size(); i += 2) {
                     Event newInstance = new Event(event);
@@ -656,6 +755,19 @@ public class DataUtils {
             }
         }
         return attendees;
+    }
+    
+    public static int getNumberOfEvents() {
+        int count = 0;
+        if (mEntries != null) {
+            for (Entry entry : mEntries) {
+                count += entry.getEvents().size();
+            }
+        }
+        if (mFreqEvents != null) {
+            count += mFreqEvents.size();
+        }
+        return count;
     }
 
 

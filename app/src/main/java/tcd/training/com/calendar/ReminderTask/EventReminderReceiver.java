@@ -47,14 +47,19 @@ public class EventReminderReceiver extends BroadcastReceiver {
             String alertTime = uri.getLastPathSegment();
             int eventId = getEventId(alertTime, context);
 
-            Event event = DataUtils.findEventById(eventId);
+//            Event event = DataUtils.findEventById(eventId);
+//            if (event == null) {
+//                DataUtils.readCalendarEventsInfo(context);
+//                event = DataUtils.findEventById(eventId);
+//                if (event == null) {
+//                    Log.e(TAG, "Event ID: " + eventId);
+//                    return;
+//                }
+//            }
+            Event event = DataUtils.readSimpleEventById(eventId, context);
             if (event == null) {
-                DataUtils.readCalendarEventsInfo(context);
-                event = DataUtils.findEventById(eventId);
-                if (event == null) {
-                    Log.e(TAG, "Event ID: " + eventId);
-                    return;
-                }
+                Log.e(TAG, "onReceive:  " + eventId);
+                return;
             }
 
             // vibrate

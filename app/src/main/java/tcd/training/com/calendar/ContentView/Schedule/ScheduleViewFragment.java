@@ -1,8 +1,10 @@
 package tcd.training.com.calendar.ContentView.Schedule;
 
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.CalendarContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -16,9 +18,9 @@ import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
+import java.util.Collections;
 
+import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
 import tcd.training.com.calendar.ContentView.Schedule.CalendarEntriesAdapter.ParallaxViewHolder;
 import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.Entry;
@@ -32,14 +34,15 @@ import static tcd.training.com.calendar.MainActivity.ARG_ENTRIES_LIST;
  * Created by cpu10661-local on 8/31/17.
  */
 
-public class ScheduleViewFragment extends Fragment {
+public class ScheduleViewFragment extends Fragment implements ContentViewBehaviors {
 
     private static final String TAG = ScheduleViewFragment.class.getSimpleName();
 
-    private ArrayList<Entry> mEntriesList;
+    private ArrayList<Entry> mEntries;
     private ArrayList<Long> mWeekPeriods;
     private int mStartWeekIndex;
     private int mEndWeekIndex;
+    private int mPosition;
 
     private LinearLayoutManager mLayoutManager;
     private CalendarEntriesAdapter mAdapter;
@@ -75,17 +78,19 @@ public class ScheduleViewFragment extends Fragment {
             }
         }
 
-        mEntriesList = DataUtils.getEntriesBetween(getContext(), mWeekPeriods.get(mStartWeekIndex), mWeekPeriods.get(mEndWeekIndex));
-        if (mEntriesList != null) {
+        mEntries = DataUtils.getEntriesBetween(getContext(), mWeekPeriods.get(mStartWeekIndex), mWeekPeriods.get(mEndWeekIndex));
+        if (mEntries != null) {
             // insert today (if it doesn't exist)
-            mEntriesList = (ArrayList<Entry>) mEntriesList.clone();
+            mEntries = (ArrayList<Entry>) mEntries.clone();
 
-            insertToday(mEntriesList);
+            mEntries = insertMonthsAndWeeks(mEntries, mWeekPeriods.get(mStartWeekIndex), mWeekPeriods.get(mEndWeekIndex));
+            insertToday(mEntries);
 
-            insertMonthAndWeekEntries(mEntriesList, mWeekPeriods.get(mStartWeekIndex), mWeekPeriods.get(mEndWeekIndex));
+//            insertToday(mEntries);
+//            insertMonthAndWeekEntries(mEntries, mWeekPeriods.get(mStartWeekIndex), mWeekPeriods.get(mEndWeekIndex));
 
         } else {
-            mEntriesList = new ArrayList<>();
+            mEntries = new ArrayList<>();
         }
     }
 
@@ -117,91 +122,44 @@ public class ScheduleViewFragment extends Fragment {
         }
     }
 
+    private ArrayList<Entry> insertMonthsAndWeeks(ArrayList<Entry> entries, long startTime, long endTime) {
+
+        Calendar start = Calendar.getInstance();
+        start.setTimeInMillis(startTime);
+
+        ArrayList<Entry> weekMonths = new ArrayList<>();
+        while (start.getTimeInMillis() < endTime) {
+
+            if (start.get(Calendar.DAY_OF_MONTH) > 1 && start.get(Calendar.DAY_OF_MONTH) <= 8) {
+                Calendar earlyMonth = (Calendar) start.clone();
+                earlyMonth.set(Calendar.DAY_OF_MONTH, 1);
+                weekMonths.add(new Entry(earlyMonth.getTimeInMillis(), "m", null));
+            }
+
+            Entry entry = new Entry(start.getTimeInMillis(), "w", null);
+            weekMonths.add(entry);
+
+            start.add(Calendar.DAY_OF_MONTH, 7);
+        }
+
+        weekMonths.addAll(entries);
+        Collections.sort(weekMonths);
+
+        return weekMonths;
+    }
+
     private void insertToday(ArrayList<Entry> entries) {
         long today = Calendar.getInstance().getTimeInMillis();
         for (int i = 0; i < entries.size(); i++) {
             int comparison = TimeUtils.compareDay(entries.get(i).getTime(), today);
             if (comparison == 0) {
+                entries.get(i).setDescription("t");
                 break;
             } else if (comparison > 0) {
-                entries.add(i, new Entry(today, new ArrayList<Event>()));
+                entries.add(i, new Entry(today, "t", new ArrayList<Event>()));
                 break;
             }
         }
-    }
-
-    private void insertMonthAndWeekEntries(ArrayList<Entry> entries, long start, long end) {
-
-        assert start < end;
-
-        Calendar firstDate = Calendar.getInstance();
-        firstDate.setTimeInMillis(start);
-
-        // add week entries
-        boolean isNewMonth = false;
-        for (int i = 0; i < entries.size(); i++) {
-            long difference = firstDate.getTimeInMillis() - entries.get(i).getTime();
-            if (difference < 0) {
-
-                if (isNewMonth) {
-                    insertMonthEntry(firstDate, entries, i);
-                    i++;
-                }
-
-                isNewMonth = insertWeekEntry(firstDate, entries, i);
-
-            } else if (isNewMonth) {
-                Calendar curMonth = (Calendar) firstDate.clone();
-                curMonth.set(Calendar.DAY_OF_MONTH, 1);
-                if (TimeUtils.compareDay(curMonth.getTimeInMillis(), entries.get(i).getTime()) <= 0) {
-                    insertMonthEntry(firstDate, entries, i);
-                    isNewMonth = false;
-                }
-            }
-        }
-
-        while (firstDate.getTimeInMillis() < end) {
-            isNewMonth = insertWeekEntry(firstDate, entries, entries.size());
-            if (isNewMonth) {
-                insertMonthEntry(firstDate, entries, entries.size());
-            }
-        }
-    }
-
-    private boolean insertWeekEntry(Calendar date, ArrayList<Entry> entries, int index) {
-
-        boolean isNewMonth = false;
-
-        // current date
-        String dateString = TimeUtils.getFormattedDate(date.getTimeInMillis(), "MMM, d") + " - ";
-        int curMonth = date.get(Calendar.MONTH);
-
-        // next 7 days
-        date.add(Calendar.DAY_OF_MONTH, 6);
-        if (curMonth == date.get(Calendar.MONTH)) {
-            dateString += TimeUtils.getFormattedDate(date.getTimeInMillis(), "d");
-        } else {
-            dateString += TimeUtils.getFormattedDate(date.getTimeInMillis(), "MMM, d");
-            isNewMonth = true;
-        }
-
-        // year
-        if (date.get(Calendar.YEAR) != Calendar.getInstance().get(Calendar.YEAR)) {
-            dateString += ", " + date.get(Calendar.YEAR);
-        }
-
-        // add it to entries
-        Entry weekEntry = new Entry(date.getTimeInMillis(), dateString, null);
-        entries.add(index, weekEntry);
-
-        date.add(Calendar.DAY_OF_MONTH, 1);
-        return isNewMonth || ((int)date.get(Calendar.DAY_OF_MONTH) == 8);
-    }
-
-    private void insertMonthEntry(Calendar date, ArrayList<Entry> entries, int index) {
-        String month = TimeUtils.getFormattedDate(date.getTimeInMillis(), "MMMM yyyy");
-        Entry monthEntry = new Entry(date.getTimeInMillis(), month, null);
-        entries.add(index, monthEntry);
     }
 
     @Nullable
@@ -210,7 +168,7 @@ public class ScheduleViewFragment extends Fragment {
         View view = inflater.inflate(R.layout.content_schedule_view, container, false);
 
         // adapter
-        mAdapter = new CalendarEntriesAdapter(view.getContext(), mEntriesList);
+        mAdapter = new CalendarEntriesAdapter(view.getContext(), mEntries);
 
         // recycler view
         RecyclerView eventsRecyclerView = view.findViewById(R.id.rv_events_list);
@@ -222,23 +180,29 @@ public class ScheduleViewFragment extends Fragment {
         eventsRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                int position = mLayoutManager.findFirstVisibleItemPosition();
+                mPosition = mLayoutManager.findFirstVisibleItemPosition();
                 if (dy < 0) {
-                    if (position < 3) {
+                    if (mPosition < 3) {
                         int newStartIndex = mStartWeekIndex - 52 >= 0 ? mStartWeekIndex - 52 : 0;
-                        ArrayList<Entry> newEntries = DataUtils.getEntriesBetween(getContext(), mWeekPeriods.get(newStartIndex), mWeekPeriods.get(mStartWeekIndex));
-                        insertMonthAndWeekEntries(newEntries, mWeekPeriods.get(newStartIndex), mWeekPeriods.get(mStartWeekIndex));
-                        mEntriesList.addAll(0, newEntries);
+                        ArrayList<Entry> newEntries = insertMonthsAndWeeks(
+                                DataUtils.getEntriesBetween(getContext(), mWeekPeriods.get(newStartIndex), mWeekPeriods.get(mStartWeekIndex)),
+                                mWeekPeriods.get(newStartIndex),
+                                mWeekPeriods.get(mStartWeekIndex)
+                        );
+                        mEntries.addAll(0, newEntries);
                         mAdapter.notifyDataSetChanged();
-                        mLayoutManager.scrollToPositionWithOffset(newEntries.size(), 0);
+                        mLayoutManager.scrollToPositionWithOffset(newEntries.size() + mPosition, 0);
                         mStartWeekIndex = newStartIndex;
                     }
                 } else {
-                    if (mEntriesList.size() - position < 10) {
+                    if (mEntries.size() - mPosition < 10) {
                         int newEndIndex = mEndWeekIndex + 52 < mWeekPeriods.size() ? mEndWeekIndex + 52 : mWeekPeriods.size() - 1;
-                        ArrayList<Entry> newEntries = DataUtils.getEntriesBetween(getContext(), mWeekPeriods.get(mEndWeekIndex), mWeekPeriods.get(newEndIndex));
-                        insertMonthAndWeekEntries(newEntries, mWeekPeriods.get(mEndWeekIndex), mWeekPeriods.get(newEndIndex));
-                        mEntriesList.addAll(newEntries);
+                        ArrayList<Entry> newEntries = insertMonthsAndWeeks(
+                                DataUtils.getEntriesBetween(getContext(), mWeekPeriods.get(mEndWeekIndex), mWeekPeriods.get(newEndIndex)),
+                                mWeekPeriods.get(mEndWeekIndex),
+                                mWeekPeriods.get(newEndIndex)
+                        );
+                        mEntries.addAll(newEntries);
                         mAdapter.notifyDataSetChanged();
                         mEndWeekIndex = newEndIndex;
                     }
@@ -258,8 +222,13 @@ public class ScheduleViewFragment extends Fragment {
         return view;
     }
 
-    public void scrollToToday() {
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+    }
 
+    @Override
+    public void scrollToToday() {
         int mCurrentPosition = mLayoutManager.findFirstVisibleItemPosition();
         RecyclerView.SmoothScroller smoothScroller = new LinearSmoothScroller(getContext()) {
             @Override protected int getVerticalSnapPreference() {
@@ -269,8 +238,8 @@ public class ScheduleViewFragment extends Fragment {
 
         long today = Calendar.getInstance().getTimeInMillis();
         // TODO: 09/09/2017 this is temporary, must be fixed in the future for better performance
-        for (int i = 0; i < mEntriesList.size(); i++) {
-            if (TimeUtils.isSameDay(mEntriesList.get(i).getTime(), today)) {
+        for (int i = 0; i < mEntries.size(); i++) {
+            if (TimeUtils.isSameDay(mEntries.get(i).getTime(), today)) {
                 if (Math.abs(mCurrentPosition - i) > 50) {
                     mLayoutManager.scrollToPositionWithOffset(i, 0);
                 } else {
@@ -282,7 +251,51 @@ public class ScheduleViewFragment extends Fragment {
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
+    public void addEvent() {
+
+//        final String selection = CalendarContract.Events.DIRTY + "=" + 1;
+//        ArrayList<Event> events = DataUtils.readCalendarEvents(selection, getContext());
+//
+//        Event event = events.get(events.size() - 1);
+//        for (Entry entry : mEntries) {
+//            if (entry.getDescription() == null || entry.getDescription().length() == 0 || entry.getDescription().equals("t")) {
+//                if (TimeUtils.isSameDay(entry.getTime(), event.getStartDate())) {
+//                    entry.getEvents().add(event);
+//                }
+//            }
+//        }
+//
+//        mAdapter.notifyDataSetChanged();
+
+        removeEvent();
+    }
+
+    @Override
+    public void removeEvent() {
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                DataUtils.readCalendarEventsInfo(getContext());
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+                mEntries.clear();
+                mEntries.addAll(insertMonthsAndWeeks(
+                        DataUtils.getEntriesBetween(getContext(), mWeekPeriods.get(mStartWeekIndex), mWeekPeriods.get(mEndWeekIndex)),
+                        mWeekPeriods.get(mStartWeekIndex),
+                        mWeekPeriods.get(mEndWeekIndex)
+                ));
+                insertToday(mEntries);
+                mAdapter.notifyDataSetChanged();
+            }
+        }.execute();
+    }
+
+    @Override
+    public void invalidate() {
+
     }
 }

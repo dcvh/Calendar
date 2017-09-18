@@ -34,12 +34,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import java.util.Calendar;
 import java.util.TimeZone;
 
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
+import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
 import tcd.training.com.calendar.Data.DataUtils;
 import tcd.training.com.calendar.Data.Entry;
 import tcd.training.com.calendar.Data.Event;
@@ -51,22 +53,35 @@ import tcd.training.com.calendar.ContentView.Day.DayViewFragment;
 import tcd.training.com.calendar.ContentView.Month.MonthViewFragment;
 import tcd.training.com.calendar.ContentView.Schedule.ScheduleViewFragment;
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private final static String TAG = MainActivity.class.getSimpleName();
 
     public static final String ARG_ENTRIES_LIST = "entriesList";
+
+    public static final String UPDATE_CONTENT_VIEW_ACTION = "updateContentViewAction";
+    public static final String ARG_CONTENT_VIEW_TYPE = "contentViewType";
+    public static final String ARG_TIME_IN_MILLIS = "timeInMillis";
+
     public static final String UPDATE_MONTH_ACTION = "updateMonthAction";
     public static final String ARG_CALENDAR = "calendar";
+
+    public static final String UPDATE_EVENT_ACTION = "updateEventAction";
+    public static final String ARG_UPDATE_TYPE = "updateType";
+    public static final int UPDATE_REMOVE = 0;
+    public static final int UPDATE_ADD = 1;
+
     private static final int RC_CALENDAR_PERMISSION = 1;
+    private static final int RC_SETTINGS = 2;
 
     private DrawerLayout mDrawerLayout;
     private NavigationView mNavigationView;
 
     private FragmentManager mFragmentManager;
     private Fragment mCurrentFragment;
-    private BroadcastReceiver mBroadcastReceiver;
+    private BroadcastReceiver mUpdateContentViewReceiver;
+    private BroadcastReceiver mUpdateMonthReceiver;
+    private BroadcastReceiver mUpdateEventReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,18 +94,31 @@ public class MainActivity extends AppCompatActivity
         readCalendarEntries();
 
         ReminderUtils.clearAllNotifications(this);
+
+        if (mCurrentFragment instanceof ContentViewBehaviors) {
+            ((ContentViewBehaviors)mCurrentFragment).addEvent();
+        }
+
+        // TODO: 9/18/17 handle custom event
+        // https://developer.android.com/reference/android/provider/CalendarContract.html#ACTION_HANDLE_CUSTOM_EVENT
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        LocalBroadcastManager.getInstance(this).registerReceiver(mBroadcastReceiver, new IntentFilter(UPDATE_MONTH_ACTION));
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateContentViewReceiver, new IntentFilter(UPDATE_CONTENT_VIEW_ACTION));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateMonthReceiver, new IntentFilter(UPDATE_MONTH_ACTION));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateEventReceiver, new IntentFilter(UPDATE_EVENT_ACTION));
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
+
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mUpdateContentViewReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mUpdateMonthReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mUpdateEventReceiver);
     }
 
     @Override
@@ -119,7 +147,9 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
         switch (id) {
             case R.id.action_today:
-                scrollToToday();
+                if (mCurrentFragment instanceof ContentViewBehaviors) {
+                    ((ContentViewBehaviors)mCurrentFragment).scrollToToday();
+                }
                 return true;
             case R.id.action_refresh:
                 readCalendarEntries();
@@ -127,42 +157,6 @@ public class MainActivity extends AppCompatActivity
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    private void scrollToToday() {
-        if (mCurrentFragment instanceof ScheduleViewFragment) {
-            ((ScheduleViewFragment) mCurrentFragment).scrollToToday();
-        } else if (mCurrentFragment instanceof  MonthViewFragment) {
-            ((MonthViewFragment) mCurrentFragment).scrollToToday();
-        } else if (mCurrentFragment instanceof  DayViewFragment) {
-            ((DayViewFragment) mCurrentFragment).scrollToToday();
-        }
-    }
-
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        int id = item.getItemId();
-        switch (id) {
-            case R.id.nav_schedule: replaceFragment(ScheduleViewFragment.class); break;
-            case R.id.nav_day: replaceFragment(DayViewFragment.class); break;
-            case R.id.nav_week: replaceFragment(ScheduleViewFragment.class); break;
-            case R.id.nav_month: replaceFragment(MonthViewFragment.class); break;
-            case R.id.nav_settings:
-                Intent intent = new Intent(this, SettingsActivity.class);
-                startActivity(intent);
-                break;
-            case R.id.nav_help_feedback:
-                break;
-            default:
-                throw new UnsupportedOperationException("Unknown selected item: " + item.getTitle());
-        }
-
-        if (id != R.id.nav_settings && id != R.id.nav_help_feedback) {
-            mFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-        }
-
-        mDrawerLayout.closeDrawer(GravityCompat.START);
-        return true;
     }
 
     private void initializeUiComponents() {
@@ -205,7 +199,37 @@ public class MainActivity extends AppCompatActivity
     private void initializeBasicComponents() {
         mFragmentManager = getSupportFragmentManager();
 
-        mBroadcastReceiver = new BroadcastReceiver() {
+        mUpdateContentViewReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                int navMenuId = intent.getIntExtra(ARG_CONTENT_VIEW_TYPE, R.id.nav_schedule);
+                final long timeInMillis = intent.getLongExtra(ARG_TIME_IN_MILLIS, Calendar.getInstance().getTimeInMillis());
+                selectItemNavigation(navMenuId);
+
+                if (mCurrentFragment instanceof DayViewFragment) {
+                    new AsyncTask<Void, Void, Void>() {
+                        @Override
+                        protected Void doInBackground(Void... voids) {
+                            try {
+                                Thread.sleep(50);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            return null;
+                        }
+
+                        @Override
+                        protected void onPostExecute(Void aVoid) {
+                            ((DayViewFragment)mCurrentFragment).scrollTo(timeInMillis, false);
+                            super.onPostExecute(aVoid);
+                        }
+                    }.execute();
+                }
+            }
+        };
+        LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateContentViewReceiver, new IntentFilter(UPDATE_CONTENT_VIEW_ACTION));
+
+        mUpdateMonthReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 Calendar calendar = (Calendar) intent.getSerializableExtra(ARG_CALENDAR);
@@ -213,7 +237,29 @@ public class MainActivity extends AppCompatActivity
                 getSupportActionBar().setTitle(month);
             }
         };
-        LocalBroadcastManager.getInstance(this).registerReceiver(mBroadcastReceiver, new IntentFilter(UPDATE_MONTH_ACTION));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateMonthReceiver, new IntentFilter(UPDATE_MONTH_ACTION));
+
+        mUpdateEventReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                int type = intent.getIntExtra(ARG_UPDATE_TYPE, 0);
+                switch (type) {
+                    case UPDATE_ADD:
+                        if (mCurrentFragment instanceof ContentViewBehaviors) {
+                            ((ContentViewBehaviors)mCurrentFragment).addEvent();
+                        }
+                        break;
+                    case UPDATE_REMOVE:
+                        if (mCurrentFragment instanceof ContentViewBehaviors) {
+                            ((ContentViewBehaviors)mCurrentFragment).removeEvent();
+                        }
+                        break;
+                    default:
+                        throw new UnsupportedOperationException("Unknown update type");
+                }
+            }
+        };
+        LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateEventReceiver, new IntentFilter(UPDATE_EVENT_ACTION));
     }
 
     private void replaceFragment(Class fragmentClass) {
@@ -223,7 +269,7 @@ public class MainActivity extends AppCompatActivity
             mFragmentManager.beginTransaction()
                     .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                     .replace(R.id.fl_content, mCurrentFragment)
-                    .commit();
+                    .commitAllowingStateLoss();
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
@@ -316,5 +362,47 @@ public class MainActivity extends AppCompatActivity
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.nav_schedule: replaceFragment(ScheduleViewFragment.class); break;
+            case R.id.nav_day: replaceFragment(DayViewFragment.class); break;
+            case R.id.nav_week: replaceFragment(ScheduleViewFragment.class); break;
+            case R.id.nav_month: replaceFragment(MonthViewFragment.class); break;
+            case R.id.nav_settings:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivityForResult(intent, RC_SETTINGS);
+                break;
+            case R.id.nav_help_feedback:
+                break;
+            default:
+                throw new UnsupportedOperationException("Unknown selected item: " + item.getTitle());
+        }
+
+        if (id != R.id.nav_settings && id != R.id.nav_help_feedback) {
+            mFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        }
+
+        mDrawerLayout.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case RC_SETTINGS:
+                if (resultCode == RESULT_OK) {
+//                    if (mCurrentFragment instanceof ContentViewBehaviors) {
+//                        ((ContentViewBehaviors)mCurrentFragment).invalidate();
+//                    }
+                    replaceFragment(mCurrentFragment.getClass());
+                }
+                break;
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 }
