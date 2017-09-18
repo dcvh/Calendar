@@ -3,7 +3,6 @@ package tcd.training.com.calendar.AddEventTask;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ColorStateList;
@@ -17,7 +16,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,6 +32,7 @@ import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
@@ -50,15 +49,15 @@ import java.util.LinkedHashMap;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
-import tcd.training.com.calendar.Data.Account;
-import tcd.training.com.calendar.Data.DataUtils;
-import tcd.training.com.calendar.Data.Event;
-import tcd.training.com.calendar.Data.Reminder;
-import tcd.training.com.calendar.Data.TimeUtils;
+import tcd.training.com.calendar.Entities.Account;
+import tcd.training.com.calendar.Utils.DataUtils;
+import tcd.training.com.calendar.Entities.Event;
+import tcd.training.com.calendar.Entities.Reminder;
+import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.EventDetailsActivity;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.ReminderTask.ReminderUtils;
-import tcd.training.com.calendar.ViewUtils;
+import tcd.training.com.calendar.Utils.ViewUtils;
 
 public class AddEventActivity extends AppCompatActivity {
 
@@ -650,9 +649,7 @@ public class AddEventActivity extends AppCompatActivity {
                 try {
                     Intent intent = new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_FULLSCREEN).build(AddEventActivity.this);
                     startActivityForResult(intent, RC_PLACE_AUTOCOMPLETE);
-                } catch (GooglePlayServicesRepairableException e) {
-                    e.printStackTrace();
-                } catch (GooglePlayServicesNotAvailableException e) {
+                } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
                     e.printStackTrace();
                 }
             }
@@ -805,7 +802,9 @@ public class AddEventActivity extends AppCompatActivity {
 
         final Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_custom_notification);
-        dialog.getWindow().setLayout(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setLayout(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        }
 
         // edit text
         final EditText valueTextView = dialog.findViewById(R.id.edt_notification_value);
@@ -813,7 +812,7 @@ public class AddEventActivity extends AppCompatActivity {
 
         // list view
         ListView unitListView = dialog.findViewById(R.id.lv_unit);
-        ArrayList<String> units = new ArrayList<>(Arrays.asList(getString(R.string.minutes), getString(R.string.hours), getString(R.string.days), getString(R.string.weeks)));
+        ArrayList<String> units = new ArrayList<>(Arrays.asList(getString(R.string.minute), getString(R.string.hour), getString(R.string.day), getString(R.string.week)));
         mUnitIndex = 0;
         DialogListAdapter adapter = new DialogListAdapter(this, R.layout.list_item_dialog, units, mUnitIndex);
         unitListView.setAdapter(adapter);
@@ -870,7 +869,7 @@ public class AddEventActivity extends AppCompatActivity {
                 Status status = PlaceAutocomplete.getStatus(this, data);
                 Log.e(TAG, status.getStatusMessage());
             } else if (resultCode == RESULT_CANCELED) {
-
+                Toast.makeText(this, R.string.cancelled, Toast.LENGTH_SHORT).show();
             }
         }
     }

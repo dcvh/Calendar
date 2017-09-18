@@ -1,4 +1,4 @@
-package tcd.training.com.calendar.Data;
+package tcd.training.com.calendar.Entities;
 
 import android.support.annotation.NonNull;
 

@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Calendar</string>
 
     <!--navigation drawer-->
@@ -8,7 +8,6 @@
     <string name="day">Day</string>
     <string name="week">Week</string>
     <string name="month">Month</string>
-    <string name="search">Search</string>
     <string name="more">More</string>
     <string name="settings">Settings</string>
     <string name="help_feedback">Help &amp; feedback</string>
@@ -17,13 +16,12 @@
     <string name="action_today">Today</string>
     <string name="refresh">Refresh</string>
     <string name="title_activity_settings">Settings</string>
-    <string name="action_settings">Settings</string>
 
     <!--calendar events-->
     <string name="no_calendar_events_error">No event found!</string>
     <string name="no_title">(No title)</string>
     <string name="wait_load_events_message">Please wait while system loads events</string>
-    <string name="x_more">%d more</string>
+    <string name="x_more" tools:ignore="PluralsCandidate">%d more</string>
     <string name="show_less">Show less</string>
 
     <!--list events-->
@@ -56,15 +54,35 @@
     </string-array>
 
     <!--display event details activity-->
-    <string name="x_minutes_before">%d minute(s) before</string>
-    <string name="weeks">weeks</string>
-    <string name="days">days</string>
-    <string name="hour">hour</string>
-    <string name="hours">hours</string>
-    <string name="minute">minute</string>
-    <string name="minutes">minutes</string>
-    <string name="x_guest">%d guest</string>
+    <string name="minute">Minute</string>
+    <string name="hour">Hour</string>
+    <plurals name="x_week">
+        <item quantity="one">%d week</item>
+        <item quantity="other">%d weeks</item>
+    </plurals>
+    <plurals name="x_day">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <plurals name="x_hour">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
+    <plurals name="x_minute">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="x_guest">
+        <item quantity="one">%d guest</item>
+        <item quantity="other">%d guests</item>
+    </plurals>
     <string name="guest_email">\n &#8226; %s</string>
+    <string name="cancelled">Cancelled</string>
+
+    <!--content descriptions-->
+    <string name="date_time_icon">DateTime icon</string>
+    <string name="note_icon">Note icon</string>
+    <string name="arrow_icon">Arrow icon</string>
 
     <!--add event activity-->
     <string name="save">Save</string>
@@ -150,7 +168,6 @@
     <string name="pref_title_vibrate">Vibrate</string>
 
     <!-- Example settings for Data & Sync -->
-    <string name="pref_header_data_sync">Data &amp; sync</string>
 
     <string name="pref_title_sync_frequency">Sync frequency</string>
     <string-array name="pref_sync_frequency_titles">
@@ -169,20 +186,6 @@
         <item>360</item>
         <item>-1</item>
     </string-array>
-
-    <string-array name="list_preference_entries">
-        <item>Entry 1</item>
-        <item>Entry 2</item>
-        <item>Entry 3</item>
-    </string-array>
-
-    <string-array name="list_preference_entry_values">
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-    </string-array>
-
-    <string-array name="multi_select_list_preference_default_value" />
 
     <string name="pref_title_system_sync_settings">System sync settings</string>
 </resources>

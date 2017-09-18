@@ -4,14 +4,12 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.provider.CalendarContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.LinearSmoothScroller;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,10 +20,10 @@ import java.util.Collections;
 
 import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
 import tcd.training.com.calendar.ContentView.Schedule.CalendarEntriesAdapter.ParallaxViewHolder;
-import tcd.training.com.calendar.Data.DataUtils;
-import tcd.training.com.calendar.Data.Entry;
-import tcd.training.com.calendar.Data.Event;
-import tcd.training.com.calendar.Data.TimeUtils;
+import tcd.training.com.calendar.Utils.DataUtils;
+import tcd.training.com.calendar.Entities.Entry;
+import tcd.training.com.calendar.Entities.Event;
+import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.R;
 
 import static tcd.training.com.calendar.MainActivity.ARG_ENTRIES_LIST;
@@ -85,9 +83,6 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
 
             mEntries = insertMonthsAndWeeks(mEntries, mWeekPeriods.get(mStartWeekIndex), mWeekPeriods.get(mEndWeekIndex));
             insertToday(mEntries);
-
-//            insertToday(mEntries);
-//            insertMonthAndWeekEntries(mEntries, mWeekPeriods.get(mStartWeekIndex), mWeekPeriods.get(mEndWeekIndex));
 
         } else {
             mEntries = new ArrayList<>();
@@ -151,9 +146,10 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
     private void insertToday(ArrayList<Entry> entries) {
         long today = Calendar.getInstance().getTimeInMillis();
         for (int i = 0; i < entries.size(); i++) {
-            int comparison = TimeUtils.compareDay(entries.get(i).getTime(), today);
-            if (comparison == 0) {
-                entries.get(i).setDescription("t");
+            Entry entry = entries.get(i);
+            int comparison = TimeUtils.compareDay(entry.getTime(), today);
+            if (comparison == 0 && entry.getDescription() == null) {
+                entry.setDescription("t");
                 break;
             } else if (comparison > 0) {
                 entries.add(i, new Entry(today, "t", new ArrayList<Event>()));
@@ -220,11 +216,6 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
         scrollToToday();
 
         return view;
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
     }
 
     @Override

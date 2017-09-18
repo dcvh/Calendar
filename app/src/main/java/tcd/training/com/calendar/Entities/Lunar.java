@@ -1,13 +1,9 @@
-package tcd.training.com.calendar.Data;
+package tcd.training.com.calendar.Entities;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
-
-/**
- * Created by ADMIN on 17/09/2017.
- */
 
 /**
  * Lunar calendar in 200 years from 1900.

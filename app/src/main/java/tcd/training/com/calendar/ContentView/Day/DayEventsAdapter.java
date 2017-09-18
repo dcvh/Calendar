@@ -8,11 +8,11 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import tcd.training.com.calendar.Data.Entry;
-import tcd.training.com.calendar.Data.Event;
-import tcd.training.com.calendar.Data.TimeUtils;
+import tcd.training.com.calendar.Entities.Entry;
+import tcd.training.com.calendar.Entities.Event;
+import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.R;
-import tcd.training.com.calendar.ViewUtils;
+import tcd.training.com.calendar.Utils.ViewUtils;
 
 /**
  * Created by cpu10661-local on 9/1/17.

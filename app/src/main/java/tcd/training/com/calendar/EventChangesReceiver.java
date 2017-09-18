@@ -9,10 +9,9 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 
-import tcd.training.com.calendar.Data.DataUtils;
-import tcd.training.com.calendar.Data.Event;
+import tcd.training.com.calendar.Utils.DataUtils;
+import tcd.training.com.calendar.Entities.Event;
 
 /**
  * Created by cpu10661-local on 9/18/17.

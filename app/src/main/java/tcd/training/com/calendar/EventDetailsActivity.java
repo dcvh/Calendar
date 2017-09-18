@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.provider.CalendarContract;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -20,12 +19,12 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
-import tcd.training.com.calendar.Data.Account;
-import tcd.training.com.calendar.Data.Attendee;
-import tcd.training.com.calendar.Data.DataUtils;
-import tcd.training.com.calendar.Data.Event;
-import tcd.training.com.calendar.Data.Reminder;
-import tcd.training.com.calendar.Data.TimeUtils;
+import tcd.training.com.calendar.Entities.Account;
+import tcd.training.com.calendar.Entities.Attendee;
+import tcd.training.com.calendar.Utils.DataUtils;
+import tcd.training.com.calendar.Entities.Event;
+import tcd.training.com.calendar.Utils.TimeUtils;
+import tcd.training.com.calendar.Utils.ViewUtils;
 
 public class EventDetailsActivity extends AppCompatActivity {
 
@@ -196,7 +195,7 @@ public class EventDetailsActivity extends AppCompatActivity {
             ((ImageView) mGuestsLayout.findViewById(R.id.iv_icon)).setImageResource(R.drawable.ic_people_black_48dp);
 
             TextView content = mGuestsLayout.findViewById(R.id.tv_primary_content);
-            content.setText(String.format(getString(R.string.x_guest), attendees.size()));
+            content.setText(getResources().getQuantityString(R.plurals.x_guest, attendees.size(), attendees.size()));
             for (Attendee attendee : attendees) {
                 content.append(String.format(getString(R.string.guest_email), attendee.getEmail()));
             }

@@ -51,6 +51,7 @@
                     android:layout_width="24dp"
                     android:layout_weight="1"
                     android:layout_height="24dp"
+                    android:contentDescription="@string/date_time_icon"
                     android:tint="#9E9E9E"/>
 
                 <LinearLayout
@@ -181,7 +182,8 @@
                     android:layout_width="24dp"
                     android:layout_weight="1"
                     android:layout_height="24dp"
-                    android:tint="#9E9E9E"/>
+                    android:tint="#9E9E9E"
+                    android:contentDescription="@string/note_icon"/>
 
                 <EditText
                     android:id="@+id/edt_note"

@@ -1,4 +1,4 @@
-package tcd.training.com.calendar;
+package tcd.training.com.calendar.Utils;
 
 import android.content.Context;
 import android.content.Intent;
@@ -15,9 +15,7 @@ import android.widget.TextView;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
-import tcd.training.com.calendar.Data.DataUtils;
-import tcd.training.com.calendar.Data.Event;
-import tcd.training.com.calendar.Data.TimeUtils;
+import tcd.training.com.calendar.Entities.Event;
 import tcd.training.com.calendar.EventDetailsActivity;
 import tcd.training.com.calendar.R;
 
@@ -148,28 +146,30 @@ public class ViewUtils {
         StringBuilder formattedTime = new StringBuilder();
 
         int _minutes = minutes;
-        String format = "%d %s ";
 
         int weeks = (int) (TimeUnit.MINUTES.toDays(_minutes) / 7);
         if (weeks > 0) {
-            formattedTime.append(String.format(format, weeks, weeks == 1 ? context.getString(R.string.week) : context.getString(R.string.weeks)));
+            formattedTime.append(context.getResources().getQuantityString(R.plurals.x_week, weeks, weeks));
+            formattedTime.append(" ");
             _minutes -= TimeUnit.DAYS.toMinutes(weeks) * 7;
         }
 
         int days = (int) (TimeUnit.MINUTES.toDays(_minutes));
         if (days > 0) {
-            formattedTime.append(String.format(format, days, days == 1 ? context.getString(R.string.day) : context.getString(R.string.days)));
+            formattedTime.append(context.getResources().getQuantityString(R.plurals.x_day, days, days));
+            formattedTime.append(" ");
             _minutes -= TimeUnit.DAYS.toMinutes(days);
         }
 
         int hours = (int) (TimeUnit.MINUTES.toHours(_minutes));
         if (hours > 0) {
-            formattedTime.append(String.format(format, hours, hours == 1 ? context.getString(R.string.hour) : context.getString(R.string.hours)));
+            formattedTime.append(context.getResources().getQuantityString(R.plurals.x_hour, hours, hours));
+            formattedTime.append(" ");
             _minutes -= TimeUnit.HOURS.toMinutes(hours);
         }
 
         if (_minutes > 0) {
-            formattedTime.append(String.format(format, _minutes, _minutes == 1 ? context.getString(R.string.minute) : context.getString(R.string.minutes)));
+            formattedTime.append(context.getResources().getQuantityString(R.plurals.x_minute, _minutes, _minutes));
         }
 
         return formattedTime.toString();

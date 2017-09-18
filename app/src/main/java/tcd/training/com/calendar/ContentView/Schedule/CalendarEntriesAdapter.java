@@ -4,8 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.preference.PreferenceManager;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -19,14 +17,12 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
-import tcd.training.com.calendar.Data.DataUtils;
-import tcd.training.com.calendar.Data.TimeUtils;
+import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
-import tcd.training.com.calendar.Data.Entry;
-import tcd.training.com.calendar.Data.Event;
-import tcd.training.com.calendar.ContentView.Day.DayViewFragment;
-import tcd.training.com.calendar.ViewUtils;
+import tcd.training.com.calendar.Entities.Entry;
+import tcd.training.com.calendar.Entities.Event;
+import tcd.training.com.calendar.Utils.ViewUtils;
 
 /**
  * Created by cpu10661-local on 8/30/17.

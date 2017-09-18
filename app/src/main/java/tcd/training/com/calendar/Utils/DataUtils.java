@@ -1,7 +1,6 @@
-package tcd.training.com.calendar.Data;
+package tcd.training.com.calendar.Utils;
 
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -10,32 +9,30 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Environment;
 import android.provider.CalendarContract;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
+import tcd.training.com.calendar.Entities.Account;
+import tcd.training.com.calendar.Entities.Attendee;
+import tcd.training.com.calendar.Entities.Entry;
+import tcd.training.com.calendar.Entities.Event;
+import tcd.training.com.calendar.Entities.Reminder;
 import tcd.training.com.calendar.R;
 
 /**
@@ -70,7 +67,7 @@ public class DataUtils {
 
         readCalendarEventAttendees(context);
     }
-    
+
     private static ArrayList<Entry> readCalendarEntries(String selection, Context context) {
 
         ArrayList<Event> events = readCalendarEvents(selection, context);
@@ -118,7 +115,7 @@ public class DataUtils {
         projections.put(CalendarContract.Events.DISPLAY_COLOR, i++);
         projections.put(CalendarContract.Events.AVAILABILITY, i++);
         projections.put(CalendarContract.Events.DIRTY, i++);
-        projections.put(CalendarContract.Events.DELETED, i++);
+        projections.put(CalendarContract.Events.DELETED, i);
 
         // querying
         Cursor cursor = contentResolver.query(uri, projections.keySet().toArray(new String[0]), selection, null, null);
@@ -228,9 +225,9 @@ public class DataUtils {
         int PROJECTION_START_INDEX = 1;
         int PROJECTION_END_INDEX = 2;
         int PROJECTION_CALENDAR_ID_INDEX = 3;
-        
+
         String selection = CalendarContract.Events._ID + "=" + id;
-        
+
         // querying
         Cursor cursor = context.getContentResolver().query(CalendarContract.Events.CONTENT_URI, projection, selection, null, null);
         if (cursor == null) {
@@ -254,7 +251,7 @@ public class DataUtils {
                 return event;
             }
         }
-        
+
         if (cursor != null) {
             cursor.close();
         }
@@ -268,7 +265,6 @@ public class DataUtils {
         }
 
         // Projection array. Creating indices for this array instead of doing dynamic lookups improves performance.
-
         ArrayList<String> projection = new ArrayList<>(Arrays.asList(
                 CalendarContract.Calendars._ID,                           // 0
                 CalendarContract.Calendars.ACCOUNT_NAME,                  // 1
@@ -302,13 +298,13 @@ public class DataUtils {
             while (cursor.moveToNext()) {
 
                 // Get the field values
-                long id = cursor.getInt(PROJECTION_ID_INDEX);
+                long id = cursor.getLong(PROJECTION_ID_INDEX);
                 String displayName = cursor.getString(PROJECTION_DISPLAY_NAME_INDEX);
                 String accountName = cursor.getString(PROJECTION_ACCOUNT_NAME_INDEX);
                 String ownerName = cursor.getString(PROJECTION_OWNER_ACCOUNT_INDEX);
                 int color = cursor.getInt(PROJECTION_COLOR_INDEX);
 
-                boolean isPrimary = false;
+                boolean isPrimary;
 //                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
 //                    isPrimary = cursor.getInt(PROJECTION_IS_PRIMARY_INDEX) == 1;
 //                }
@@ -552,7 +548,7 @@ public class DataUtils {
     }
 
     private static void writeEventPriorityToFile(long eventId, int priority, Context context) {
-        String fileName = null;
+        String fileName;
         switch (priority) {
             case AddEventActivity.PRIORITY_NOTIFICATION: fileName = "notification"; break;
             case AddEventActivity.PRIORITY_POPUP: fileName = "popup"; break;
@@ -679,34 +675,38 @@ public class DataUtils {
 
         ArrayList<Entry> entries = new ArrayList<>();
 
-        for (Entry entry : mEntries) {
-            if (entry.getTime() > start && entry.getTime() < end) {
-                entries.add(new Entry(entry));
+        if (mEntries != null) {
+            for (Entry entry : mEntries) {
+                if (entry.getTime() > start && entry.getTime() < end) {
+                    entries.add(new Entry(entry));
+                }
             }
         }
 
-        for (Event event : mFreqEvents) {
+        if (mFreqEvents != null) {
+            for (Event event : mFreqEvents) {
 
-            // the original events
-            if (TimeUtils.compareDay(event.getStartDate(), start) >= 0 && TimeUtils.compareDay(event.getStartDate(), end) <= 0) {
-                addEventToEntries(entries, event);
-            }
+                // the original events
+                if (TimeUtils.compareDay(event.getStartDate(), start) >= 0 && TimeUtils.compareDay(event.getStartDate(), end) <= 0) {
+                    addEventToEntries(entries, event);
+                }
 
-            // TODO: 16/09/2017 the expanded time is a temporary walk-around, this must be fixed in the future
-            int expandedTime = 30;
-            ArrayList<Long> instances = readCalendarInstances(context, event.getId(),
-                    start - TimeUnit.DAYS.toMillis(expandedTime), end + TimeUnit.DAYS.toMillis(expandedTime));
+                // TODO: 16/09/2017 the expanded time is a temporary walk-around, this must be fixed in the future
+                int expandedTime = 30;
+                ArrayList<Long> instances = readCalendarInstances(context, event.getId(),
+                        start - TimeUnit.DAYS.toMillis(expandedTime), end + TimeUnit.DAYS.toMillis(expandedTime));
 
-            // and its follow instances
-            if (instances != null) {
-                for (int i = 0; i < instances.size(); i += 2) {
-                    Event newInstance = new Event(event);
-                    newInstance.setStartDate(instances.get(i));
-                    newInstance.setEndDate(instances.get(i + 1));
+                // and its follow instances
+                if (instances != null) {
+                    for (int i = 0; i < instances.size(); i += 2) {
+                        Event newInstance = new Event(event);
+                        newInstance.setStartDate(instances.get(i));
+                        newInstance.setEndDate(instances.get(i + 1));
 
-                    // TODO: 16/09/2017 this too
-                    if (TimeUtils.compareDay(instances.get(i), start) >= 0 && TimeUtils.compareDay(instances.get(i), end) <= 0) {
-                        addEventToEntries(entries, newInstance);
+                        // TODO: 16/09/2017 this too
+                        if (TimeUtils.compareDay(instances.get(i), start) >= 0 && TimeUtils.compareDay(instances.get(i), end) <= 0) {
+                            addEventToEntries(entries, newInstance);
+                        }
                     }
                 }
             }
@@ -721,27 +721,33 @@ public class DataUtils {
 
     public static ArrayList<Account> getPrimaryAccounts() {
         ArrayList<Account> accounts = new ArrayList<>();
-        for (Account account : mAccounts) {
-            if (account.isPrimary()) {
-                accounts.add(account);
+        if (mAccounts != null) {
+            for (Account account : mAccounts) {
+                if (account.isPrimary()) {
+                    accounts.add(account);
+                }
             }
         }
         return accounts;
     }
 
     public static String getAccountDisplayName(long id) {
-        for (Account account : mAccounts) {
-            if (account.getId() == id) {
-                return account.getDisplayName();
+        if (mAccounts != null) {
+            for (Account account : mAccounts) {
+                if (account.getId() == id) {
+                    return account.getDisplayName();
+                }
             }
         }
         return "";
     }
 
     public static int getReminderMinutes(long id) {
-        for (Reminder reminder : mReminders) {
-            if (reminder.getEventId() == id) {
-                return reminder.getMinutes();
+        if (mReminders != null) {
+            for (Reminder reminder : mReminders) {
+                if (reminder.getEventId() == id) {
+                    return reminder.getMinutes();
+                }
             }
         }
         return -1;
@@ -749,14 +755,16 @@ public class DataUtils {
 
     public static ArrayList<Attendee> getEventAttendees(long id) {
         ArrayList<Attendee> attendees = new ArrayList<>();
-        for (Attendee attendee : mAttendees) {
-            if (attendee.getEventId() == id) {
-                attendees.add(attendee);
+        if (mAttendees != null) {
+            for (Attendee attendee : mAttendees) {
+                if (attendee.getEventId() == id) {
+                    attendees.add(attendee);
+                }
             }
         }
         return attendees;
     }
-    
+
     public static int getNumberOfEvents() {
         int count = 0;
         if (mEntries != null) {
@@ -771,20 +779,6 @@ public class DataUtils {
     }
 
 
-
-    public static Event findEventById(long id) {
-        Event result = null;
-        if (mEntries != null) {
-            for (Entry entry : mEntries) {
-                for (Event event : entry.getEvents()) {
-                    if (event.getId() == id) {
-                        result = new Event(event);
-                    }
-                }
-            }
-        }
-        return result;
-    }
 
     /**
      *

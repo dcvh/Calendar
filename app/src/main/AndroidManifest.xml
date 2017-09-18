@@ -52,7 +52,7 @@
         </service>
 
         <activity android:name=".AddEventTask.AddEventActivity"
-            android:theme="@style/AppTheme.ColorActionBar" ></activity>
+            android:theme="@style/AppTheme.ColorActionBar" />
 
         <activity android:name=".ReminderTask.EventPopup"
             android:theme="@style/Theme.Transparent"

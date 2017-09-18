@@ -15,9 +15,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
-import tcd.training.com.calendar.Data.DataUtils;
-import tcd.training.com.calendar.Data.Entry;
-import tcd.training.com.calendar.Data.TimeUtils;
+import tcd.training.com.calendar.Utils.DataUtils;
+import tcd.training.com.calendar.Entities.Entry;
+import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
 

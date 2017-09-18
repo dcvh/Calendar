@@ -1,14 +1,10 @@
-package tcd.training.com.calendar.Data;
+package tcd.training.com.calendar.Entities;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
 
 import java.util.Calendar;
-
-/**
- * Created by ADMIN on 17/09/2017.
- */
 
 /**
  * Representation one day in a month.
@@ -110,7 +106,7 @@ public final class LunarDay implements Parcelable {
      *
      * @return lunar day string
      */
-    protected String getLunarDay() {
+    public String getLunarDay() {
         return mLunarDay;
     }
 
@@ -128,7 +124,7 @@ public final class LunarDay implements Parcelable {
      *
      * @return true if was holiday, otherwise return false
      */
-    protected boolean isHoliday() {
+    public boolean isHoliday() {
         return mIsHoliday;
     }
 
@@ -137,7 +133,7 @@ public final class LunarDay implements Parcelable {
      *
      * @return true if was first day, otherwise return false
      */
-    protected boolean isFirstDay() {
+    public boolean isFirstDay() {
         return (int)mCalendar.get(Calendar.DAY_OF_MONTH) == 1 && mIsCheckable;
     }
 

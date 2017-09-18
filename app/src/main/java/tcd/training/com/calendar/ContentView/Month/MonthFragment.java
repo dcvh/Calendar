@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.TypedValue;
@@ -24,14 +23,13 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import tcd.training.com.calendar.Data.DataUtils;
-import tcd.training.com.calendar.Data.Entry;
-import tcd.training.com.calendar.Data.Event;
-import tcd.training.com.calendar.Data.TimeUtils;
+import tcd.training.com.calendar.Utils.DataUtils;
+import tcd.training.com.calendar.Entities.Entry;
+import tcd.training.com.calendar.Entities.Event;
+import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
-import tcd.training.com.calendar.ContentView.Day.DayViewFragment;
-import tcd.training.com.calendar.ViewUtils;
+import tcd.training.com.calendar.Utils.ViewUtils;
 
 /**
  * Created by cpu10661-local on 8/31/17.
@@ -307,10 +305,5 @@ public class MonthFragment extends Fragment {
             default:
                 throw new UnsupportedOperationException("Unknown index");
         }
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
     }
 }

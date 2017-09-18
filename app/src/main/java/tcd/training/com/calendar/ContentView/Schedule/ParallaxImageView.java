@@ -12,10 +12,6 @@ import android.widget.ImageView;
 import tcd.training.com.calendar.R;
 
 /**
- * Created by ADMIN on 16/09/2017.
- */
-
-/**
  * @link https://github.com/yayaa/ParallaxRecyclerView
  */
 public class ParallaxImageView extends android.support.v7.widget.AppCompatImageView {

@@ -1,6 +1,4 @@
-package tcd.training.com.calendar.Data;
-
-import android.util.Log;
+package tcd.training.com.calendar.Utils;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -8,6 +6,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import tcd.training.com.calendar.Entities.LunarDay;
 
 /**
  * Created by ADMIN on 10/09/2017.

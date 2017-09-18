@@ -1,18 +1,17 @@
 package tcd.training.com.calendar;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -22,7 +21,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -34,19 +32,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Switch;
 import android.widget.Toast;
 
 import java.util.Calendar;
-import java.util.TimeZone;
 
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
 import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
-import tcd.training.com.calendar.Data.DataUtils;
-import tcd.training.com.calendar.Data.Entry;
-import tcd.training.com.calendar.Data.Event;
-import tcd.training.com.calendar.Data.TimeUtils;
-import tcd.training.com.calendar.ReminderTask.EventPopup;
+import tcd.training.com.calendar.Utils.DataUtils;
+import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.ReminderTask.ReminderUtils;
 import tcd.training.com.calendar.Settings.SettingsActivity;
 import tcd.training.com.calendar.ContentView.Day.DayViewFragment;
@@ -73,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private static final int RC_CALENDAR_PERMISSION = 1;
     private static final int RC_SETTINGS = 2;
+    private static final int RC_ADD_ACCOUNT = 3;
 
     private DrawerLayout mDrawerLayout;
     private NavigationView mNavigationView;
@@ -234,7 +228,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onReceive(Context context, Intent intent) {
                 Calendar calendar = (Calendar) intent.getSerializableExtra(ARG_CALENDAR);
                 String month = TimeUtils.getFormattedDate(calendar.getTimeInMillis(), "MMMM");
-                getSupportActionBar().setTitle(month);
+                if (getSupportActionBar() != null) {
+                    getSupportActionBar().setTitle(month);
+                }
             }
         };
         LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateMonthReceiver, new IntentFilter(UPDATE_MONTH_ACTION));
@@ -308,10 +304,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 return null;
             }
 
+            @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
             @Override
             protected void onPostExecute(Void aVoid) {
                 mDialog.dismiss();
                 mDialog = null;
+
+                if (DataUtils.getPrimaryAccounts().size() == 0) {
+                    Intent addAccountIntent = new Intent(android.provider.Settings.ACTION_ADD_ACCOUNT)
+                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    addAccountIntent.putExtra(Settings.EXTRA_ACCOUNT_TYPES, new String[] {"com.google"});
+                    startActivityForResult(addAccountIntent, RC_ADD_ACCOUNT);
+                }
+
                 selectItemNavigation(R.id.nav_schedule);
             }
 
@@ -399,6 +404,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //                        ((ContentViewBehaviors)mCurrentFragment).invalidate();
 //                    }
                     replaceFragment(mCurrentFragment.getClass());
+                }
+                break;
+            case RC_ADD_ACCOUNT:
+                if (resultCode == RESULT_OK) {
+                    finish();
                 }
                 break;
             default:

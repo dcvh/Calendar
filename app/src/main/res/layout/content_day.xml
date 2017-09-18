@@ -21,7 +21,8 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:tint="@android:color/darker_gray"
-            android:src="@drawable/ic_arrow_down_black_24dp"/>
+            android:src="@drawable/ic_arrow_down_black_24dp"
+            android:contentDescription="@string/arrow_icon"/>
 
         <TextView
             android:id="@+id/tv_show_hide"
