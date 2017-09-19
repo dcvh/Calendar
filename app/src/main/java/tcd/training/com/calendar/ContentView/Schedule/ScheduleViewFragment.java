@@ -10,6 +10,7 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.LinearSmoothScroller;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +18,7 @@ import android.view.ViewGroup;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
 import tcd.training.com.calendar.ContentView.Schedule.CalendarEntriesAdapter.ParallaxViewHolder;
@@ -219,7 +221,7 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
     }
 
     @Override
-    public void scrollToToday() {
+    public void scrollTo(long millis) {
         int mCurrentPosition = mLayoutManager.findFirstVisibleItemPosition();
         RecyclerView.SmoothScroller smoothScroller = new LinearSmoothScroller(getContext()) {
             @Override protected int getVerticalSnapPreference() {
@@ -227,18 +229,27 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
             }
         };
 
-        long today = Calendar.getInstance().getTimeInMillis();
-        // TODO: 09/09/2017 this is temporary, must be fixed in the future for better performance
+        // TODO: 9/19/17 this is temporary, must be fixed in the future for better performance
         for (int i = 0; i < mEntries.size(); i++) {
-            if (TimeUtils.isSameDay(mEntries.get(i).getTime(), today)) {
+            int comparison = TimeUtils.compareDay(mEntries.get(i).getTime(), millis);
+            if (comparison >= 0) {
+                if (comparison > 0) {
+                    i--;
+                }
                 if (Math.abs(mCurrentPosition - i) > 50) {
                     mLayoutManager.scrollToPositionWithOffset(i, 0);
                 } else {
                     smoothScroller.setTargetPosition(i);
                     mLayoutManager.startSmoothScroll(smoothScroller);
                 }
+                break;
             }
         }
+    }
+
+    @Override
+    public void scrollToToday() {
+        scrollTo(Calendar.getInstance().getTimeInMillis());
     }
 
     @Override

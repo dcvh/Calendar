@@ -21,6 +21,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -32,12 +33,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Calendar;
 
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
 import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
+import tcd.training.com.calendar.ContentView.Shortcut.ShortcutViewFragment;
 import tcd.training.com.calendar.Utils.DataUtils;
 import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.ReminderTask.ReminderUtils;
@@ -64,34 +67,35 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public static final int UPDATE_REMOVE = 0;
     public static final int UPDATE_ADD = 1;
 
+    public static final String SCROLL_TO_ACTION = "scrollToAction";
+
     private static final int RC_CALENDAR_PERMISSION = 1;
     private static final int RC_SETTINGS = 2;
     private static final int RC_ADD_ACCOUNT = 3;
 
     private DrawerLayout mDrawerLayout;
     private NavigationView mNavigationView;
+    private TextView mToolbarTitle;
 
     private FragmentManager mFragmentManager;
     private Fragment mCurrentFragment;
+    private Fragment mShortcutFragment;
     private BroadcastReceiver mUpdateContentViewReceiver;
     private BroadcastReceiver mUpdateMonthReceiver;
     private BroadcastReceiver mUpdateEventReceiver;
+    private BroadcastReceiver mScrollToReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        initializeUiComponents();
         initializeBasicComponents();
+        initializeUiComponents();
 
         readCalendarEntries();
 
         ReminderUtils.clearAllNotifications(this);
-
-        if (mCurrentFragment instanceof ContentViewBehaviors) {
-            ((ContentViewBehaviors)mCurrentFragment).addEvent();
-        }
 
         // TODO: 9/18/17 handle custom event
         // https://developer.android.com/reference/android/provider/CalendarContract.html#ACTION_HANDLE_CUSTOM_EVENT
@@ -104,6 +108,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateContentViewReceiver, new IntentFilter(UPDATE_CONTENT_VIEW_ACTION));
         LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateMonthReceiver, new IntentFilter(UPDATE_MONTH_ACTION));
         LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateEventReceiver, new IntentFilter(UPDATE_EVENT_ACTION));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mScrollToReceiver, new IntentFilter(SCROLL_TO_ACTION));
     }
 
     @Override
@@ -113,6 +118,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mUpdateContentViewReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mUpdateMonthReceiver);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mUpdateEventReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mScrollToReceiver);
     }
 
     @Override
@@ -153,43 +159,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return super.onOptionsItemSelected(item);
     }
 
-    private void initializeUiComponents() {
-        // status bar color
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Window window = getWindow();
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-            window.setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimaryDark));
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-            }
-        }
-
-        // toolbar
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        // floating action button
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent addEventIntent = new Intent(MainActivity.this, AddEventActivity.class);
-                startActivity(addEventIntent);
-            }
-        });
-
-        // navigation drawer
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, mDrawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        mDrawerLayout.setDrawerListener(toggle);
-        toggle.syncState();
-
-        mNavigationView = (NavigationView) findViewById(R.id.nav_view);
-        mNavigationView.setNavigationItemSelectedListener(this);
-    }
-
     private void initializeBasicComponents() {
         mFragmentManager = getSupportFragmentManager();
 
@@ -228,9 +197,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onReceive(Context context, Intent intent) {
                 Calendar calendar = (Calendar) intent.getSerializableExtra(ARG_CALENDAR);
                 String month = TimeUtils.getFormattedDate(calendar.getTimeInMillis(), "MMMM");
-                if (getSupportActionBar() != null) {
-                    getSupportActionBar().setTitle(month);
-                }
+                mToolbarTitle.setText(month);
             }
         };
         LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateMonthReceiver, new IntentFilter(UPDATE_MONTH_ACTION));
@@ -256,6 +223,74 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         };
         LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateEventReceiver, new IntentFilter(UPDATE_EVENT_ACTION));
+
+        mScrollToReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                long millis = intent.getLongExtra(ARG_TIME_IN_MILLIS, Calendar.getInstance().getTimeInMillis());
+                if (mCurrentFragment instanceof ContentViewBehaviors) {
+                    ((ContentViewBehaviors)mCurrentFragment).scrollTo(millis);
+                }
+                showMonthShortcut(false);
+            }
+        };
+        LocalBroadcastManager.getInstance(this).registerReceiver(mScrollToReceiver, new IntentFilter(SCROLL_TO_ACTION));
+    }
+
+    private void initializeUiComponents() {
+        // status bar color
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimaryDark));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+            }
+        }
+
+        // toolbar
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
+        mToolbarTitle = toolbar.findViewById(R.id.tv_toolbar_title);
+        mToolbarTitle.setText(TimeUtils.getFormattedDate(Calendar.getInstance().getTimeInMillis(), "MMMM"));
+        mToolbarTitle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mShortcutFragment.isVisible()) {
+                    showMonthShortcut(false);
+                } else {
+                    showMonthShortcut(true);
+                }
+            }
+        });
+
+        // floating action button
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent addEventIntent = new Intent(MainActivity.this, AddEventActivity.class);
+                startActivity(addEventIntent);
+            }
+        });
+
+        // navigation drawer
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, mDrawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        mDrawerLayout.setDrawerListener(toggle);
+        toggle.syncState();
+
+        mNavigationView = (NavigationView) findViewById(R.id.nav_view);
+        mNavigationView.setNavigationItemSelectedListener(this);
+
+        //month shortcut
+        mShortcutFragment = ShortcutViewFragment.newInstance();
+        mFragmentManager.beginTransaction().replace(R.id.fl_month_shortcut, mShortcutFragment).commit();
     }
 
     private void replaceFragment(Class fragmentClass) {
@@ -271,6 +306,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
+    }
+
+    private void showMonthShortcut(boolean showShortcut) {
+
+        FragmentTransaction transaction = mFragmentManager.beginTransaction()
+                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out);
+
+        if (showShortcut) {
+            transaction.show(mShortcutFragment);
+            mToolbarTitle.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_arrow_up_black_24dp, 0);
+        } else {
+            transaction.hide(mShortcutFragment);
+            mToolbarTitle.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_arrow_down_black_24dp, 0);
+        }
+        transaction.commit();
     }
 
     private void readCalendarEntries() {
@@ -290,6 +340,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 mDialog.show();
             }
 
+            @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
             @Override
             protected Void doInBackground(Void... voids) {
                 DataUtils.readCalendarEventsInfo(MainActivity.this);
@@ -300,6 +351,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             Toast.makeText(MainActivity.this, R.string.no_calendar_events_error, Toast.LENGTH_LONG).show();
                         }
                     });
+                    Intent addAccountIntent = new Intent(android.provider.Settings.ACTION_ADD_ACCOUNT)
+                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    addAccountIntent.putExtra(Settings.EXTRA_ACCOUNT_TYPES, new String[] {"com.google"});
+                    startActivityForResult(addAccountIntent, RC_ADD_ACCOUNT);
                 }
                 return null;
             }
@@ -310,12 +365,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 mDialog.dismiss();
                 mDialog = null;
 
-                if (DataUtils.getPrimaryAccounts().size() == 0) {
-                    Intent addAccountIntent = new Intent(android.provider.Settings.ACTION_ADD_ACCOUNT)
-                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    addAccountIntent.putExtra(Settings.EXTRA_ACCOUNT_TYPES, new String[] {"com.google"});
-                    startActivityForResult(addAccountIntent, RC_ADD_ACCOUNT);
-                }
+                showMonthShortcut(false);
 
                 selectItemNavigation(R.id.nav_schedule);
             }

@@ -12,5 +12,7 @@ public interface ContentViewBehaviors {
 
     void removeEvent();
 
+    void scrollTo(long millis);
+
     void invalidate();
 }

@@ -1,4 +1,4 @@
-package tcd.training.com.calendar.ContentView.Month;
+package tcd.training.com.calendar.ContentView.Shortcut;
 
 import android.content.Context;
 import android.content.Intent;
@@ -7,63 +7,52 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 
-import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
-import tcd.training.com.calendar.Utils.DataUtils;
-import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
-
-import static tcd.training.com.calendar.MainActivity.ARG_ENTRIES_LIST;
+import tcd.training.com.calendar.Utils.TimeUtils;
 
 /**
  * Created by cpu10661-local on 8/31/17.
  */
 
-public class MonthViewFragment extends Fragment implements ContentViewBehaviors{
+public class ShortcutViewFragment extends Fragment {
 
-    private static final String TAG = MonthViewFragment.class.getSimpleName();
+    private static final String TAG = ShortcutViewFragment.class.getSimpleName();
 
     private ArrayList<Calendar> mMonths;
     private Context mContext;
 
-    private ViewPager mMonthViewPager;
-    private MonthPagerAdapter mAdapter;
+    private WrapContentViewPager mShortcutViewPager;
+    private ShortcutPagerAdapter mAdapter;
 
-    public MonthViewFragment() {
+    public ShortcutViewFragment() {
     }
 
-    public static MonthViewFragment newInstance() {
-        Bundle args = new Bundle();
-        args.putSerializable(ARG_ENTRIES_LIST, DataUtils.getAllEntries());
-        MonthViewFragment fragment = new MonthViewFragment();
-        fragment.setArguments(args);
-        return fragment;
+    public static ShortcutViewFragment newInstance() {
+        return new ShortcutViewFragment();
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        if (getArguments() != null) {
-//            mEntriesList = (ArrayList<Entry>) getArguments().getSerializable(ARG_ENTRIES_LIST);
-//            getArguments().remove(ARG_ENTRIES_LIST);
-//        } else {
-//            mEntriesList = new ArrayList<>();
-//        }
         mMonths = new ArrayList<>();
+        mContext = getContext();
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.content_month_view, container, false);
-        mContext = view.getContext();
+        View view = inflater.inflate(R.layout.content_shortcut_view, container, false);
 
         Calendar startDate = Calendar.getInstance();
         startDate.set(2010, 0, 1);
@@ -75,19 +64,20 @@ public class MonthViewFragment extends Fragment implements ContentViewBehaviors{
             startDate.add(Calendar.MONTH, 1);
         }
 
-        initializeUiComponents(view);
+        initializeViewPager(view);
 
         scrollToToday();
 
         return view;
     }
 
-    private void initializeUiComponents(View view) {
-        mMonthViewPager = view.findViewById(R.id.vp_month_view);
-        mAdapter = new MonthPagerAdapter(getChildFragmentManager(), mMonths);
-        mMonthViewPager.setAdapter(mAdapter);
+    private void initializeViewPager(View view) {
+        mShortcutViewPager = view.findViewById(R.id.vp_month_view);
 
-        mMonthViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+        mAdapter = new ShortcutPagerAdapter(getChildFragmentManager(), mMonths);
+        mShortcutViewPager.setAdapter(mAdapter);
+
+        mShortcutViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
 
@@ -101,7 +91,7 @@ public class MonthViewFragment extends Fragment implements ContentViewBehaviors{
                 } else if (position == 0) {
                     addOneMoreYear(mMonths.get(0).get(Calendar.YEAR) - 1, true);
                     mAdapter.notifyDataSetChanged();
-                    mMonthViewPager.setCurrentItem(12, false);
+                    mShortcutViewPager.setCurrentItem(12, false);
                 }
                 sendUpdateMonthAction(mContext, position);
             }
@@ -134,48 +124,23 @@ public class MonthViewFragment extends Fragment implements ContentViewBehaviors{
         }
     }
 
-
     private void sendUpdateMonthAction(Context context, int position) {
         Intent intent = new Intent(MainActivity.UPDATE_MONTH_ACTION);
         intent.putExtra(MainActivity.ARG_CALENDAR, mMonths.get(position));
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
-    @Override
-    public void scrollToToday() {
-        scrollTo(Calendar.getInstance().getTimeInMillis());
-    }
-
-    @Override
-    public void scrollTo(long millis) {
-        int low = 0;
-        int high = mMonths.size() - 1;
-        while (low <= high) {
-            int mid = low + (high - low) / 2;
-            if (TimeUtils.compareMonth(millis, mMonths.get(mid).getTimeInMillis()) < 0) {
-                high = mid - 1;
-            } else if (TimeUtils.compareMonth(millis, mMonths.get(mid).getTimeInMillis()) > 0) {
-                low = mid + 1;
-            } else {
-                mMonthViewPager.setCurrentItem(mid);
-                sendUpdateMonthAction(mContext, mid);
-                return;
+    private void scrollToToday() {
+        long curMonth = Calendar.getInstance().getTimeInMillis();
+        for (int i = 0; i < mMonths.size(); i++) {
+            if (TimeUtils.compareMonth(mMonths.get(i).getTimeInMillis(), curMonth) == 0) {
+                mShortcutViewPager.setCurrentItem(i);
             }
         }
     }
 
-    @Override
-    public void addEvent() {
-        mAdapter.notifyDataSetChanged();
-    }
-
-    @Override
-    public void removeEvent() {
-        mAdapter.notifyDataSetChanged();
-    }
-
-    @Override
-    public void invalidate() {
-        mMonthViewPager.invalidate();
+    public void notifyDataSetChanged() {
+        ShortcutFragment fragment = mAdapter.getCurrentFragment();
+        fragment.refresh();
     }
 }

@@ -162,6 +162,7 @@ public class DayViewFragment extends Fragment implements ContentViewBehaviors {
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
+    @Override
     public void scrollTo(long millis) {
         scrollTo(millis, true);
     }
