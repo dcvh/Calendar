@@ -802,7 +802,7 @@ public class DataUtils {
         return findEntryIndexWithDate(mEntries, millis);
     }
 
-    private static int findEntryIndexWithDate(ArrayList<Entry> entries, final long millis) {
+    public static int findEntryIndexWithDate(ArrayList<Entry> entries, final long millis) {
         Comparator<Entry> comparator = new Comparator<Entry>() {
             @Override
             public int compare(Entry entry, Entry t1) {

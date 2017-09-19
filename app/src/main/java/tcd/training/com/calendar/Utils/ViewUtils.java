@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.text.TextUtils;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -73,6 +74,40 @@ public class ViewUtils {
 
         eventLayout.setPadding(DP_AS_PX_8 * 2, DP_AS_PX_8, DP_AS_PX_8 * 2, DP_AS_PX_8);
         return eventLayout;
+    }
+
+    public static TextView getSimpleTileView(Event event, Context context) {
+
+        String title = event.getTitle() != null && event.getTitle().length() > 0  ?
+                event.getTitle() : context.getString(R.string.no_title);
+        TextView eventTextView = ViewUtils.getStandardTextView(title, context);
+        eventTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
+
+        eventTextView.setBackgroundResource(R.drawable.layout_round_corner);
+        GradientDrawable drawable = (GradientDrawable) eventTextView.getBackground();
+        drawable.setColor(event.getDisplayColor());
+
+        int dpToPx_4 = dpToPixel(4);
+        eventTextView.setPadding(dpToPx_4, 0, dpToPx_4, 0);
+
+        return eventTextView;
+    }
+
+    public static TextView getTextView(String content, int size, int color, int style, boolean singleLine, Context context) {
+
+        TextView textView = new TextView(context);
+
+        textView.setText(content);
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, size);
+        textView.setTextColor(color);
+        textView.setTypeface(null, style);
+
+        if (singleLine) {
+            textView.setSingleLine(true);
+            textView.setEllipsize(TextUtils.TruncateAt.END);
+        }
+
+        return textView;
     }
 
     public static TextView getStandardTextView(String content, Context context) {

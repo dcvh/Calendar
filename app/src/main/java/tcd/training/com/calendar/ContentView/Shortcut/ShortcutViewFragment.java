@@ -93,7 +93,7 @@ public class ShortcutViewFragment extends Fragment {
                     mAdapter.notifyDataSetChanged();
                     mShortcutViewPager.setCurrentItem(12, false);
                 }
-                sendUpdateMonthAction(mContext, position);
+                sendUpdateMonthAction(position);
             }
 
             @Override
@@ -124,10 +124,10 @@ public class ShortcutViewFragment extends Fragment {
         }
     }
 
-    private void sendUpdateMonthAction(Context context, int position) {
+    private void sendUpdateMonthAction(int position) {
         Intent intent = new Intent(MainActivity.UPDATE_MONTH_ACTION);
         intent.putExtra(MainActivity.ARG_CALENDAR, mMonths.get(position));
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+        LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
     }
 
     private void scrollToToday() {
@@ -135,6 +135,7 @@ public class ShortcutViewFragment extends Fragment {
         for (int i = 0; i < mMonths.size(); i++) {
             if (TimeUtils.compareMonth(mMonths.get(i).getTimeInMillis(), curMonth) == 0) {
                 mShortcutViewPager.setCurrentItem(i);
+                sendUpdateMonthAction(i);
             }
         }
     }

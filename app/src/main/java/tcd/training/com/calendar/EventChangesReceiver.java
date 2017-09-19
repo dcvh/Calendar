@@ -19,39 +19,38 @@ import tcd.training.com.calendar.Entities.Event;
 
 public class EventChangesReceiver extends BroadcastReceiver {
 
-
     private static final String TAG = EventChangesReceiver.class.getSimpleName();
 
     @Override
     public void onReceive(final Context context, final Intent intent) {
 
         if (intent.getAction().equalsIgnoreCase(Intent.ACTION_PROVIDER_CHANGED)) {
-
+            Log.e(TAG, "onReceive: " + Intent.ACTION_PROVIDER_CHANGED);
             new AsyncTask<Void, Void, Void>() {
 
                 @Override
                 protected Void doInBackground(Void... voids) {
 
-                    final String selection =
-                            CalendarContract.Events.DIRTY + "=" + 1 + " OR "
-                            + CalendarContract.Events.DELETED + "=" + 1;
-                    ArrayList<Event> events = DataUtils.readCalendarEvents(selection, context);
+//                    final String selection =
+//                            CalendarContract.Events.DIRTY + "=" + 1 + " OR "
+//                            + CalendarContract.Events.DELETED + "=" + 1;
+//                    ArrayList<Event> events = DataUtils.readCalendarEvents(selection, context);
+//
+//                    if (events.size() != 0) {
+//                        sendUpdateBroadcast(MainActivity.UPDATE_ADD, context);
+//                    } else {
 
-                    if (events.size() != 0) {
-                        sendUpdateBroadcast(MainActivity.UPDATE_ADD, context);
-                    } else {
-                        int numberOfEvents = DataUtils.getNumberOfEvents();
+                    int numberOfEvents = DataUtils.getNumberOfEvents();
 
-                        DataUtils.readCalendarEventsInfo(context);
+                    DataUtils.readCalendarEventsInfo(context);
 
-                        int difference = DataUtils.getNumberOfEvents() - numberOfEvents;
-                        if (difference != 0) {
-                            sendUpdateBroadcast(MainActivity.UPDATE_REMOVE, context);
-                        }
-
-                        Log.d(TAG, "old: " + numberOfEvents);
-                        Log.d(TAG, "new: " + DataUtils.getNumberOfEvents());
+                    int difference = DataUtils.getNumberOfEvents() - numberOfEvents;
+                    if (difference != 0) {
+                        sendUpdateBroadcast(MainActivity.UPDATE_REMOVE, context);
                     }
+
+                    Log.d(TAG, "old: " + numberOfEvents);
+                    Log.d(TAG, "new: " + DataUtils.getNumberOfEvents());
 
                     return null;
 

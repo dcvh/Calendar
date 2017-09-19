@@ -123,7 +123,7 @@ public class DayViewFragment extends Fragment implements ContentViewBehaviors {
                 // change month
                 int dayOfMonth = mDays.get(position).get(Calendar.DAY_OF_MONTH);
                 if (dayOfMonth == 1 || dayOfMonth == mDays.get(position).getActualMaximum(Calendar.DAY_OF_MONTH)) {
-                    sendUpdateMonthAction(mContext, position);
+                    sendUpdateMonthAction(position);
                 }
             }
 
@@ -156,10 +156,10 @@ public class DayViewFragment extends Fragment implements ContentViewBehaviors {
         }
     }
 
-    private void sendUpdateMonthAction(Context context, int position) {
+    private void sendUpdateMonthAction(int position) {
         Intent intent = new Intent(MainActivity.UPDATE_MONTH_ACTION);
         intent.putExtra(MainActivity.ARG_CALENDAR, mDays.get(position));
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+        LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
     }
 
     @Override
@@ -173,13 +173,14 @@ public class DayViewFragment extends Fragment implements ContentViewBehaviors {
             int high = mDays.size() - 1;
             while (low <= high) {
                 int mid = low + (high - low) / 2;
-                if (TimeUtils.compareDay(millis, mDays.get(mid).getTimeInMillis()) < 0) {
+                int comparison = TimeUtils.compareDay(millis, mDays.get(mid).getTimeInMillis());
+                if (comparison < 0) {
                     high = mid - 1;
-                } else if (TimeUtils.compareDay(millis, mDays.get(mid).getTimeInMillis()) > 0) {
+                } else if (comparison > 0) {
                     low = mid + 1;
                 } else {
                     mDayViewPager.setCurrentItem(mid, smoothScroll);
-                    sendUpdateMonthAction(mContext, mid);
+                    sendUpdateMonthAction(mid);
                     return;
                 }
             }

@@ -29,12 +29,23 @@ public class TimeUtils {
         return compareTo(dayInMillis1, dayInMillis2, TYPE_DAY);
     }
 
-    public static int compareMonth(long monthInMillis1, long monthInMillis2) {
-        return compareTo(monthInMillis1, monthInMillis2, TYPE_MONTH);
+    public static int compareWeek(long weekInMillis1, long weekInMillis2) {
+
+        Calendar week1 = Calendar.getInstance();
+        week1.setTimeInMillis(weekInMillis1);
+        Calendar week2 = Calendar.getInstance();
+        week2.setTimeInMillis(weekInMillis2);
+
+        int compareYear = week1.get(Calendar.YEAR) - week2.get(Calendar.YEAR);
+        if (compareYear != 0) {
+            return compareYear;
+        } else {
+            return week1.get(Calendar.WEEK_OF_YEAR) - week2.get(Calendar.WEEK_OF_YEAR);
+        }
     }
 
-    public static int compareYear(long yearInMillis1, long yearInMillis2) {
-        return compareTo(yearInMillis1, yearInMillis2, TYPE_YEAR);
+    public static int compareMonth(long monthInMillis1, long monthInMillis2) {
+        return compareTo(monthInMillis1, monthInMillis2, TYPE_MONTH);
     }
 
     private static int compareTo(long millis1, long millis2, int type) {

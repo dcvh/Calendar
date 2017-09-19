@@ -19,7 +19,7 @@
         android:layout_width="0dp"
         android:layout_weight="5"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:visibility="gone"/>
 
 </LinearLayout>

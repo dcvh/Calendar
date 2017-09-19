@@ -114,12 +114,12 @@ public class DayFragment extends Fragment {
             int allDayEventsNumber = 0;
             for (int i = 0; i < mEntry.getEvents().size(); i++) {
                 if (mEntry.getEvents().get(i).isAllDay()) {
-                    allDayEventsNumber++;
                     View eventTileView = ViewUtils.getEventTileView(mEntry.getEvents().get(i), mContext);
                     eventTileView.setLayoutParams(params);
-                    if (i >= NUMBER_OF_SHOWN_EVENTS) {
+                    if (allDayEventsNumber >= NUMBER_OF_SHOWN_EVENTS) {
                         eventTileView.setVisibility(View.GONE);
                     }
+                    allDayEventsNumber++;
                     mAllDayEventsLayout.addView(eventTileView);
                 }
             }

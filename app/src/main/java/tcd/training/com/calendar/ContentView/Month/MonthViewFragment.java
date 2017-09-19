@@ -103,7 +103,7 @@ public class MonthViewFragment extends Fragment implements ContentViewBehaviors{
                     mAdapter.notifyDataSetChanged();
                     mMonthViewPager.setCurrentItem(12, false);
                 }
-                sendUpdateMonthAction(mContext, position);
+                sendUpdateMonthAction(position);
             }
 
             @Override
@@ -134,11 +134,10 @@ public class MonthViewFragment extends Fragment implements ContentViewBehaviors{
         }
     }
 
-
-    private void sendUpdateMonthAction(Context context, int position) {
+    private void sendUpdateMonthAction(int position) {
         Intent intent = new Intent(MainActivity.UPDATE_MONTH_ACTION);
         intent.putExtra(MainActivity.ARG_CALENDAR, mMonths.get(position));
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+        LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
     }
 
     @Override
@@ -152,13 +151,14 @@ public class MonthViewFragment extends Fragment implements ContentViewBehaviors{
         int high = mMonths.size() - 1;
         while (low <= high) {
             int mid = low + (high - low) / 2;
-            if (TimeUtils.compareMonth(millis, mMonths.get(mid).getTimeInMillis()) < 0) {
+            int comparison = TimeUtils.compareMonth(millis, mMonths.get(mid).getTimeInMillis());
+            if (comparison < 0) {
                 high = mid - 1;
-            } else if (TimeUtils.compareMonth(millis, mMonths.get(mid).getTimeInMillis()) > 0) {
+            } else if (comparison > 0) {
                 low = mid + 1;
             } else {
                 mMonthViewPager.setCurrentItem(mid);
-                sendUpdateMonthAction(mContext, mid);
+                sendUpdateMonthAction(mid);
                 return;
             }
         }

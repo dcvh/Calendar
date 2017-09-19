@@ -41,6 +41,7 @@ import java.util.Calendar;
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
 import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
 import tcd.training.com.calendar.ContentView.Shortcut.ShortcutViewFragment;
+import tcd.training.com.calendar.ContentView.Week.WeekViewFragment;
 import tcd.training.com.calendar.Utils.DataUtils;
 import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.ReminderTask.ReminderUtils;
@@ -359,7 +360,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 return null;
             }
 
-            @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
             @Override
             protected void onPostExecute(Void aVoid) {
                 mDialog.dismiss();
@@ -425,7 +425,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         switch (id) {
             case R.id.nav_schedule: replaceFragment(ScheduleViewFragment.class); break;
             case R.id.nav_day: replaceFragment(DayViewFragment.class); break;
-            case R.id.nav_week: replaceFragment(ScheduleViewFragment.class); break;
+            case R.id.nav_week: replaceFragment(WeekViewFragment.class); break;
             case R.id.nav_month: replaceFragment(MonthViewFragment.class); break;
             case R.id.nav_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);

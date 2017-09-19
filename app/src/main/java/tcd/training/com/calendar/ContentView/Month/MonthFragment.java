@@ -242,7 +242,6 @@ public class MonthFragment extends Fragment {
 
             layout.addView(dateTextView);
 
-            int dpToPx_4 = ViewUtils.dpToPixel(4);
             for (int i = 0; i < entry.getEvents().size(); i++) {
 
                 Event event = entry.getEvents().get(i);
@@ -253,17 +252,7 @@ public class MonthFragment extends Fragment {
                     break;
                 }
 
-                String title = event.getTitle() != null && event.getTitle().length() > 0  ?
-                        event.getTitle() : mContext.getString(R.string.no_title);
-                TextView eventTextView = ViewUtils.getStandardTextView(title, mContext);
-                eventTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, DEFAULT_TEXT_SIZE);
-//                eventTextView.setBackgroundColor(event.getDisplayColor());
-                eventTextView.setBackgroundResource(R.drawable.layout_round_corner);
-                GradientDrawable drawable = (GradientDrawable) eventTextView.getBackground();
-                drawable.setColor(event.getDisplayColor());
-
-                eventTextView.setPadding(dpToPx_4, 0, dpToPx_4, 0);
-                layout.addView(eventTextView);
+                layout.addView(ViewUtils.getSimpleTileView(event, mContext));
             }
 
             resultView = layout;

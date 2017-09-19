@@ -1,11 +1,14 @@
 package tcd.training.com.calendar.ContentView.Schedule;
 
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.LinearSmoothScroller;
@@ -22,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
 import tcd.training.com.calendar.ContentView.Schedule.CalendarEntriesAdapter.ParallaxViewHolder;
+import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.Utils.DataUtils;
 import tcd.training.com.calendar.Entities.Entry;
 import tcd.training.com.calendar.Entities.Event;
@@ -40,6 +44,8 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
 
     private ArrayList<Entry> mEntries;
     private ArrayList<Long> mWeekPeriods;
+    private Context mContext;
+    private int mCurMonth;
     private int mStartWeekIndex;
     private int mEndWeekIndex;
     private int mPosition;
@@ -62,6 +68,9 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        mContext = getContext();
+        mCurMonth = Calendar.getInstance().get(Calendar.MONTH);
+
         breakUpIntoWeekPeriods();
         // determine start and end periods of current year
         int curYear = Calendar.getInstance().get(Calendar.YEAR);
@@ -78,7 +87,7 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
             }
         }
 
-        mEntries = DataUtils.getEntriesBetween(getContext(), mWeekPeriods.get(mStartWeekIndex), mWeekPeriods.get(mEndWeekIndex));
+        mEntries = DataUtils.getEntriesBetween(mContext, mWeekPeriods.get(mStartWeekIndex), mWeekPeriods.get(mEndWeekIndex));
         if (mEntries != null) {
             // insert today (if it doesn't exist)
             mEntries = (ArrayList<Entry>) mEntries.clone();
@@ -99,7 +108,7 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
         end.set(2030, 11, 31, 23, 59);
 
         // determine the first date of week
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
         String firstDay = sharedPreferences.getString(getString(R.string.pref_key_start_of_the_week), "Monday");
         int firstDayOfWeek;
         switch (firstDay) {
@@ -166,11 +175,11 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
         View view = inflater.inflate(R.layout.content_schedule_view, container, false);
 
         // adapter
-        mAdapter = new CalendarEntriesAdapter(view.getContext(), mEntries);
+        mAdapter = new CalendarEntriesAdapter(mContext, mEntries);
 
         // recycler view
         RecyclerView eventsRecyclerView = view.findViewById(R.id.rv_events_list);
-        mLayoutManager = new LinearLayoutManager(view.getContext());
+        mLayoutManager = new LinearLayoutManager(mContext);
         eventsRecyclerView.setLayoutManager(mLayoutManager);
         eventsRecyclerView.setItemAnimator(new DefaultItemAnimator());
         eventsRecyclerView.setAdapter(mAdapter);
@@ -183,7 +192,7 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
                     if (mPosition < 3) {
                         int newStartIndex = mStartWeekIndex - 52 >= 0 ? mStartWeekIndex - 52 : 0;
                         ArrayList<Entry> newEntries = insertMonthsAndWeeks(
-                                DataUtils.getEntriesBetween(getContext(), mWeekPeriods.get(newStartIndex), mWeekPeriods.get(mStartWeekIndex)),
+                                DataUtils.getEntriesBetween(mContext, mWeekPeriods.get(newStartIndex), mWeekPeriods.get(mStartWeekIndex)),
                                 mWeekPeriods.get(newStartIndex),
                                 mWeekPeriods.get(mStartWeekIndex)
                         );
@@ -196,7 +205,7 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
                     if (mEntries.size() - mPosition < 10) {
                         int newEndIndex = mEndWeekIndex + 52 < mWeekPeriods.size() ? mEndWeekIndex + 52 : mWeekPeriods.size() - 1;
                         ArrayList<Entry> newEntries = insertMonthsAndWeeks(
-                                DataUtils.getEntriesBetween(getContext(), mWeekPeriods.get(mEndWeekIndex), mWeekPeriods.get(newEndIndex)),
+                                DataUtils.getEntriesBetween(mContext, mWeekPeriods.get(mEndWeekIndex), mWeekPeriods.get(newEndIndex)),
                                 mWeekPeriods.get(mEndWeekIndex),
                                 mWeekPeriods.get(newEndIndex)
                         );
@@ -204,6 +213,13 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
                         mAdapter.notifyDataSetChanged();
                         mEndWeekIndex = newEndIndex;
                     }
+                }
+
+                Calendar cal = Calendar.getInstance();
+                cal.setTimeInMillis(mEntries.get(mPosition).getTime());
+                if (cal.get(Calendar.MONTH) != mCurMonth) {
+                    sendUpdateMonthAction(mPosition);
+                    mCurMonth = cal.get(Calendar.MONTH);
                 }
 
                 for (int i = 0; i < recyclerView.getChildCount(); i++) {
@@ -220,10 +236,18 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
         return view;
     }
 
+    private void sendUpdateMonthAction(int position) {
+        Intent intent = new Intent(MainActivity.UPDATE_MONTH_ACTION);
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(mEntries.get(position).getTime());
+        intent.putExtra(MainActivity.ARG_CALENDAR, calendar);
+        LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+    }
+
     @Override
     public void scrollTo(long millis) {
         int mCurrentPosition = mLayoutManager.findFirstVisibleItemPosition();
-        RecyclerView.SmoothScroller smoothScroller = new LinearSmoothScroller(getContext()) {
+        RecyclerView.SmoothScroller smoothScroller = new LinearSmoothScroller(mContext) {
             @Override protected int getVerticalSnapPreference() {
                 return LinearSmoothScroller.SNAP_TO_START;
             }
@@ -242,6 +266,7 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
                     smoothScroller.setTargetPosition(i);
                     mLayoutManager.startSmoothScroll(smoothScroller);
                 }
+                sendUpdateMonthAction(i);
                 break;
             }
         }
@@ -256,7 +281,7 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
     public void addEvent() {
 
 //        final String selection = CalendarContract.Events.DIRTY + "=" + 1;
-//        ArrayList<Event> events = DataUtils.readCalendarEvents(selection, getContext());
+//        ArrayList<Event> events = DataUtils.readCalendarEvents(selection, mContext);
 //
 //        Event event = events.get(events.size() - 1);
 //        for (Entry entry : mEntries) {
@@ -277,7 +302,7 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... voids) {
-                DataUtils.readCalendarEventsInfo(getContext());
+                DataUtils.readCalendarEventsInfo(mContext);
                 return null;
             }
 
@@ -286,7 +311,7 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
                 super.onPostExecute(aVoid);
                 mEntries.clear();
                 mEntries.addAll(insertMonthsAndWeeks(
-                        DataUtils.getEntriesBetween(getContext(), mWeekPeriods.get(mStartWeekIndex), mWeekPeriods.get(mEndWeekIndex)),
+                        DataUtils.getEntriesBetween(mContext, mWeekPeriods.get(mStartWeekIndex), mWeekPeriods.get(mEndWeekIndex)),
                         mWeekPeriods.get(mStartWeekIndex),
                         mWeekPeriods.get(mEndWeekIndex)
                 ));

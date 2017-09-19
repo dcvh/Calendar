@@ -176,7 +176,7 @@ public class ShortcutFragment extends Fragment {
         LinearLayout row = getRow();
         for (int index = 1; curDate.compareTo(mEndDate) <= 0; index++) {
             if (curDate.get(Calendar.MONTH) != curMonth) {
-                row.addView(createDateView(curDate, Color.TRANSPARENT));
+                row.addView(getTextView("", DEFAULT_TEXT_SIZE, Color.TRANSPARENT, Typeface.NORMAL));
             } else {
                 row.addView(createDateView(curDate, Color.BLACK));
             }

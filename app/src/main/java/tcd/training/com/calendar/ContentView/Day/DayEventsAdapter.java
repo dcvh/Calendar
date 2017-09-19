@@ -2,6 +2,7 @@ package tcd.training.com.calendar.ContentView.Day;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,8 @@ import tcd.training.com.calendar.Utils.ViewUtils;
  */
 
 public class DayEventsAdapter extends RecyclerView.Adapter<DayEventsAdapter.DayEventViewHolder> {
+
+    private static final String TAG = DayEventsAdapter.class.getSimpleName();
 
     private final Context mContext;
     private Entry mEntry;
@@ -50,7 +53,7 @@ public class DayEventsAdapter extends RecyclerView.Adapter<DayEventsAdapter.DayE
         holder.mTimeTextView.setText(time);
         if (mEntry != null) {
             for (Event event : mEntry.getEvents()) {
-                if (!event.isAllDay() && Integer.valueOf(TimeUtils.getFormattedDate(event.getStartDate(), "HH")) == position) {
+                if (!event.isAllDay() && Integer.valueOf(TimeUtils.getFormattedDate(event.getStartDate(), "H")) == position) {
                     holder.mEventsLinearLayout.addView(ViewUtils.getEventTileView(event, mContext));
                     holder.mEventsLinearLayout.setVisibility(View.VISIBLE);
                     holder.setIsRecyclable(false);
