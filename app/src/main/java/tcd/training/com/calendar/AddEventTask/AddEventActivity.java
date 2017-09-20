@@ -110,13 +110,21 @@ public class AddEventActivity extends AppCompatActivity {
 
     private Event mEvent;
 
+    private boolean mEndActivity = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_event);
 
         updateActionBar();
+
         initializeVariables();
+        if (mEndActivity) {
+            finish();
+            return;
+        }
+
         initializeUiComponents();
 
         if (getIntent().hasExtra(EventDetailsActivity.ARG_CALENDAR_EVENT)) {
@@ -156,7 +164,6 @@ public class AddEventActivity extends AppCompatActivity {
                         DataUtils.addEvent(event, reminder, this);
                     }
 
-                    ReminderUtils.scheduleForReadingReminders(this);
                     finish();
                 }
                 break;
@@ -260,6 +267,11 @@ public class AddEventActivity extends AppCompatActivity {
         mAccountIndex = 0;
 
         mAccounts = DataUtils.getPrimaryAccounts();
+        if (mAccounts.size() == 0) {
+            Toast.makeText(getApplicationContext(), R.string.no_account_found, Toast.LENGTH_SHORT).show();
+            mEndActivity = true;
+            return;
+        }
         mAccountNames = new ArrayList<>();
         mAccountColors = new ArrayList<>();
         for (Account account : mAccounts) {
@@ -412,6 +424,11 @@ public class AddEventActivity extends AppCompatActivity {
     }
 
     private void initializeUiComponents() {
+
+        if (mEndActivity) {
+            return;
+        }
+
         mTitleEditText = (EditText) findViewById(R.id.edt_event_title);
 
         initializeAccountsOption();

@@ -1,0 +1,182 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">Calendar</string>
+
+    <!--navigation drawer-->
+    <string name="navigation_drawer_open">Mở navigation drawer</string>
+    <string name="navigation_drawer_close">Đóng navigation drawer</string>
+    <string name="schedule">Lịch trình</string>
+    <string name="day">Ngày</string>
+    <string name="week">Tuần</string>
+    <string name="month">Tháng</string>
+    <string name="more">Thêm</string>
+    <string name="settings">Cài đặt</string>
+    <string name="help_feedback">Giúp đỡ &amp; Phản hồi</string>
+
+    <!--menus-->
+    <string name="action_today">Hôm nay</string>
+    <string name="refresh">Làm mới</string>
+    <string name="title_activity_settings">Cài đặt</string>
+
+    <!--content views-->
+    <string name="no_calendar_events_error">Không tìm thấy event!</string>
+    <string name="no_title">(Không tên)</string>
+    <string name="wait_load_events_message">Xin chờ đến khi hệ thống tải xong sự kiện</string>
+    <string name="x_more" tools:ignore="PluralsCandidate">%d nữa</string>
+    <string name="show_less">Ít hơn</string>
+    <string name="no_event">Chưa có sự kiện nào. Nhấn để tạo.</string>
+
+    <!--event details-->
+    <string name="edit">Sửa</string>
+    <string name="delete">Xóa</string>
+
+    <!--list events-->
+    <string-array name="first_day_saturday">
+        <item>B</item>
+        <item>C</item>
+        <item>H</item>
+        <item>B</item>
+        <item>T</item>
+        <item>N</item>
+        <item>S</item>
+    </string-array>
+    <string-array name="first_day_sunday">
+        <item>C</item>
+        <item>H</item>
+        <item>B</item>
+        <item>T</item>
+        <item>N</item>
+        <item>S</item>
+        <item>B</item>
+    </string-array>
+    <string-array name="first_day_monday">
+        <item>H</item>
+        <item>B</item>
+        <item>T</item>
+        <item>N</item>
+        <item>S</item>
+        <item>B</item>
+        <item>C</item>
+    </string-array>
+
+    <!--display event details activity-->
+    <string name="minute">Phút</string>
+    <string name="hour">Giờ</string>
+    <plurals name="x_week">
+        <item quantity="one">%d tuần</item>
+        <item quantity="other">%d tuần</item>
+    </plurals>
+    <plurals name="x_day">
+        <item quantity="one">%d ngày</item>
+        <item quantity="other">%d ngày</item>
+    </plurals>
+    <plurals name="x_hour">
+        <item quantity="one">%d giờ</item>
+        <item quantity="other">%d giờ</item>
+    </plurals>
+    <plurals name="x_minute">
+        <item quantity="one">%d phút</item>
+        <item quantity="other">%d phút</item>
+    </plurals>
+    <plurals name="x_guest">
+        <item quantity="one">%d khách</item>
+        <item quantity="other">%d khách</item>
+    </plurals>
+    <string name="guest_email">\n &#8226; %s</string>
+    <string name="cancelled">Hủy</string>
+
+    <!--add event activity-->
+    <string name="save">Lưu</string>
+    <string name="enter_title">Nhập tên, thời gian, người tham gia, nơi chốn,…</string>
+    <string name="invite_people">Mời bạn bè</string>
+    <string name="add_location">Thêm địa điểm</string>
+    <string name="default_color">Màu mặc định</string>
+    <string name="add_note">Thêm ghi chú</string>
+    <string name="busy">Bận</string>
+    <string name="all_day">Cả ngày</string>
+    <string name="more_option">Thêm</string>
+    <string name="available">Rảnh</string>
+    <string name="icon">Biểu tượng</string>
+    <string name="does_not_repeat">Không lặp lại</string>
+    <string name="every_day">Hằng ngày</string>
+    <string name="every_week">Hằng tuần</string>
+    <string name="every_month">Hằng tháng</string>
+    <string name="every_year">Hằng năm</string>
+    <string name="no_notification">Không thông báo</string>
+    <string name="custom">Tùy chỉnh…</string>
+    <string name="before">trước</string>
+    <string name="done">Xong</string>
+    <string name="title_empty_error">Tên không thể để trống</string>
+    <string name="wait_message">Xin đợi đến khi quá trình kết thúc</string>
+    <string name="discard_event">Bạn có chắc chắn muốn hủy sự kiện này không?</string>
+    <string name="keep_editing">Tiếp tục chỉnh sửa</string>
+    <string name="discard">Hủy</string>
+    <string name="tentative">Chưa quyết định</string>
+    <string name="notification">Thông báo notification</string>
+    <string name="popup">Thông báo popup</string>
+    <string name="no_account_found">Không tìm thấy tài khoản gmail</string>
+
+    <!--permissions-->
+    <string name="grant">Cho phép</string>
+    <string name="require_calendar_permission_error">Ứng dụng này cần quyền truy cập lịch</string>
+
+    <!--Settings-->
+    <!--general-->
+    <string name="pref_header_general">Chung</string>
+    <string name="pref_title_start_of_the_week">Ngày đầu tuần</string>
+    <string-array name="pref_start_of_the_week_list_titles">
+        <item>Thứ bảy</item>
+        <item>Chủ nhật</item>
+        <item>Thứ hai</item>
+    </string-array>
+
+    <string name="pref_start_of_the_week_default">Thứ hai</string>
+    <string name="pref_title_show_week_number">Hiển thị số tuần</string>
+    <string name="pref_title_default_event_duration">Thời lượng sự kiện mặc định</string>
+    <string-array name="pref_default_event_duration_titles">
+        <item>Không có thời gian kết thúc</item>
+        <item>15 phút</item>
+        <item>30 phút</item>
+        <item>60 phút</item>
+        <item>90 phút</item>
+        <item>120 phút</item>
+    </string-array>
+    <string-array name="pref_default_event_duration_values">
+        <item>-1</item>
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
+        <item>90</item>
+        <item>120</item>
+    </string-array>
+    <string name="pref_default_event_duration_values_default">60</string>
+    <string name="pref_title_show_lunar_calendar">Hiển thị âm lịch</string>
+
+    <!-- notifications -->
+    <string name="pref_header_notifications">Thông báo</string>
+    <string name="pref_title_notify_on_this_device">Thông báo trên thiết bị này</string>
+    <string name="pref_title_ringtone">Nhạc chuông</string>
+    <string name="pref_ringtone_silent">Im lặng</string>
+    <string name="pref_title_vibrate">Rung</string>
+
+    <!-- Example settings for Data & Sync -->
+
+    <string name="pref_title_sync_frequency">Tần suất đồng bộ</string>
+    <string-array name="pref_sync_frequency_titles">
+        <item>15 phút</item>
+        <item>30 phút</item>
+        <item>1 giờ</item>
+        <item>3 giờ</item>
+        <item>6 giờ</item>
+        <item>Không bao giờ</item>
+    </string-array>
+    <string-array name="pref_sync_frequency_values">
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
+        <item>180</item>
+        <item>360</item>
+        <item>-1</item>
+    </string-array>
+
+    <string name="pref_title_system_sync_settings">Đồng bộ hóa</string>
+</resources>

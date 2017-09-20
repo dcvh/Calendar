@@ -17,12 +17,17 @@
     <string name="refresh">Refresh</string>
     <string name="title_activity_settings">Settings</string>
 
-    <!--calendar events-->
+    <!--content v-->
     <string name="no_calendar_events_error">No event found!</string>
     <string name="no_title">(No title)</string>
     <string name="wait_load_events_message">Please wait while system loads events</string>
     <string name="x_more" tools:ignore="PluralsCandidate">%d more</string>
     <string name="show_less">Show less</string>
+    <string name="no_event">Nothing planned. Tap to create.</string>
+
+    <!--event details-->
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
 
     <!--list events-->
     <string-array name="first_day_saturday">
@@ -80,9 +85,10 @@
     <string name="cancelled">Cancelled</string>
 
     <!--content descriptions-->
-    <string name="date_time_icon">DateTime icon</string>
-    <string name="note_icon">Note icon</string>
-    <string name="arrow_icon">Arrow icon</string>
+    <string name="date_time_icon" translatable="false">DateTime icon</string>
+    <string name="note_icon" translatable="false">Note icon</string>
+    <string name="arrow_icon" translatable="false">Arrow icon</string>
+    <string name="check" translatable="false">Check</string>
 
     <!--add event activity-->
     <string name="save">Save</string>
@@ -95,7 +101,6 @@
     <string name="busy">Busy</string>
     <string name="all_day">All-day</string>
     <string name="more_option">More options</string>
-    <string name="check">Check</string>
     <string name="available">Available</string>
     <string name="icon">icon</string>
     <string name="every_day">Every day</string>
@@ -106,18 +111,16 @@
     <string name="custom">Custom…</string>
     <string name="before">before</string>
     <string name="done">Done</string>
-    <string name="no_event">Nothing planned. Tap to create.</string>
     <string name="title_empty_error">Title cannot be blank</string>
     <string name="wait_message">Please wait until the process is completed</string>
     <string name="discard_event">Are you sure you want to discard this event?</string>
     <string name="keep_editing">KEEP EDITING</string>
     <string name="discard">DISCARD</string>
     <string name="tentative">Tentative</string>
-    <string name="edit">Edit</string>
-    <string name="delete">Delete</string>
     <string name="notification">As notification</string>
     <string name="popup">As popup</string>
-    <string name="ok">OK</string>
+    <string name="ok" translatable="false">OK</string>
+    <string name="no_account_found">No account found</string>
 
     <!--permissions-->
     <string name="grant">Grant</string>
@@ -129,6 +132,11 @@
     <string name="pref_key_start_of_the_week" translatable="false">start_of_the_week</string>
     <string name="pref_title_start_of_the_week">Start of the week</string>
     <string-array name="pref_start_of_the_week_list_titles">
+        <item>Saturday</item>
+        <item>Sunday</item>
+        <item>Monday</item>
+    </string-array>
+    <string-array name="pref_start_of_the_week_list_values">
         <item>Saturday</item>
         <item>Sunday</item>
         <item>Monday</item>
