@@ -51,5 +51,8 @@
         <!-- Background color when SELECTED -->
         <item name="colorControlHighlight">@color/colorPrimaryDark</item>
     </style>
+
+    <style name="CalendarPickerDialogTheme" parent="Theme.AppCompat.Light.Dialog">
+    </style>
     
 </resources>

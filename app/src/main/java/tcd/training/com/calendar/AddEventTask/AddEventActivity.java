@@ -1,5 +1,6 @@
 package tcd.training.com.calendar.AddEventTask;
 
+import android.annotation.TargetApi;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
@@ -15,6 +16,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.format.DateFormat;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.Menu;
@@ -256,7 +258,8 @@ public class AddEventActivity extends AppCompatActivity {
     private void initializeVariables() {
 
         mStart = Calendar.getInstance();
-        mEnd = Calendar.getInstance();
+        mStart.add(Calendar.MINUTE, 10);
+        mEnd = (Calendar) mStart.clone();
 
         mAvailabilityIndex = 0;
         mColorIndex = 0;
@@ -566,37 +569,40 @@ public class AddEventActivity extends AppCompatActivity {
     }
 
     private void showDatePickerDialog(final TextView textView) {
-        Calendar today = Calendar.getInstance();
-        DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+        final Calendar date = textView.getId() == R.id.tv_start_date ? mStart : mEnd;
+        int themeResId = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ?
+                android.R.style.Theme_Material_Light_Dialog : android.R.style.Theme_Holo_Light_Dialog;
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this, themeResId,
                 new DatePickerDialog.OnDateSetListener() {
                     @Override
                     public void onDateSet(DatePicker datePicker, int year, int month, int dayOfMonth) {
-                        Calendar date = textView.getId() == R.id.tv_start_date ? mStart : mEnd;
                         date.set(year, month, dayOfMonth);
                         textView.setText(DateUtils.formatDateTime(AddEventActivity.this, date.getTimeInMillis(), DATE_FORMAT_FLAGS));
                     }
                 },
-                today.get(Calendar.YEAR),
-                today.get(Calendar.MONTH),
-                today.get(Calendar.DAY_OF_MONTH));
+                date.get(Calendar.YEAR),
+                date.get(Calendar.MONTH),
+                date.get(Calendar.DAY_OF_MONTH));
         datePickerDialog.show();
     }
 
     private void showTimePickerDialog(final TextView textView) {
-        final Calendar today = Calendar.getInstance();
-        TimePickerDialog timePickerDialog = new TimePickerDialog(this,
+        final Calendar time = textView.getId() == R.id.tv_start_time ? mStart : mEnd;
+        int themeResId = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ?
+                android.R.style.Theme_Material_Light_Dialog : android.R.style.Theme_Holo_Light_Dialog;
+        TimePickerDialog timePickerDialog = new TimePickerDialog(this, themeResId,
                 new TimePickerDialog.OnTimeSetListener() {
                     @Override
                     public void onTimeSet(TimePicker timePicker, int hourOfDay, int minute) {
-                        Calendar date = textView.getId() == R.id.tv_start_time ? mStart : mEnd;
-                        date.set(Calendar.HOUR_OF_DAY, hourOfDay);
-                        date.set(Calendar.MINUTE, minute);
-                        textView.setText(DateUtils.formatDateTime(AddEventActivity.this, date.getTimeInMillis(), TIME_FORMAT_FLAGS));
+                        time.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                        time.set(Calendar.MINUTE, minute);
+                        textView.setText(DateUtils.formatDateTime(AddEventActivity.this, time.getTimeInMillis(), TIME_FORMAT_FLAGS));
                     }
                 },
-                today.get(Calendar.HOUR_OF_DAY),
-                today.get(Calendar.MINUTE),
-                false);
+                time.get(Calendar.HOUR_OF_DAY),
+                time.get(Calendar.MINUTE),
+                DateFormat.is24HourFormat(this));
+
         timePickerDialog.show();
     }
 
