@@ -7,6 +7,7 @@ import android.provider.CalendarContract;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.format.DateUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -165,19 +166,18 @@ public class EventDetailsActivity extends AppCompatActivity {
         String dateTime;
         long startDate = mEvent.getStartDate();
         long endDate = mEvent.getDuration() == null ? mEvent.getEndDate() : startDate + TimeUtils.getDurationValue(mEvent.getDuration());
-        if (TimeUtils.isSameDay(startDate, endDate)) {
-            dateTime = TimeUtils.getFormattedDate(startDate, "EEEE, MMMM d")
-                    + "\n"
-                    + TimeUtils.getFormattedDate(startDate, "hh:mm a")
-                    + " - "
-                    + TimeUtils.getFormattedDate(endDate, "hh:mm a");
+        if (mEvent.isAllDay()) {
+            dateTime = DateUtils.formatDateTime(this, startDate, DateUtils.FORMAT_SHOW_WEEKDAY | DateUtils.FORMAT_SHOW_DATE);
         } else {
-            String format = "EEEE, MMMM d, hh:mm a";
-            dateTime = TimeUtils.getFormattedDate(startDate, format);
-            if (!mEvent.isAllDay()) {
-                dateTime += " -\n" + TimeUtils.getFormattedDate(endDate, format);
+            if (TimeUtils.isSameDay(startDate, endDate)) {
+                dateTime = DateUtils.formatDateTime(this, startDate, DateUtils.FORMAT_SHOW_WEEKDAY | DateUtils.FORMAT_SHOW_DATE) + "\n" +
+                        DateUtils.formatDateRange(this, startDate, endDate, DateUtils.FORMAT_SHOW_TIME);
+            } else {
+                int flags = DateUtils.FORMAT_SHOW_WEEKDAY | DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_TIME;
+                dateTime = DateUtils.formatDateTime(this, startDate, flags) + " \u2014\n" + DateUtils.formatDateTime(this, endDate, flags);
             }
         }
+
         dateTimeTextView.setText(dateTime);
     }
 

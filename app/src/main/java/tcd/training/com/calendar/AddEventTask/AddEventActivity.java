@@ -15,6 +15,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -61,18 +62,25 @@ import tcd.training.com.calendar.Utils.ViewUtils;
 
 public class AddEventActivity extends AppCompatActivity {
 
+    private static final String TAG = AddEventActivity.class.getSimpleName();
+
     private static final int MENU_SAVE_ID = 1;
+
     private static final int STATUS_DIALOG_TYPE = 1;
     private static final int REPEAT_DIALOG_TYPE = 2;
     private static final int TIME_ZONE_DIALOG_TYPE = 3;
     private static final int NOTIFICATION_DIALOG_TYPE = 4;
     private static final int COLOR_DIALOG_TYPE = 5;
     private static final int ACCOUNT_DIALOG_TYPE = 6;
-    private static final String TAG = AddEventActivity.class.getSimpleName();
+
     private static final int RC_PLACE_AUTOCOMPLETE = 1;
 
     public static final int PRIORITY_NOTIFICATION = 0;
     public static final int PRIORITY_POPUP = 1;
+
+    private static final int DATE_FORMAT_FLAGS =
+            DateUtils.FORMAT_SHOW_WEEKDAY | DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_ABBREV_ALL;
+    private static final int TIME_FORMAT_FLAGS = DateUtils.FORMAT_SHOW_TIME;
 
     private TextView mStartDateTextView, mEndDateTextView, mStartTimeTextView, mEndTimeTextView, mLocationTextView, mTimeZoneTextView;
     private EditText mTitleEditText, mNoteEditText;
@@ -107,6 +115,7 @@ public class AddEventActivity extends AppCompatActivity {
     private int mUnitIndex;
 
     private Place mLocation;
+    private Calendar mStart, mEnd;
 
     private Event mEvent;
 
@@ -206,20 +215,6 @@ public class AddEventActivity extends AppCompatActivity {
 
         String timeZone = mTimeZoneTitles.get(mTimeZoneIndex);
 
-        Calendar startDate = Calendar.getInstance();
-        startDate.setTimeInMillis(TimeUtils.getMillis(mStartDateTextView.getText().toString(), ViewUtils.getAddEventDateFormat()));
-        Calendar startTime = Calendar.getInstance();
-        startTime.setTimeInMillis(TimeUtils.getMillis(mStartTimeTextView.getText().toString(), TimeUtils.getStandardTimeFormat()));
-        startDate.set(Calendar.HOUR_OF_DAY, startTime.get(Calendar.HOUR_OF_DAY));
-        startDate.set(Calendar.MINUTE, startTime.get(Calendar.MINUTE));
-
-        Calendar endDate = Calendar.getInstance();
-        endDate.setTimeInMillis(TimeUtils.getMillis(mEndDateTextView.getText().toString(), ViewUtils.getAddEventDateFormat()));
-        Calendar endTime = Calendar.getInstance();
-        endTime.setTimeInMillis(TimeUtils.getMillis(mEndTimeTextView.getText().toString(), TimeUtils.getStandardTimeFormat()));
-        endDate.set(Calendar.HOUR_OF_DAY, endTime.get(Calendar.HOUR_OF_DAY));
-        endDate.set(Calendar.MINUTE, endTime.get(Calendar.MINUTE));
-
         boolean hasAlarm = mNotificationMinutes.get(mNotificationIndex) != 0;
 
         String rRule = null;
@@ -236,14 +231,14 @@ public class AddEventActivity extends AppCompatActivity {
 
         String duration = null;
         if (rRule != null) {
-            duration = TimeUtils.getDurationString(endDate.getTimeInMillis() - startDate.getTimeInMillis());
+            duration = TimeUtils.getDurationString(mEnd.getTimeInMillis() - mStart.getTimeInMillis());
         }
 
         int displayColor = mColorValues.get(mColorIndex);
 
         int availability = mAvailabilityIndex == 0 ? CalendarContract.Events.AVAILABILITY_BUSY : CalendarContract.Events.AVAILABILITY_FREE;
 
-        Event event = new Event(title, calendarId, location, description, timeZone, startDate.getTimeInMillis(), endDate.getTimeInMillis(),
+        Event event = new Event(title, calendarId, location, description, timeZone, mStart.getTimeInMillis(), mEnd.getTimeInMillis(),
                 isAllDay, hasAlarm, rRule, duration, displayColor, availability);
         event.setPriority(mPriorityIndex);
         return event;
@@ -259,6 +254,9 @@ public class AddEventActivity extends AppCompatActivity {
     }
 
     private void initializeVariables() {
+
+        mStart = Calendar.getInstance();
+        mEnd = Calendar.getInstance();
 
         mAvailabilityIndex = 0;
         mColorIndex = 0;
@@ -309,14 +307,14 @@ public class AddEventActivity extends AppCompatActivity {
     private void initializeValuesFromEvent() {
 
         // start date and time
-        mStartDateTextView.setText(TimeUtils.getFormattedDate(mEvent.getStartDate(), ViewUtils.getAddEventDateFormat()));
-        mStartTimeTextView.setText(TimeUtils.getFormattedDate(mEvent.getStartDate(), TimeUtils.getStandardTimeFormat()));
+        mStartDateTextView.setText(DateUtils.formatDateTime(this, mEvent.getStartDate(), DATE_FORMAT_FLAGS));
+        mStartTimeTextView.setText(DateUtils.formatDateTime(this, mEvent.getStartDate(), TIME_FORMAT_FLAGS));
 
         // end date and time
         long endMillis = mEvent.getRRule() == null ? mEvent.getEndDate() :
                 mEvent.getStartDate() + TimeUtils.getDurationValue(mEvent.getDuration());
-        mEndDateTextView.setText(TimeUtils.getFormattedDate(endMillis, ViewUtils.getAddEventDateFormat()));
-        mEndTimeTextView.setText(TimeUtils.getFormattedDate(endMillis, TimeUtils.getStandardTimeFormat()));
+        mEndDateTextView.setText(DateUtils.formatDateTime(this, endMillis, DATE_FORMAT_FLAGS));
+        mEndTimeTextView.setText(DateUtils.formatDateTime(this, endMillis, TIME_FORMAT_FLAGS));
 
         // availability
         mAvailabilityIndex = mEvent.getAvailability() == CalendarContract.Events.AVAILABILITY_BUSY ? 0 : 1;
@@ -528,14 +526,14 @@ public class AddEventActivity extends AppCompatActivity {
         // default date time values
         long curTime = Calendar.getInstance().getTimeInMillis() + TimeUnit.MINUTES.toMillis(10);
 
-        String today = TimeUtils.getFormattedDate(curTime, ViewUtils.getAddEventDateFormat());
+        String today = DateUtils.formatDateTime(this, curTime, DATE_FORMAT_FLAGS);
         mStartDateTextView.setText(today);
         mEndDateTextView.setText(today);
 
-        mStartTimeTextView.setText(TimeUtils.getFormattedDate(curTime, TimeUtils.getStandardTimeFormat()));
+        mStartTimeTextView.setText(DateUtils.formatDateTime(this, curTime, TIME_FORMAT_FLAGS));
         int defaultEventDuration = Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(this)
                 .getString(getString(R.string.pref_key_default_event_duration), getString(R.string.pref_default_event_duration_values_default)));
-        mEndTimeTextView.setText(TimeUtils.getFormattedDate(curTime + TimeUnit.MINUTES.toMillis(defaultEventDuration), TimeUtils.getStandardTimeFormat()));
+        mEndTimeTextView.setText(DateUtils.formatDateTime(this, curTime + TimeUnit.MINUTES.toMillis(defaultEventDuration), TIME_FORMAT_FLAGS));
 
         // on click listener
         View.OnClickListener dateListener = new View.OnClickListener() {
@@ -573,9 +571,9 @@ public class AddEventActivity extends AppCompatActivity {
                 new DatePickerDialog.OnDateSetListener() {
                     @Override
                     public void onDateSet(DatePicker datePicker, int year, int month, int dayOfMonth) {
-                        Calendar date = Calendar.getInstance();
+                        Calendar date = textView.getId() == R.id.tv_start_date ? mStart : mEnd;
                         date.set(year, month, dayOfMonth);
-                        textView.setText(TimeUtils.getFormattedDate(date.getTimeInMillis(), ViewUtils.getAddEventDateFormat()));
+                        textView.setText(DateUtils.formatDateTime(AddEventActivity.this, date.getTimeInMillis(), DATE_FORMAT_FLAGS));
                     }
                 },
                 today.get(Calendar.YEAR),
@@ -590,10 +588,10 @@ public class AddEventActivity extends AppCompatActivity {
                 new TimePickerDialog.OnTimeSetListener() {
                     @Override
                     public void onTimeSet(TimePicker timePicker, int hourOfDay, int minute) {
-                        Calendar date = Calendar.getInstance();
+                        Calendar date = textView.getId() == R.id.tv_start_time ? mStart : mEnd;
                         date.set(Calendar.HOUR_OF_DAY, hourOfDay);
                         date.set(Calendar.MINUTE, minute);
-                        textView.setText(TimeUtils.getFormattedDate(date.getTimeInMillis(), TimeUtils.getStandardTimeFormat()));
+                        textView.setText(DateUtils.formatDateTime(AddEventActivity.this, date.getTimeInMillis(), TIME_FORMAT_FLAGS));
                     }
                 },
                 today.get(Calendar.HOUR_OF_DAY),

@@ -7,11 +7,10 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.util.Log;
+import android.text.format.DateUtils;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,14 +24,12 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import tcd.training.com.calendar.Entities.Entry;
-import tcd.training.com.calendar.Entities.Event;
 import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.Utils.DataUtils;
+import tcd.training.com.calendar.Utils.PreferenceUtils;
 import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.Utils.ViewUtils;
-
-import static tcd.training.com.calendar.R.string.x_more;
 
 /**
  * Created by cpu10661-local on 9/1/17.
@@ -45,11 +42,12 @@ public class WeekFragment extends Fragment {
     public final static String ARG_DISPLAY_DAY = "ARG_DISPLAY_DAY";
     private static final int NUMBER_OF_DISPLAY_EVENTS = 2;
 
+    private static int DAY_OF_MONTH_TEXT_SIZE, DAY_OF_WEEK_TEXT_SIZE, ALTERNATE_DATE_TEXT_SIZE;
+
     private Calendar mFirstWeekDay;
     private Context mContext;
     private ArrayList<Entry> mEntries;
-
-    private GridView mGridView;
+    private String mAlternateCalendar;
 
     public static WeekFragment newInstance(Calendar date) {
         Bundle args = new Bundle();
@@ -66,7 +64,13 @@ public class WeekFragment extends Fragment {
             mFirstWeekDay = (Calendar) getArguments().getSerializable(ARG_DISPLAY_DAY);
         }
 
+        DAY_OF_MONTH_TEXT_SIZE = ViewUtils.pixelToSp(getResources().getDimension(R.dimen.day_of_month_text_size));
+        DAY_OF_WEEK_TEXT_SIZE = ViewUtils.pixelToSp(getResources().getDimension(R.dimen.day_of_week_text_size));
+        ALTERNATE_DATE_TEXT_SIZE = ViewUtils.pixelToSp(getResources().getDimension(R.dimen.alternate_date_text_size));
+
+
         mContext = getContext();
+        mAlternateCalendar = PreferenceUtils.getAlternateCalendar(mContext);
     }
 
     @Nullable
@@ -105,16 +109,27 @@ public class WeekFragment extends Fragment {
     private void createHeader(View view) {
         LinearLayout header = view.findViewById(R.id.ll_week);
         for (int i = 0; i < 7; i++) {
+
+            // the date
             final Entry entry = mEntries.get(i);
-            TextView dayOfMonth = ViewUtils.getTextView(TimeUtils.getFormattedDate(entry.getTime(), "dd"),
-                    24, Color.GRAY, Typeface.NORMAL, true, mContext);
-            TextView dayOfWeek = ViewUtils.getTextView(TimeUtils.getFormattedDate(entry.getTime(), "EEE"),
-                    16, Color.GRAY, Typeface.NORMAL, true, mContext);
+            int color = DateUtils.isToday(entry.getTime()) ? ContextCompat.getColor(mContext, R.color.colorAccent) : Color.BLACK;
+            TextView dayOfMonth = ViewUtils.getTextView(String.valueOf(TimeUtils.getField(entry.getTime(), Calendar.DAY_OF_MONTH)),
+                    DAY_OF_MONTH_TEXT_SIZE, color, Typeface.NORMAL, true, mContext);
+            TextView dayOfWeek = ViewUtils.getTextView(
+                    DateUtils.formatDateTime(mContext, entry.getTime(), DateUtils.FORMAT_ABBREV_WEEKDAY | DateUtils.FORMAT_SHOW_WEEKDAY),
+                    DAY_OF_WEEK_TEXT_SIZE, color, Typeface.NORMAL, true, mContext);
 
             LinearLayout dayLayout = (LinearLayout) header.getChildAt(i + 1);
             dayLayout.addView(dayOfMonth);
             dayLayout.addView(dayOfWeek);
 
+            // alternate calendar
+            if (mAlternateCalendar != null) {
+                dayLayout.addView(ViewUtils.getTextView(PreferenceUtils.getAlternateDate(entry.getTime(), mAlternateCalendar),
+                        ALTERNATE_DATE_TEXT_SIZE, color, Typeface.NORMAL, true, mContext));
+            }
+
+            // the all-day entries
             if (entry.getEvents() != null) {
                 int allDayEventsNumber = 0;
                 for (int j = 0; j < entry.getEvents().size(); j++) {
@@ -130,6 +145,7 @@ public class WeekFragment extends Fragment {
                 }
             }
 
+            // navigation
             dayLayout.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -143,9 +159,9 @@ public class WeekFragment extends Fragment {
     }
 
     private void createWeekGridView(View view) {
-        mGridView = view.findViewById(R.id.grid_view);
+        GridView gridView = view.findViewById(R.id.grid_view);
         DaysOfWeekAdapter adapter = new DaysOfWeekAdapter(mEntries, mContext);
-        mGridView.setAdapter(adapter);
+        gridView.setAdapter(adapter);
     }
 
     @Override

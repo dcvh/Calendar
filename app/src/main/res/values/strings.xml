@@ -129,30 +129,71 @@
     <!--Settings-->
     <!--general-->
     <string name="pref_header_general">General</string>
+
     <string name="pref_key_start_of_the_week" translatable="false">start_of_the_week</string>
+    <string name="pref_start_of_the_week_default" translatable="false">Monday</string>
     <string name="pref_title_start_of_the_week">Start of the week</string>
-    <string-array name="pref_start_of_the_week_list_titles">
-        <item>Saturday</item>
-        <item>Sunday</item>
-        <item>Monday</item>
-    </string-array>
-    <string-array name="pref_start_of_the_week_list_values">
-        <item>Saturday</item>
-        <item>Sunday</item>
-        <item>Monday</item>
-    </string-array>
-    <string name="pref_start_of_the_week_default">Monday</string>
+    <string name="saturday">Saturday</string>
+    <string name="sunday">Sunday</string>
+    <string name="monday">Monday</string>
+
     <string name="pref_key_show_week_number" translatable="false">show_week_number</string>
     <string name="pref_title_show_week_number">Show week number</string>
+
     <string name="pref_key_default_event_duration" translatable="false">default_event_duration</string>
+    <string name="pref_default_event_duration_values_default" translatable="false">60</string>
     <string name="pref_title_default_event_duration">Default event duration</string>
+    <string name="no_end_time">No end time</string>
+    <string name="minutes_15">15 minutes</string>
+    <string name="minutes_30">30 minutes</string>
+    <string name="minutes_60">60 minutes</string>
+    <string name="minutes_90">90 minutes</string>
+    <string name="minutes_120">120 minutes</string>
+
+    <string name="pref_key_alternate_calendar" translatable="false">alternate_calendar</string>
+    <string name="pref_alternate_calendar_default" translatable="false">no</string>
+    <string name="pref_title_alternate_calendar">Alternate calendar</string>
+    <string name="no_alternate_calendar">No alternate calendar</string>
+    <string name="chinese_simplified">Chinese calendar - Simplified</string>
+
+    <string name="pref_key_language" translatable="false">language</string>
+    <string name="pref_language_default" translatable="false">en</string>
+    <string name="pref_title_language">Language</string>
+    <string name="english">English</string>
+    <string name="vietnamese">Vietnamese</string>
+
+    <!-- notifications -->
+    <string name="pref_header_notifications">Notifications</string>
+
+    <string name="pref_key_notify_on_this_device" translatable="false">notify_on_this_device</string>
+    <string name="pref_title_notify_on_this_device">Notify on this device</string>
+
+    <string name="pref_key_ringtone" translatable="false">ringtone</string>
+    <string name="pref_title_ringtone">Ringtone</string>
+
+    <string name="pref_key_vibrate" translatable="false">Vibrate</string>
+    <string name="pref_ringtone_silent">Silent</string>
+    <string name="pref_title_vibrate">Vibrate</string>
+
+
+    <string-array name="pref_start_of_the_week_list_titles">
+        <item>@string/saturday</item>
+        <item>@string/sunday</item>
+        <item>@string/monday</item>
+    </string-array>
+    <string-array name="pref_start_of_the_week_list_values">
+        <item>saturday</item>
+        <item>sunday</item>
+        <item>monday</item>
+    </string-array>
+
     <string-array name="pref_default_event_duration_titles">
-        <item>No end time</item>
-        <item>15 minutes</item>
-        <item>30 minutes</item>
-        <item>60 minutes</item>
-        <item>90 minutes</item>
-        <item>120 minutes</item>
+        <item>@string/no_alternate_calendar</item>
+        <item>@string/minutes_15</item>
+        <item>@string/minutes_30</item>
+        <item>@string/minutes_60</item>
+        <item>@string/minutes_90</item>
+        <item>@string/minutes_120</item>
     </string-array>
     <string-array name="pref_default_event_duration_values">
         <item>-1</item>
@@ -162,38 +203,22 @@
         <item>90</item>
         <item>120</item>
     </string-array>
-    <string name="pref_default_event_duration_values_default">60</string>
-    <string name="pref_key_show_lunar_calendar" translatable="false">show_lunar_calendar</string>
-    <string name="pref_title_show_lunar_calendar">Show lunar calendar</string>
-    <!-- notifications -->
-    <string name="pref_header_notifications">Notifications</string>
-    <string name="pref_key_notify_on_this_device" translatable="false">notify_on_this_device</string>
-    <string name="pref_title_notify_on_this_device">Notify on this device</string>
-    <string name="pref_key_ringtone" translatable="false">ringtone</string>
-    <string name="pref_title_ringtone">Ringtone</string>
-    <string name="pref_key_vibrate" translatable="false">Vibrate</string>
-    <string name="pref_ringtone_silent">Silent</string>
-    <string name="pref_title_vibrate">Vibrate</string>
 
-    <!-- Example settings for Data & Sync -->
-
-    <string name="pref_title_sync_frequency">Sync frequency</string>
-    <string-array name="pref_sync_frequency_titles">
-        <item>15 minutes</item>
-        <item>30 minutes</item>
-        <item>1 hour</item>
-        <item>3 hours</item>
-        <item>6 hours</item>
-        <item>Never</item>
+    <string-array name="pref_alternate_calendar_list_titles">
+        <item>@string/no_alternate_calendar</item>
+        <item>@string/chinese_simplified</item>
     </string-array>
-    <string-array name="pref_sync_frequency_values">
-        <item>15</item>
-        <item>30</item>
-        <item>60</item>
-        <item>180</item>
-        <item>360</item>
-        <item>-1</item>
+    <string-array name="pref_alternate_calendar_list_values">
+        <item>no</item>
+        <item>chinese</item>
     </string-array>
 
-    <string name="pref_title_system_sync_settings">System sync settings</string>
+    <string-array name="pref_language_list_titles">
+        <item>@string/english</item>
+        <item>@string/vietnamese</item>
+    </string-array>
+    <string-array name="pref_language_list_values">
+        <item>en</item>
+        <item>vi</item>
+    </string-array>
 </resources>

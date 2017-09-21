@@ -2,16 +2,14 @@ package tcd.training.com.calendar.ContentView.Month;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.format.DateUtils;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +24,7 @@ import java.util.Calendar;
 import tcd.training.com.calendar.Utils.DataUtils;
 import tcd.training.com.calendar.Entities.Entry;
 import tcd.training.com.calendar.Entities.Event;
+import tcd.training.com.calendar.Utils.PreferenceUtils;
 import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
@@ -49,7 +48,7 @@ public class MonthFragment extends Fragment {
     private String[] mDayOrder;
     private Calendar mStartDate, mEndDate;
     private ArrayList<Entry> mEntries;
-    private boolean mShowLunarDate;
+    private String mAlternateCalendar;
 
     private TableRow mTableHeader;
     private TableRow mTableRow1;
@@ -75,8 +74,7 @@ public class MonthFragment extends Fragment {
         }
 
         mContext = getContext();
-        mShowLunarDate = PreferenceManager.getDefaultSharedPreferences(mContext)
-                .getBoolean(getString(R.string.pref_key_show_lunar_calendar), false);
+        mAlternateCalendar = PreferenceUtils.getAlternateCalendar(mContext);
     }
 
     @Nullable
@@ -108,7 +106,7 @@ public class MonthFragment extends Fragment {
 
         mDayOrder = getDayOfWeekOrder();
 
-        // get the number of days in previous month
+        // getField the number of days in previous month
         mStartDate = (Calendar) mCurMonth.clone();
         mStartDate.set(Calendar.DAY_OF_MONTH, 1);
         int previousMonthDay = mStartDate.get(Calendar.DAY_OF_WEEK) - mFirstDayOfWeek;
@@ -119,7 +117,7 @@ public class MonthFragment extends Fragment {
         mStartDate.set(Calendar.HOUR_OF_DAY, 0);
         mStartDate.set(Calendar.MINUTE, 0);
 
-        // get the number of days in next month
+        // getField the number of days in next month
         int daysInMonth = mCurMonth.getActualMaximum(Calendar.DAY_OF_MONTH);
         mEndDate = (Calendar) mCurMonth.clone();
         mEndDate.add(Calendar.MONTH, 1);
@@ -152,29 +150,8 @@ public class MonthFragment extends Fragment {
     }
 
     private String[] getDayOfWeekOrder() {
-
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
-        String firstDay = sharedPreferences.getString(getString(R.string.pref_key_start_of_the_week), "Monday");
-
-        String[] daysOfWeek;
-        switch (firstDay) {
-            case "Saturday":
-                daysOfWeek = getResources().getStringArray(R.array.first_day_saturday);
-                mFirstDayOfWeek = Calendar.SATURDAY;
-                break;
-            case "Sunday":
-                daysOfWeek = getResources().getStringArray(R.array.first_day_sunday);
-                mFirstDayOfWeek = Calendar.SUNDAY;
-                break;
-            case "Monday":
-                daysOfWeek = getResources().getStringArray(R.array.first_day_monday);
-                mFirstDayOfWeek = Calendar.MONDAY;
-                break;
-            default:
-                throw new UnsupportedOperationException("Unknown first day");
-        }
-
-        return daysOfWeek;
+        mFirstDayOfWeek = PreferenceUtils.getFirstDayOfWeek(mContext);
+        return PreferenceUtils.getDayOfWeekOrder(mFirstDayOfWeek, mContext);
     }
 
     private void createCalendarDates() {
@@ -208,7 +185,7 @@ public class MonthFragment extends Fragment {
 
 //        TextView textView = new TextView(mContext);
 //        textView.setTextColor(Color.BLACK);
-//        textView.setText(curMonth.get(Calendar.MONTH) + "/" + curMonth.get(Calendar.YEAR));
+//        textView.setText(curMonth.getField(Calendar.MONTH) + "/" + curMonth.getField(Calendar.YEAR));
 //        mCalendarTable.addView(textView);
     }
 
@@ -216,14 +193,13 @@ public class MonthFragment extends Fragment {
 
         // prepare date and lunar date
         String dateString = String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
-        if (mShowLunarDate) {
-            dateString += "\n" + TimeUtils.getLunarString(calendar);
+        if (mAlternateCalendar != null) {
+            dateString += "\n" + PreferenceUtils.getAlternateDate(calendar.getTimeInMillis(), mAlternateCalendar);
         }
         final TextView dateTextView = getTextView(dateString, DEFAULT_TEXT_SIZE, dateColor, Typeface.NORMAL);
 
         // tint today
-        long today = Calendar.getInstance().getTimeInMillis();
-        if (TimeUtils.isSameDay(calendar.getTimeInMillis(), today)) {
+        if (DateUtils.isToday(calendar.getTimeInMillis())) {
             dateTextView.setTextColor(ContextCompat.getColor(mContext, R.color.colorAccent));
         }
 

@@ -8,9 +8,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -37,12 +39,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Calendar;
+import java.util.Locale;
 
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
 import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
 import tcd.training.com.calendar.ContentView.Shortcut.ShortcutViewFragment;
 import tcd.training.com.calendar.ContentView.Week.WeekViewFragment;
 import tcd.training.com.calendar.Utils.DataUtils;
+import tcd.training.com.calendar.Utils.PreferenceUtils;
 import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.ReminderTask.ReminderUtils;
 import tcd.training.com.calendar.Settings.SettingsActivity;
@@ -54,25 +58,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private final static String TAG = MainActivity.class.getSimpleName();
 
-    public static final String ARG_ENTRIES_LIST = "entriesList";
+    private static final int RC_CALENDAR_PERMISSION = 1;
+    private static final int RC_ADD_ACCOUNT = 2;
 
-    public static final String UPDATE_CONTENT_VIEW_ACTION = "updateContentViewAction";
+    public static final String ARG_ENTRIES_LIST = "entriesList";
     public static final String ARG_CONTENT_VIEW_TYPE = "contentViewType";
     public static final String ARG_TIME_IN_MILLIS = "timeInMillis";
-
-    public static final String UPDATE_MONTH_ACTION = "updateMonthAction";
-    public static final String ARG_CALENDAR = "calendar";
-
-    public static final String UPDATE_EVENT_ACTION = "updateEventAction";
     public static final String ARG_UPDATE_TYPE = "updateType";
+
+    public static final String UPDATE_CONTENT_VIEW_ACTION = "updateContentViewAction";
+    public static final String UPDATE_MONTH_ACTION = "updateMonthAction";
+    public static final String SCROLL_TO_ACTION = "scrollToAction";
+    public static final String UPDATE_EVENT_CHANGE_ACTION = "updateEventChangeAction";
     public static final int UPDATE_REMOVE = 0;
     public static final int UPDATE_ADD = 1;
-
-    public static final String SCROLL_TO_ACTION = "scrollToAction";
-
-    private static final int RC_CALENDAR_PERMISSION = 1;
-    private static final int RC_SETTINGS = 2;
-    private static final int RC_ADD_ACCOUNT = 3;
 
     private DrawerLayout mDrawerLayout;
     private NavigationView mNavigationView;
@@ -81,10 +80,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private FragmentManager mFragmentManager;
     private Fragment mCurrentFragment;
     private Fragment mShortcutFragment;
+
     private BroadcastReceiver mUpdateContentViewReceiver;
     private BroadcastReceiver mUpdateMonthReceiver;
     private BroadcastReceiver mUpdateEventReceiver;
     private BroadcastReceiver mScrollToReceiver;
+
+    private int mPrevFirstDayOfWeek;
+    private String mPrevAlternateCalendar;
+    private boolean mPrevShowNumberOfWeek;
+    private String mPrevLanguage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,64 +105,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // TODO: 9/18/17 handle custom event
         // https://developer.android.com/reference/android/provider/CalendarContract.html#ACTION_HANDLE_CUSTOM_EVENT
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateContentViewReceiver, new IntentFilter(UPDATE_CONTENT_VIEW_ACTION));
-        LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateMonthReceiver, new IntentFilter(UPDATE_MONTH_ACTION));
-        LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateEventReceiver, new IntentFilter(UPDATE_EVENT_ACTION));
-        LocalBroadcastManager.getInstance(this).registerReceiver(mScrollToReceiver, new IntentFilter(SCROLL_TO_ACTION));
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mUpdateContentViewReceiver);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mUpdateMonthReceiver);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mUpdateEventReceiver);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mScrollToReceiver);
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
-            mDrawerLayout.closeDrawer(GravityCompat.START);
-        } else if (mFragmentManager.getBackStackEntryCount() > 0) {
-            mFragmentManager.popBackStack();
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        switch (id) {
-            case R.id.action_today:
-                if (mCurrentFragment instanceof ContentViewBehaviors) {
-                    ((ContentViewBehaviors)mCurrentFragment).scrollToToday();
-                }
-                return true;
-            case R.id.action_refresh:
-                readCalendarEntries();
-                return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     private void initializeBasicComponents() {
@@ -196,8 +143,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mUpdateMonthReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Calendar calendar = (Calendar) intent.getSerializableExtra(ARG_CALENDAR);
-                String month = TimeUtils.getFormattedDate(calendar.getTimeInMillis(), "MMMM");
+                long millis = intent.getLongExtra(ARG_TIME_IN_MILLIS, Calendar.getInstance().getTimeInMillis());
+                String month = TimeUtils.getMonthString(millis);
+                month = month.substring(0, 1).toUpperCase() + month.substring(1);
                 mToolbarTitle.setText(month);
             }
         };
@@ -223,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
         };
-        LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateEventReceiver, new IntentFilter(UPDATE_EVENT_ACTION));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateEventReceiver, new IntentFilter(UPDATE_EVENT_CHANGE_ACTION));
 
         mScrollToReceiver = new BroadcastReceiver() {
             @Override
@@ -257,7 +205,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
         mToolbarTitle = toolbar.findViewById(R.id.tv_toolbar_title);
-        mToolbarTitle.setText(TimeUtils.getFormattedDate(Calendar.getInstance().getTimeInMillis(), "MMMM"));
         mToolbarTitle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -292,36 +239,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         //month shortcut
         mShortcutFragment = ShortcutViewFragment.newInstance();
         mFragmentManager.beginTransaction().replace(R.id.fl_month_shortcut, mShortcutFragment).commit();
-    }
-
-    private void replaceFragment(Class fragmentClass) {
-        try {
-            assert fragmentClass != null;
-            mCurrentFragment = (Fragment) fragmentClass.newInstance();
-            mFragmentManager.beginTransaction()
-                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-                    .replace(R.id.fl_content, mCurrentFragment)
-                    .commitAllowingStateLoss();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void showMonthShortcut(boolean showShortcut) {
-
-        FragmentTransaction transaction = mFragmentManager.beginTransaction()
-                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out);
-
-        if (showShortcut) {
-            transaction.show(mShortcutFragment);
-            mToolbarTitle.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_arrow_up_black_24dp, 0);
-        } else {
-            transaction.hide(mShortcutFragment);
-            mToolbarTitle.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_arrow_down_black_24dp, 0);
-        }
-        transaction.commit();
     }
 
     private void readCalendarEntries() {
@@ -373,6 +290,36 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }.execute();
     }
 
+    private void replaceFragment(Class fragmentClass) {
+        try {
+            assert fragmentClass != null;
+            mCurrentFragment = (Fragment) fragmentClass.newInstance();
+            mFragmentManager.beginTransaction()
+                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                    .replace(R.id.fl_content, mCurrentFragment)
+                    .commitAllowingStateLoss();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showMonthShortcut(boolean showShortcut) {
+
+        FragmentTransaction transaction = mFragmentManager.beginTransaction()
+                .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out);
+
+        if (showShortcut) {
+            transaction.show(mShortcutFragment);
+            mToolbarTitle.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_arrow_up_black_24dp, 0);
+        } else {
+            transaction.hide(mShortcutFragment);
+            mToolbarTitle.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_arrow_down_black_24dp, 0);
+        }
+        transaction.commit();
+    }
+
     private void selectItemNavigation(int id) {
         mNavigationView.setCheckedItem(id);
         mNavigationView.getMenu().performIdentifierAction(id, 0);
@@ -404,6 +351,101 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
+    public void onBackPressed() {
+        if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
+            mDrawerLayout.closeDrawer(GravityCompat.START);
+        } else if (mFragmentManager.getBackStackEntryCount() > 0) {
+            mFragmentManager.popBackStack();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.action_today:
+                if (mCurrentFragment instanceof ContentViewBehaviors) {
+                    ((ContentViewBehaviors)mCurrentFragment).scrollToToday();
+                }
+                return true;
+            case R.id.action_refresh:
+                readCalendarEntries();
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        detectSettingChanges();
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateContentViewReceiver, new IntentFilter(UPDATE_CONTENT_VIEW_ACTION));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateMonthReceiver, new IntentFilter(UPDATE_MONTH_ACTION));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateEventReceiver, new IntentFilter(UPDATE_EVENT_CHANGE_ACTION));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mScrollToReceiver, new IntentFilter(SCROLL_TO_ACTION));
+    }
+
+    private void detectSettingChanges() {
+        // first day of week
+        int curFirstDayOfWeek = PreferenceUtils.getFirstDayOfWeek(this);
+        if (curFirstDayOfWeek != mPrevFirstDayOfWeek) {
+            mPrevFirstDayOfWeek = curFirstDayOfWeek;
+            if (mCurrentFragment instanceof MonthViewFragment) {
+                replaceFragment(MonthViewFragment.class);
+            }
+        }
+
+        if (mCurrentFragment != null) {
+            // show number of week
+            if (PreferenceUtils.isShowNumberOfWeekChecked(this) != mPrevShowNumberOfWeek) {
+                mPrevShowNumberOfWeek = !mPrevShowNumberOfWeek;
+                replaceFragment(mCurrentFragment.getClass());
+            }
+
+            // alternate calendar
+            String curAlternate = PreferenceUtils.getAlternateCalendar(this);
+            if ((curAlternate == null && mPrevAlternateCalendar != null) || (curAlternate != null && !curAlternate.equals(mPrevAlternateCalendar))) {
+                mPrevAlternateCalendar = curAlternate;
+                replaceFragment(mCurrentFragment.getClass());
+            }
+        }
+
+        // language
+        String curLanguage = PreferenceUtils.getLanguage(this);
+        if (!curLanguage.equals(mPrevLanguage)) {
+            mPrevLanguage = curLanguage;
+
+            Configuration config = new Configuration();
+            Locale.setDefault(new Locale(curLanguage));
+            getResources().updateConfiguration(config, null);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mUpdateContentViewReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mUpdateMonthReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mUpdateEventReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mScrollToReceiver);
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case RC_CALENDAR_PERMISSION: {
@@ -429,7 +471,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_month: replaceFragment(MonthViewFragment.class); break;
             case R.id.nav_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);
-                startActivityForResult(intent, RC_SETTINGS);
+                startActivity(intent);
                 break;
             case R.id.nav_help_feedback:
                 break;
@@ -448,14 +490,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-            case RC_SETTINGS:
-                if (resultCode == RESULT_OK) {
-//                    if (mCurrentFragment instanceof ContentViewBehaviors) {
-//                        ((ContentViewBehaviors)mCurrentFragment).invalidate();
-//                    }
-                    replaceFragment(mCurrentFragment.getClass());
-                }
-                break;
             case RC_ADD_ACCOUNT:
                 if (resultCode == RESULT_OK) {
                     finish();

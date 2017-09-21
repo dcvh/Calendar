@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.text.TextUtils;
+import android.text.format.DateUtils;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,11 +27,16 @@ import tcd.training.com.calendar.R;
 
 public class ViewUtils {
 
-    private static final float SCALE = Resources.getSystem().getDisplayMetrics().density;
-    private static final int DP_AS_PX_8 = (int) (8 * SCALE + 0.5f);
+    private static final float DENSITY = Resources.getSystem().getDisplayMetrics().density;
+    private static final float SCALED_DENSITY = Resources.getSystem().getDisplayMetrics().scaledDensity;
+    private static final int DP_AS_PX_8 = (int) (8 * SCALED_DENSITY + 0.5f);
 
     public static int dpToPixel(int dp) {
-        return (int) (dp * SCALE + 0.5f);
+        return (int) (dp * DENSITY + 0.5f);
+    }
+
+    public static int pixelToSp(float px) {
+        return (int) (px / SCALED_DENSITY);
     }
 
     public static View getEventTileView(final Event event, final Context context) {
@@ -55,10 +61,18 @@ public class ViewUtils {
 
         // duration
         if (!event.isAllDay()) {
-            String duration = TimeUtils.getFormattedDate(event.getStartDate(), TimeUtils.getStandardTimeFormat())
-                    + " - " + TimeUtils.getFormattedDate(event.getEndDate(), TimeUtils.getStandardTimeFormat());
+            String duration;
+            if (TimeUtils.isSameDay(event.getStartDate(), event.getEndDate())) {
+                duration = DateUtils.formatDateRange(context, event.getStartDate(), event.getEndDate(), DateUtils.FORMAT_SHOW_TIME);
+            } else {
+                int flags = DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_ABBREV_ALL;
+                duration = DateUtils.formatDateTime(context, event.getStartDate(), flags) + " \u2014\n"
+                        + DateUtils.formatDateTime(context, event.getEndDate(), flags);
+            }
+
             TextView durationTextView = getStandardTextView(duration, context);
             durationTextView.setPadding(0, DP_AS_PX_8 / 2, 0, 0);
+
             eventLayout.addView(durationTextView);
         }
 
@@ -111,35 +125,7 @@ public class ViewUtils {
     }
 
     public static TextView getStandardTextView(String content, Context context) {
-        TextView textView = new TextView(context);
-
-        textView.setText(content);
-        textView.setTextColor(Color.WHITE);
-        textView.setTypeface(null, Typeface.BOLD);
-
-        textView.setSingleLine(true);
-        textView.setEllipsize(TextUtils.TruncateAt.END);
-
-        return textView;
-    }
-    
-    public static int getMonthImageResourceId(String month) {
-        switch (month) {
-            case "January": return R.drawable.bkg_01_january ;
-            case "February": return R.drawable.bkg_02_february ;
-            case "March": return R.drawable.bkg_03_march ;
-            case "April": return R.drawable.bkg_04_april ;
-            case "May": return R.drawable.bkg_05_may ;
-            case "June": return R.drawable.bkg_06_june ;
-            case "July": return R.drawable.bkg_07_july ;
-            case "August": return R.drawable.bkg_08_august ;
-            case "September": return R.drawable.bkg_09_september ;
-            case "October": return R.drawable.bkg_10_october ;
-            case "November": return R.drawable.bkg_11_november ;
-            case "December": return R.drawable.bkg_12_december ;
-            default:
-                throw new UnsupportedOperationException("Unknown month");
-        }
+        return getTextView(content, 14, Color.WHITE, Typeface.BOLD, true, context);
     }
 
     public static int getMonthImageResourceId(long millis) {
@@ -170,10 +156,6 @@ public class ViewUtils {
         Color.colorToHSV(color, hsv);
         hsv[2] *= 0.8f; // value component
         return Color.HSVToColor(hsv);
-    }
-
-    public static String getAddEventDateFormat() {
-        return "EEE, MMM d, yyyy";
     }
 
     public static String getNotificationTimeFormat(int minutes, Context context) {

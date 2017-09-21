@@ -166,7 +166,6 @@ public class DataUtils {
         return events;
     }
 
-
     private static void addEventToEntries(ArrayList<Entry> entries, Event event) {
 
         if (getAccountDisplayName(event.getCalendarId()).length() == 0) {
@@ -288,7 +287,7 @@ public class DataUtils {
         ContentResolver cr = context.getContentResolver();
         Uri uri = CalendarContract.Calendars.CONTENT_URI;
 
-        // Submit the query and get a Cursor object back.
+        // Submit the query and getField a Cursor object back.
         Cursor cursor = cr.query(uri, projection.toArray(new String[0]), null, null, null);
         if (cursor == null) {
             Log.e(TAG, "readCalendarAccounts: There was a problem handling the cursor");
@@ -422,7 +421,7 @@ public class DataUtils {
         ContentResolver cr = context.getContentResolver();
         Uri uri = CalendarContract.Reminders.CONTENT_URI;
 
-        // Submit the query and get a Cursor object back.
+        // Submit the query and getField a Cursor object back.
         Cursor cursor = cr.query(uri, projection, null, null, null);
         if (cursor == null) {
             Log.e(TAG, "readCalendarReminders: There was a problem handling the cursor");
@@ -470,7 +469,7 @@ public class DataUtils {
         ContentResolver cr = context.getContentResolver();
         Uri uri = CalendarContract.Attendees.CONTENT_URI;
 
-        // Submit the query and get a Cursor object back.
+        // Submit the query and getField a Cursor object back.
         Cursor cursor = cr.query(uri, projection, null, null, null);
         if (cursor == null) {
             Log.e(TAG, "readCalendarEventAttendees: There was a problem handling the cursor");
@@ -780,15 +779,6 @@ public class DataUtils {
 
 
 
-    /**
-     *
-     * @param millis  the milliseconds since January 1, 1970, 00:00:00 GMT.
-     * @return entry with the specified date, null if there is no entry matches the date
-     */
-    public static Entry findEntryWithDate(long millis) {
-        int index = findEntryIndexWithDate(millis);
-        return index < 0 ? null : mEntries.get(index);
-    }
 
     public static Entry findEntryWithDate(ArrayList<Entry> entries, long millis) {
         if (entries == null) {
@@ -796,10 +786,6 @@ public class DataUtils {
         }
         int index = findEntryIndexWithDate(entries, millis);
         return index < 0 ? null : entries.get(index);
-    }
-
-    private static int findEntryIndexWithDate(final long millis) {
-        return findEntryIndexWithDate(mEntries, millis);
     }
 
     public static int findEntryIndexWithDate(ArrayList<Entry> entries, final long millis) {

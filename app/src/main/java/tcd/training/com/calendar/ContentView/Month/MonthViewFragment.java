@@ -136,7 +136,7 @@ public class MonthViewFragment extends Fragment implements ContentViewBehaviors{
 
     private void sendUpdateMonthAction(int position) {
         Intent intent = new Intent(MainActivity.UPDATE_MONTH_ACTION);
-        intent.putExtra(MainActivity.ARG_CALENDAR, mMonths.get(position));
+        intent.putExtra(MainActivity.ARG_TIME_IN_MILLIS, mMonths.get(position).getTimeInMillis());
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
     }
 

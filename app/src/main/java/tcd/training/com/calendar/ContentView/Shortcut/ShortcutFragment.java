@@ -12,6 +12,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -29,6 +30,7 @@ import tcd.training.com.calendar.Entities.Entry;
 import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.Utils.DataUtils;
+import tcd.training.com.calendar.Utils.PreferenceUtils;
 import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.Utils.ViewUtils;
 
@@ -125,29 +127,8 @@ public class ShortcutFragment extends Fragment {
     }
 
     private String[] getDayOfWeekOrder() {
-
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
-        String firstDay = sharedPreferences.getString(getString(R.string.pref_key_start_of_the_week), "Monday");
-
-        String[] daysOfWeek;
-        switch (firstDay) {
-            case "Saturday":
-                daysOfWeek = getResources().getStringArray(R.array.first_day_saturday);
-                mFirstDayOfWeek = Calendar.SATURDAY;
-                break;
-            case "Sunday":
-                daysOfWeek = getResources().getStringArray(R.array.first_day_sunday);
-                mFirstDayOfWeek = Calendar.SUNDAY;
-                break;
-            case "Monday":
-                daysOfWeek = getResources().getStringArray(R.array.first_day_monday);
-                mFirstDayOfWeek = Calendar.MONDAY;
-                break;
-            default:
-                throw new UnsupportedOperationException("Unknown first day");
-        }
-
-        return daysOfWeek;
+        mFirstDayOfWeek = PreferenceUtils.getFirstDayOfWeek(mContext);
+        return PreferenceUtils.getDayOfWeekOrder(mFirstDayOfWeek, mContext);
     }
 
     private void createHeader() {
@@ -195,8 +176,7 @@ public class ShortcutFragment extends Fragment {
         final TextView dateTextView = getTextView(dateString, DEFAULT_TEXT_SIZE, dateColor, Typeface.NORMAL);
 
         // tint today
-        long today = Calendar.getInstance().getTimeInMillis();
-        if (TimeUtils.isSameDay(calendar.getTimeInMillis(), today)) {
+        if (DateUtils.isToday(calendar.getTimeInMillis())) {
             dateTextView.setTextColor(ContextCompat.getColor(mContext, R.color.colorAccent));
         }
 

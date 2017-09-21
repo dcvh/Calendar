@@ -3,9 +3,9 @@ package tcd.training.com.calendar.ContentView.Schedule;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,8 +15,10 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.concurrent.TimeUnit;
 
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
+import tcd.training.com.calendar.Utils.PreferenceUtils;
 import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
@@ -39,14 +41,13 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
     private ArrayList<Entry> mEntries;
     private Context mContext;
-    private boolean mShowLunarDate;
+    private String mAlternateCalendar;
 
     public CalendarEntriesAdapter(Context context, ArrayList<Entry> mEntries) {
         this.mContext = context;
         this.mEntries = mEntries;
 
-        mShowLunarDate = PreferenceManager.getDefaultSharedPreferences(mContext)
-                .getBoolean(mContext.getString(R.string.pref_key_show_lunar_calendar), false);
+        mAlternateCalendar = PreferenceUtils.getAlternateCalendar(mContext);
     }
 
     @Override
@@ -151,20 +152,13 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             case TYPE_WEEK:
                 WeekViewHolder weekHolder = (WeekViewHolder) viewHolder;
 
-                Calendar curTime = Calendar.getInstance();
                 Calendar week = Calendar.getInstance();
                 week.setTimeInMillis(entry.getTime());
 
-                String dateString = TimeUtils.getFormattedDate(entry.getTime(), "MMM, d") + " - ";
-                week.add(Calendar.DAY_OF_MONTH, 6);
-
-                dateString += week.get(Calendar.MONTH) == curTime.get(Calendar.MONTH) ?
-                    TimeUtils.getFormattedDate(week.getTimeInMillis(), "d") : TimeUtils.getFormattedDate(week.getTimeInMillis(), "MMM, d");
-
-                if (week.get(Calendar.YEAR) != curTime.get(Calendar.YEAR)) {
-                    dateString += ", " + week.get(Calendar.YEAR);
-                }
-
+                String dateString = DateUtils.formatDateRange(mContext,
+                        week.getTimeInMillis(),
+                        week.getTimeInMillis() + TimeUnit.DAYS.toMillis(6),
+                        DateUtils.FORMAT_ABBREV_ALL);
 
                 weekHolder.mWeekTextView.setText(dateString);
                 break;
@@ -178,7 +172,9 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 int resId = ViewUtils.getMonthImageResourceId(entry.getTime());
                 monthHolder.mMonthImageView.setImageResource(resId);
 
-                monthHolder.mMonthTextView.setText(TimeUtils.getFormattedDate(entry.getTime(), "MMMM"));
+                String month = TimeUtils.getMonthString(entry.getTime());
+                month = month.substring(0, 1).toUpperCase() + month.substring(1);
+                monthHolder.mMonthTextView.setText(month);
 
                 break;
         }
@@ -187,8 +183,9 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     private void createDateTextViews(EntryViewHolder holder, final Entry entry) {
 
         // day and month
-        holder.mDayOfMonthTextView.setText(TimeUtils.getFormattedDate(entry.getTime(), "d"));
-        holder.mDayOfWeekTextView.setText(TimeUtils.getFormattedDate(entry.getTime(), "EEE"));
+        holder.mDayOfMonthTextView.setText(String.valueOf(TimeUtils.getField(entry.getTime(), Calendar.DAY_OF_MONTH)));
+        holder.mDayOfWeekTextView.setText(
+                DateUtils.formatDateTime(mContext, entry.getTime(), DateUtils.FORMAT_SHOW_WEEKDAY | DateUtils.FORMAT_ABBREV_WEEKDAY));
         if (TimeUtils.compareDay(entry.getTime(), Calendar.getInstance().getTimeInMillis()) > 0) {
             int blackColor = Color.rgb(40, 40, 40);
             holder.mDayOfMonthTextView.setTextColor(blackColor);
@@ -196,8 +193,8 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         }
 
         // lunar day
-        if (mShowLunarDate) {
-            holder.mLunarDayTextView.setText(TimeUtils.getLunarString(entry.getTime()));
+        if (mAlternateCalendar != null) {
+            holder.mLunarDayTextView.setText(PreferenceUtils.getAlternateDate(entry.getTime(), mAlternateCalendar));
             holder.mLunarDayTextView.setVisibility(View.VISIBLE);
         }
 
@@ -224,7 +221,7 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
             super(itemView);
             mDayOfMonthTextView = itemView.findViewById(R.id.tv_day_of_month);
             mDayOfWeekTextView = itemView.findViewById(R.id.tv_day_of_week);
-            mLunarDayTextView = itemView.findViewById(R.id.tv_lunar_day);
+            mLunarDayTextView = itemView.findViewById(R.id.tv_alternate_date);
             mEventsLinearLayout= itemView.findViewById(R.id.ll_events);
         }
     }

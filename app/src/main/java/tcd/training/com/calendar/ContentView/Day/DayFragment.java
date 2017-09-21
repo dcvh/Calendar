@@ -2,12 +2,12 @@ package tcd.training.com.calendar.ContentView.Day;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +19,7 @@ import java.util.Calendar;
 
 import tcd.training.com.calendar.Utils.DataUtils;
 import tcd.training.com.calendar.Entities.Entry;
-import tcd.training.com.calendar.Utils.TimeUtils;
+import tcd.training.com.calendar.Utils.PreferenceUtils;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.Utils.ViewUtils;
 
@@ -37,7 +37,7 @@ public class DayFragment extends Fragment {
     private Calendar mCurDay;
     private Context mContext;
     private Entry mEntry;
-    private boolean mShowLunarDate;
+    private String mAlternateCalendar;
 
     private LinearLayout mHeaderLayout;
     private LinearLayout mAllDayEventsLayout;
@@ -61,8 +61,7 @@ public class DayFragment extends Fragment {
         }
 
         mContext = getContext();
-        mShowLunarDate = PreferenceManager.getDefaultSharedPreferences(mContext)
-                .getBoolean(getString(R.string.pref_key_show_lunar_calendar), false);
+        mAlternateCalendar = PreferenceUtils.getAlternateCalendar(mContext);
     }
 
     @Nullable
@@ -96,12 +95,13 @@ public class DayFragment extends Fragment {
         mHeaderLayout.setLayoutParams(params);
 
         dayOfMonthTextView.setText(String.valueOf(mCurDay.get(Calendar.DAY_OF_MONTH)));
-        dayOfWeekTextView.setText(TimeUtils.getFormattedDate(mCurDay.getTimeInMillis(), "EEE"));
+        dayOfWeekTextView.setText(
+                DateUtils.formatDateTime(mContext, mCurDay.getTimeInMillis(), DateUtils.FORMAT_SHOW_WEEKDAY | DateUtils.FORMAT_ABBREV_WEEKDAY));
 
-        if (mShowLunarDate) {
-            TextView lunarDateTextView = mHeaderLayout.findViewById(R.id.tv_lunar_day);
-            lunarDateTextView.setText(TimeUtils.getLunarString(mCurDay.getTimeInMillis()));
-            lunarDateTextView.setVisibility(View.VISIBLE);
+        if (mAlternateCalendar != null) {
+            TextView alternateTextView = mHeaderLayout.findViewById(R.id.tv_alternate_date);
+            alternateTextView.setText(PreferenceUtils.getAlternateDate(mCurDay.getTimeInMillis(), mAlternateCalendar));
+            alternateTextView.setVisibility(View.VISIBLE);
         }
 
         mEntry = DataUtils.getEntryIn(mCurDay.getTimeInMillis(), mContext);

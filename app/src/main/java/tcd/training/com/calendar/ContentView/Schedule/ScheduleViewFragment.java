@@ -21,7 +21,6 @@ import android.view.ViewGroup;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.concurrent.TimeUnit;
 
 import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
 import tcd.training.com.calendar.ContentView.Schedule.CalendarEntriesAdapter.ParallaxViewHolder;
@@ -29,6 +28,7 @@ import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.Utils.DataUtils;
 import tcd.training.com.calendar.Entities.Entry;
 import tcd.training.com.calendar.Entities.Event;
+import tcd.training.com.calendar.Utils.PreferenceUtils;
 import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.R;
 
@@ -42,6 +42,8 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
 
     private static final String TAG = ScheduleViewFragment.class.getSimpleName();
 
+    private static int DY_LIMIT_FOR_PARALLAX = 100;
+
     private ArrayList<Entry> mEntries;
     private ArrayList<Long> mWeekPeriods;
     private Context mContext;
@@ -49,6 +51,7 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
     private int mStartWeekIndex;
     private int mEndWeekIndex;
     private int mPosition;
+    private int mPrevDy;
 
     private LinearLayoutManager mLayoutManager;
     private CalendarEntriesAdapter mAdapter;
@@ -75,13 +78,13 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
         // determine start and end periods of current year
         int curYear = Calendar.getInstance().get(Calendar.YEAR);
         for (int i = 0; i < mWeekPeriods.size(); i++) {
-            if (TimeUtils.getYear(mWeekPeriods.get(i)) == curYear) {
+            if (TimeUtils.getField(mWeekPeriods.get(i), Calendar.YEAR) == curYear) {
                 mStartWeekIndex = i;
                 break;
             }
         }
         for (int i = mWeekPeriods.size() - 1; i >= 0; i--) {
-            if (TimeUtils.getYear(mWeekPeriods.get(i)) == curYear) {
+            if (TimeUtils.getField(mWeekPeriods.get(i), Calendar.YEAR) == curYear) {
                 mEndWeekIndex = i;
                 break;
             }
@@ -108,17 +111,7 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
         end.set(2030, 11, 31, 23, 59);
 
         // determine the first date of week
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
-        String firstDay = sharedPreferences.getString(getString(R.string.pref_key_start_of_the_week), "Monday");
-        int firstDayOfWeek;
-        switch (firstDay) {
-            case "Saturday": firstDayOfWeek = Calendar.SATURDAY; break;
-            case "Sunday": firstDayOfWeek = Calendar.SUNDAY; break;
-            case "Monday": firstDayOfWeek = Calendar.MONDAY; break;
-            default:
-                throw new UnsupportedOperationException("Unknown first day");
-        }
-        int previousWeekDays = start.get(Calendar.DAY_OF_WEEK) - firstDayOfWeek;
+        int previousWeekDays = start.get(Calendar.DAY_OF_WEEK) - PreferenceUtils.getFirstDayOfWeek(mContext);
         start.add(Calendar.DAY_OF_MONTH, -previousWeekDays);
 
         mWeekPeriods = new ArrayList<>();
@@ -188,33 +181,19 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 mPosition = mLayoutManager.findFirstVisibleItemPosition();
+
+                // add more events when scroll to top or bottom
                 if (dy < 0) {
                     if (mPosition < 3) {
-                        int newStartIndex = mStartWeekIndex - 52 >= 0 ? mStartWeekIndex - 52 : 0;
-                        ArrayList<Entry> newEntries = insertMonthsAndWeeks(
-                                DataUtils.getEntriesBetween(mContext, mWeekPeriods.get(newStartIndex), mWeekPeriods.get(mStartWeekIndex)),
-                                mWeekPeriods.get(newStartIndex),
-                                mWeekPeriods.get(mStartWeekIndex)
-                        );
-                        mEntries.addAll(0, newEntries);
-                        mAdapter.notifyDataSetChanged();
-                        mLayoutManager.scrollToPositionWithOffset(newEntries.size() + mPosition, 0);
-                        mStartWeekIndex = newStartIndex;
+                        addMoreEventWhenScrollToTop();
                     }
                 } else {
                     if (mEntries.size() - mPosition < 10) {
-                        int newEndIndex = mEndWeekIndex + 52 < mWeekPeriods.size() ? mEndWeekIndex + 52 : mWeekPeriods.size() - 1;
-                        ArrayList<Entry> newEntries = insertMonthsAndWeeks(
-                                DataUtils.getEntriesBetween(mContext, mWeekPeriods.get(mEndWeekIndex), mWeekPeriods.get(newEndIndex)),
-                                mWeekPeriods.get(mEndWeekIndex),
-                                mWeekPeriods.get(newEndIndex)
-                        );
-                        mEntries.addAll(newEntries);
-                        mAdapter.notifyDataSetChanged();
-                        mEndWeekIndex = newEndIndex;
+                        addMoreEventWhenScrollToBottom();
                     }
                 }
 
+                // update month title
                 Calendar cal = Calendar.getInstance();
                 cal.setTimeInMillis(mEntries.get(mPosition).getTime());
                 if (cal.get(Calendar.MONTH) != mCurMonth) {
@@ -222,12 +201,16 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
                     mCurMonth = cal.get(Calendar.MONTH);
                 }
 
-                for (int i = 0; i < recyclerView.getChildCount(); i++) {
-                    RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(recyclerView.getChildAt(i));
-                    if (viewHolder instanceof ParallaxViewHolder) {
-                        ((ParallaxViewHolder) viewHolder).animateImage();
+                // parallax
+                if (Math.abs(dy) < DY_LIMIT_FOR_PARALLAX && mPrevDy < DY_LIMIT_FOR_PARALLAX) {
+                    for (int i = 0; i < recyclerView.getChildCount(); i++) {
+                        RecyclerView.ViewHolder viewHolder = recyclerView.getChildViewHolder(recyclerView.getChildAt(i));
+                        if (viewHolder instanceof ParallaxViewHolder) {
+                            ((ParallaxViewHolder) viewHolder).animateImage();
+                        }
                     }
                 }
+                mPrevDy = Math.abs(dy);
             }
         });
 
@@ -236,11 +219,34 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
         return view;
     }
 
+    private void addMoreEventWhenScrollToTop() {
+        int newStartIndex = mStartWeekIndex - 52 >= 0 ? mStartWeekIndex - 52 : 0;
+        ArrayList<Entry> newEntries = insertMonthsAndWeeks(
+                DataUtils.getEntriesBetween(mContext, mWeekPeriods.get(newStartIndex), mWeekPeriods.get(mStartWeekIndex)),
+                mWeekPeriods.get(newStartIndex),
+                mWeekPeriods.get(mStartWeekIndex)
+        );
+        mEntries.addAll(0, newEntries);
+        mAdapter.notifyDataSetChanged();
+        mLayoutManager.scrollToPositionWithOffset(newEntries.size() + mPosition, 0);
+        mStartWeekIndex = newStartIndex;
+    }
+
+    private void addMoreEventWhenScrollToBottom() {
+        int newEndIndex = mEndWeekIndex + 52 < mWeekPeriods.size() ? mEndWeekIndex + 52 : mWeekPeriods.size() - 1;
+        ArrayList<Entry> newEntries = insertMonthsAndWeeks(
+                DataUtils.getEntriesBetween(mContext, mWeekPeriods.get(mEndWeekIndex), mWeekPeriods.get(newEndIndex)),
+                mWeekPeriods.get(mEndWeekIndex),
+                mWeekPeriods.get(newEndIndex)
+        );
+        mEntries.addAll(newEntries);
+        mAdapter.notifyDataSetChanged();
+        mEndWeekIndex = newEndIndex;
+    }
+
     private void sendUpdateMonthAction(int position) {
         Intent intent = new Intent(MainActivity.UPDATE_MONTH_ACTION);
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(mEntries.get(position).getTime());
-        intent.putExtra(MainActivity.ARG_CALENDAR, calendar);
+        intent.putExtra(MainActivity.ARG_TIME_IN_MILLIS, mEntries.get(position).getTime());
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
     }
 
@@ -283,7 +289,7 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
 //        final String selection = CalendarContract.Events.DIRTY + "=" + 1;
 //        ArrayList<Event> events = DataUtils.readCalendarEvents(selection, mContext);
 //
-//        Event event = events.get(events.size() - 1);
+//        Event event = events.getField(events.size() - 1);
 //        for (Entry entry : mEntries) {
 //            if (entry.getDescription() == null || entry.getDescription().length() == 0 || entry.getDescription().equals("t")) {
 //                if (TimeUtils.isSameDay(entry.getTime(), event.getStartDate())) {

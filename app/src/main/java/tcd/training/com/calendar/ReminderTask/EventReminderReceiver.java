@@ -10,6 +10,7 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.provider.CalendarContract;
+import android.text.format.DateUtils;
 import android.util.Log;
 
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
@@ -47,15 +48,6 @@ public class EventReminderReceiver extends BroadcastReceiver {
             String alertTime = uri.getLastPathSegment();
             int eventId = getEventId(alertTime, context);
 
-//            Event event = DataUtils.findEventById(eventId);
-//            if (event == null) {
-//                DataUtils.readCalendarEventsInfo(context);
-//                event = DataUtils.findEventById(eventId);
-//                if (event == null) {
-//                    Log.e(TAG, "Event ID: " + eventId);
-//                    return;
-//                }
-//            }
             Event event = DataUtils.readSimpleEventById(eventId, context);
             if (event == null) {
                 Log.e(TAG, "onReceive:  " + eventId);
@@ -75,7 +67,7 @@ public class EventReminderReceiver extends BroadcastReceiver {
             }
 
             // show reminder
-            String time = TimeUtils.getFormattedDate(event.getStartDate(), TimeUtils.getStandardTimeFormat());
+            String time = DateUtils.formatDateRange(context, event.getStartDate(), event.getEndDate(), DateUtils.FORMAT_SHOW_TIME);
             switch (event.getPriority()) {
                 case AddEventActivity.PRIORITY_NOTIFICATION:
                     ReminderUtils.showReminderNotification(context, event.getTitle(), time);

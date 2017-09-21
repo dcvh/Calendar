@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light">
@@ -34,11 +34,6 @@
     
     <style name="AppTheme.BigActionBar" parent="AppTheme.ColorActionBar">
         <item name="android:actionBarSize">@dimen/big_action_bar_height</item>
-    </style>
-
-    <style name="MainDialogTheme" parent="@android:style/Theme.Dialog">
-        <item name="android:textColor">@android:color/black</item>
-        <item name="android:textColorPrimary">@android:color/black</item>
     </style>
 
     <style name="Theme.Transparent" parent="Theme.AppCompat.Light.NoActionBar">

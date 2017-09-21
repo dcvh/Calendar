@@ -21,6 +21,8 @@ public class TimeUtils {
     private static final int TYPE_MONTH = 2;
     private static final int TYPE_YEAR = 3;
 
+    private static Calendar calendar = Calendar.getInstance();
+
     public static boolean isSameDay(long dayInMillis1, long dayInMillis2) {
         return compareTo(dayInMillis1, dayInMillis2, TYPE_DAY) == 0;
     }
@@ -61,22 +63,17 @@ public class TimeUtils {
         return formatter.format(new Date(millis1)).compareTo(formatter.format(new Date(millis2)));
     }
 
-    public static int getYear(long millis) {
-        Calendar calendar = Calendar.getInstance();
+    public static int getField(long millis, int field) {
         calendar.setTimeInMillis(millis);
-        return calendar.get(Calendar.YEAR);
+        return calendar.get(field);
     }
 
-    public static String getFormattedDate(long millis, String format) {
-        SimpleDateFormat formatter = new SimpleDateFormat(format, Locale.getDefault());
+    public static String getMonthString(long millis) {
+        SimpleDateFormat formatter = new SimpleDateFormat("MMMM", Locale.getDefault());
         formatter.setTimeZone(TimeZone.getDefault());
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(millis);
         return formatter.format(calendar.getTime());
-    }
-
-    public static String getStandardTimeFormat() {
-        return "hh:mm a";
     }
 
     public static String getLunarString(long millis) {
@@ -108,17 +105,6 @@ public class TimeUtils {
             }
         }
         return lunarString;
-    }
-
-    public static long getMillis(String date, String pattern) {
-        Calendar cal = Calendar.getInstance();
-        SimpleDateFormat format = new SimpleDateFormat(pattern, Locale.getDefault());
-        try {
-            cal.setTime(format.parse(date));
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        return cal.getTimeInMillis();
     }
 
     public static long getDurationValue(String duration) {

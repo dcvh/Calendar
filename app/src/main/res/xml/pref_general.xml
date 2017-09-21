@@ -6,24 +6,26 @@
     <ListPreference
         android:defaultValue="@string/pref_start_of_the_week_default"
         android:entries="@array/pref_start_of_the_week_list_titles"
-        android:entryValues="@array/pref_start_of_the_week_list_titles"
+        android:entryValues="@array/pref_start_of_the_week_list_values"
         android:key="@string/pref_key_start_of_the_week"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
         android:title="@string/pref_title_start_of_the_week" />
 
-    <SwitchPreference
-        android:defaultValue="false"
-        android:key="@string/pref_key_show_lunar_calendar"
-        android:title="@string/pref_title_show_lunar_calendar" />
+    <ListPreference
+        android:defaultValue="@string/pref_alternate_calendar_default"
+        android:entries="@array/pref_alternate_calendar_list_titles"
+        android:entryValues="@array/pref_alternate_calendar_list_values"
+        android:key="@string/pref_key_alternate_calendar"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="@string/pref_title_alternate_calendar" />
 
     <SwitchPreference
         android:defaultValue="false"
         android:key="@string/pref_key_show_week_number"
         android:title="@string/pref_title_show_week_number" />
 
-    <!-- NOTE: EditTextPreference accepts EditText attributes. -->
-    <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
     <ListPreference
         android:defaultValue="@string/pref_default_event_duration_values_default"
         android:entries="@array/pref_default_event_duration_titles"
@@ -32,5 +34,14 @@
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
         android:title="@string/pref_title_default_event_duration" />
+
+    <ListPreference
+        android:defaultValue="@string/pref_language_default"
+        android:entries="@array/pref_language_list_titles"
+        android:entryValues="@array/pref_language_list_values"
+        android:key="@string/pref_key_language"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="@string/pref_title_language" />
 
 </PreferenceScreen>

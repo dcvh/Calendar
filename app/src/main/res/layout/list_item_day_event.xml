@@ -8,7 +8,7 @@
     <TextView
         android:id="@+id/tv_time"
         android:layout_width="0dp"
-        android:layout_weight="1"
+        android:layout_weight="@integer/layout_weight_date"
         android:layout_height="wrap_content"
         android:textSize="12sp"
         android:maxLines="1"
@@ -17,7 +17,7 @@
     <LinearLayout
         android:id="@+id/ll_events_in_hour"
         android:layout_width="0dp"
-        android:layout_weight="5"
+        android:layout_weight="@integer/layout_weight_event"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:visibility="gone"/>

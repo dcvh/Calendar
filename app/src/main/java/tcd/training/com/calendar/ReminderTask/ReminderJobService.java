@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
+import android.text.format.DateUtils;
 import android.util.Log;
 
 import com.firebase.jobdispatcher.JobParameters;
@@ -57,13 +58,13 @@ public class ReminderJobService extends JobService {
                         ReminderUtils.showReminderNotification(
                                 ReminderJobService.this,
                                 title,
-                                TimeUtils.getFormattedDate(startTime, TimeUtils.getStandardTimeFormat())
+                                DateUtils.formatDateTime(ReminderJobService.this, startTime, DateUtils.FORMAT_SHOW_TIME)
                         );
                     } else if (priority == AddEventActivity.PRIORITY_POPUP) {
                         ReminderUtils.showReminderPopup(
                                 ReminderJobService.this,
                                 title,
-                                TimeUtils.getFormattedDate(startTime, TimeUtils.getStandardTimeFormat())
+                                DateUtils.formatDateTime(ReminderJobService.this, startTime, DateUtils.FORMAT_SHOW_TIME)
                         );
                     }
                 } else {

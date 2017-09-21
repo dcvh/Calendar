@@ -18,7 +18,7 @@
         <ImageView
             android:id="@+id/iv_arrow"
             android:layout_width="0dp"
-            android:layout_weight="1"
+            android:layout_weight="@integer/layout_weight_date"
             android:layout_height="wrap_content"
             android:tint="@android:color/darker_gray"
             android:src="@drawable/ic_arrow_down_black_24dp"
@@ -27,7 +27,7 @@
         <TextView
             android:id="@+id/tv_show_hide"
             android:layout_width="0dp"
-            android:layout_weight="6"
+            android:layout_weight="@integer/layout_weight_event"
             android:layout_height="wrap_content"
             android:textStyle="bold"
             android:layout_marginLeft="16dp"

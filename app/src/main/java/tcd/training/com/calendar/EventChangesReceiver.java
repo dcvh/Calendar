@@ -4,14 +4,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.provider.CalendarContract;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import java.util.ArrayList;
-
 import tcd.training.com.calendar.Utils.DataUtils;
-import tcd.training.com.calendar.Entities.Event;
 
 /**
  * Created by cpu10661-local on 9/18/17.
@@ -62,7 +58,7 @@ public class EventChangesReceiver extends BroadcastReceiver {
     }
 
     private void sendUpdateBroadcast(int type, Context context) {
-        Intent updateEvent = new Intent(MainActivity.UPDATE_EVENT_ACTION);
+        Intent updateEvent = new Intent(MainActivity.UPDATE_EVENT_CHANGE_ACTION);
         updateEvent.putExtra(MainActivity.ARG_UPDATE_TYPE, type);
 //                difference < 0 ? MainActivity.UPDATE_REMOVE : MainActivity.UPDATE_ADD);
         LocalBroadcastManager.getInstance(context).sendBroadcast(updateEvent);

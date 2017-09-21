@@ -335,20 +335,20 @@ public final class Lunar {
         long offset = (millisec - baseDate.getTimeInMillis()) / 86400000;
 
         int daysInLunarYear = getLunarYearDays(mLunarYear);
-		/* get current lunar year */
+		/* getField current lunar year */
         while (mLunarYear < 2100 && offset >= daysInLunarYear) {
             offset -= daysInLunarYear;
             daysInLunarYear = getLunarYearDays(++mLunarYear);
         }
 
-		/* get current lunar month */
+		/* getField current lunar month */
         int lunarMonth = 1;
         int leapMonth = getLunarLeapMonth(mLunarYear);
         boolean leapDec = false;
         boolean isLeap = false;
         int daysInLunarMonth = 0;
 
-		/* to get lunar year, month and day */
+		/* to getField lunar year, month and day */
         while (lunarMonth < 13 && offset > 0) {
             if (isLeap && leapDec) {
                 daysInLunarMonth = getLunarLeapDays(mLunarYear);
@@ -483,7 +483,7 @@ public final class Lunar {
      * Convert current date into Coordinated Universal Time.
      *
      * @param date current date
-     * @return get day in Coordinated Universal Time
+     * @return getField day in Coordinated Universal Time
      */
     private synchronized int getUTCDay(Date date) {
         synchronized (Lunar.class) {
@@ -497,7 +497,7 @@ public final class Lunar {
      * Convert current date into Coordinated Universal Time.
      *
      * @param date current date
-     * @return get month in Coordinated Universal Time
+     * @return getField month in Coordinated Universal Time
      */
     private synchronized int getUTCMonth(Date date) {
         synchronized (Lunar.class) {
@@ -533,7 +533,7 @@ public final class Lunar {
         return getUTCMonth(new Date(millisec + getUTC(1900, 0, 6, 2, 5, 0)));
     }
 
-    /* get Heavenly Stems and Earthly Branches data */
+    /* getField Heavenly Stems and Earthly Branches data */
     private void getCyclicalData() {
         mSolarYear = mSolar.get(Calendar.YEAR);
         mSolarMonth = mSolar.get(Calendar.MONTH);
@@ -599,7 +599,7 @@ public final class Lunar {
     }
 
     /**
-     * Set date to get lunar data.
+     * Set date to getField lunar data.
      *
      * @param year the year
      * @param month the month
@@ -612,7 +612,7 @@ public final class Lunar {
     }
 
     /**
-     * Set lunar date, so then can get GregorianCalendar date.
+     * Set lunar date, so then can getField GregorianCalendar date.
      *
      * @param year lunar year
      * @param month lunar month
