@@ -746,7 +746,7 @@ public class AddEventActivity extends AppCompatActivity {
         final ListView listView = new ListView(this);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        ArrayAdapter adapter;
+        final ArrayAdapter adapter;
         switch (type) {
             case STATUS_DIALOG_TYPE:
                 adapter = new DialogListAdapter(AddEventActivity.this, R.layout.list_item_dialog, mAvailabilityTitles, mAvailabilityIndex);
@@ -773,7 +773,7 @@ public class AddEventActivity extends AppCompatActivity {
         listView.setAdapter(adapter);
         listView.setDivider(null);
         listView.setDividerHeight(0);
-        listView.setPadding(0, ViewUtils.dpToPixel(24), 0, 0);
+        listView.setPadding(0, ViewUtils.dpToPixel(16), 0, ViewUtils.dpToPixel(16));
         builder.setView(listView);
 
         dialog = builder.create();
@@ -782,6 +782,9 @@ public class AddEventActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                if (adapter instanceof DialogListAdapter) {
+                    ((DialogListAdapter)adapter).setSelectedItemIndex(i);
+                }
                 switch (type) {
                     case STATUS_DIALOG_TYPE:
                         mAvailabilityIndex = i;
@@ -831,29 +834,33 @@ public class AddEventActivity extends AppCompatActivity {
         final EditText valueTextView = dialog.findViewById(R.id.edt_notification_value);
         valueTextView.setText(String.valueOf(mDefaultReminderTime));
 
-        // list view
-        ListView unitListView = dialog.findViewById(R.id.lv_unit);
+        // unit list view
+        final ListView unitListView = dialog.findViewById(R.id.lv_unit);
         ArrayList<String> units = new ArrayList<>(Arrays.asList(getString(R.string.minute), getString(R.string.hour), getString(R.string.day), getString(R.string.week)));
         mUnitIndex = 0;
-        DialogListAdapter adapter = new DialogListAdapter(this, R.layout.list_item_dialog, units, mUnitIndex);
-        unitListView.setAdapter(adapter);
+        final DialogListAdapter unitAdapter = new DialogListAdapter(this, R.layout.list_item_dialog, units, mUnitIndex);
+        unitListView.setAdapter(unitAdapter);
         unitListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 mUnitIndex = i;
+                unitAdapter.setSelectedItemIndex(i);
+                unitListView.invalidateViews();
             }
         });
 
-        // list view
-        ListView priorityListView = dialog.findViewById(R.id.lv_priority);
+        // priority list view
+        final ListView priorityListView = dialog.findViewById(R.id.lv_priority);
         ArrayList<String> priorities = new ArrayList<>(Arrays.asList(getString(R.string.notification), getString(R.string.popup)));
         mPriorityIndex = 0;
-        adapter = new DialogListAdapter(this, R.layout.list_item_dialog, priorities, mPriorityIndex);
-        priorityListView.setAdapter(adapter);
+        final DialogListAdapter priorityAdapter = new DialogListAdapter(this, R.layout.list_item_dialog, priorities, mPriorityIndex);
+        priorityListView.setAdapter(priorityAdapter);
         priorityListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 mPriorityIndex = i;
+                priorityAdapter.setSelectedItemIndex(i);
+                priorityListView.invalidateViews();
             }
         });
 
@@ -862,6 +869,7 @@ public class AddEventActivity extends AppCompatActivity {
         done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // calculate the time
                 int time = Integer.parseInt(valueTextView.getText().toString());
                 switch (mUnitIndex) {
                     case 0: time = (int) TimeUnit.MINUTES.toMinutes(time); break;
@@ -869,10 +877,15 @@ public class AddEventActivity extends AppCompatActivity {
                     case 2: time = (int) TimeUnit.DAYS.toMinutes(time); break;
                     case 3: time = (int) TimeUnit.DAYS.toMinutes(time) * 7; break;
                 }
+
+                // update it in view
                 String timeString = ViewUtils.getNotificationTimeFormat(time, AddEventActivity.this) + getString(R.string.before);
                 displayView.setText(timeString);
+
+                // add it to the list
                 mNotificationMinutes.add(mNotificationMinutes.size() - 1, time);
                 mNotificationIndex = mNotificationMinutes.size() - 2;
+
                 dialog.dismiss();
             }
         });
