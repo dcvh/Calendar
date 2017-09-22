@@ -25,7 +25,6 @@ import tcd.training.com.calendar.Utils.DataUtils;
 import tcd.training.com.calendar.Entities.Entry;
 import tcd.training.com.calendar.Entities.Event;
 import tcd.training.com.calendar.Utils.PreferenceUtils;
-import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.Utils.ViewUtils;
@@ -39,7 +38,7 @@ import static android.content.res.Configuration.ORIENTATION_PORTRAIT;
 public class MonthFragment extends Fragment {
 
     private static final String TAG = MonthFragment.class.getSimpleName();
-    private static final int DEFAULT_TEXT_SIZE = 10;
+    private static int MONTH_NUMBER_TEXT_SIZE;
     private static int NUMBER_OF_DISPLAY_EVENTS = 3;
 
     public final static String ARG_DISPLAY_MONTH = "ARG_DISPLAY_MONTH";
@@ -51,6 +50,7 @@ public class MonthFragment extends Fragment {
     private Calendar mStartDate, mEndDate;
     private ArrayList<Entry> mEntries;
     private String mAlternateCalendar;
+    private boolean mShowNumberOfWeek;
 
     private TableRow mTableHeader;
     private TableRow mTableRow1;
@@ -77,8 +77,10 @@ public class MonthFragment extends Fragment {
 
         mContext = getContext();
         mAlternateCalendar = PreferenceUtils.getAlternateCalendar(mContext);
+        mShowNumberOfWeek = PreferenceUtils.isShowNumberOfWeekChecked(mContext);
 
         NUMBER_OF_DISPLAY_EVENTS = getResources().getConfiguration().orientation == ORIENTATION_PORTRAIT ? 3 : 0;
+        MONTH_NUMBER_TEXT_SIZE = ViewUtils.pixelToSp(getResources().getDimension(R.dimen.month_number_text_size));
     }
 
     @Nullable
@@ -90,6 +92,7 @@ public class MonthFragment extends Fragment {
         mEntries = DataUtils.getEntriesBetween(mContext, mStartDate.getTimeInMillis(), mEndDate.getTimeInMillis());
 
         initializeUiComponents(view);
+        createNumberOfWeek();
         createCalendarHeader();
         createCalendarDates();
 
@@ -147,7 +150,7 @@ public class MonthFragment extends Fragment {
             dayTextView.setText(dayOfWeek);
             dayTextView.setLayoutParams(layoutParams);
             dayTextView.setTextColor(Color.BLACK);
-            dayTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
+            dayTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, MONTH_NUMBER_TEXT_SIZE);
 
             mTableHeader.addView(dayTextView);
         }
@@ -156,6 +159,19 @@ public class MonthFragment extends Fragment {
     private String[] getDayOfWeekOrder() {
         mFirstDayOfWeek = PreferenceUtils.getFirstDayOfWeek(mContext);
         return PreferenceUtils.getDayOfWeekOrder(mFirstDayOfWeek, mContext);
+    }
+
+    private void createNumberOfWeek() {
+        if (mShowNumberOfWeek) {
+            mTableHeader.addView(ViewUtils.getTextView("  ", MONTH_NUMBER_TEXT_SIZE, Color.GRAY, Typeface.NORMAL, true, mContext));
+
+            Calendar firstWeekNumber = (Calendar) mCurMonth.clone();
+            firstWeekNumber.set(Calendar.DAY_OF_MONTH, 1);
+            int weekNumber = firstWeekNumber.get(Calendar.WEEK_OF_YEAR);
+            for (int i = 0; i < 6; i++) {
+                getRow(i).addView(ViewUtils.getTextView(String.valueOf(weekNumber + i), MONTH_NUMBER_TEXT_SIZE, Color.GRAY, Typeface.NORMAL, true, mContext));
+            }
+        }
     }
 
     private void createCalendarDates() {
@@ -170,7 +186,6 @@ public class MonthFragment extends Fragment {
             curDate.add(Calendar.DAY_OF_MONTH, 1);
             index++;
         }
-
 
         // days of current month
         int curMonth = mCurMonth.get(Calendar.MONTH);
@@ -195,12 +210,12 @@ public class MonthFragment extends Fragment {
 
     private View createDateView(final Calendar calendar, int dateColor) {
 
-        // prepare date and lunar date
+        // prepare date and alternate
         String dateString = String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
         if (mAlternateCalendar != null) {
             dateString += "\n" + PreferenceUtils.getAlternateDate(calendar.getTimeInMillis(), mAlternateCalendar);
         }
-        final TextView dateTextView = getTextView(dateString, DEFAULT_TEXT_SIZE, dateColor, Typeface.NORMAL);
+        final TextView dateTextView = ViewUtils.getTextView(dateString, MONTH_NUMBER_TEXT_SIZE, dateColor, Typeface.NORMAL, false, mContext);
 
         // tint today
         if (DateUtils.isToday(calendar.getTimeInMillis())) {
@@ -228,7 +243,7 @@ public class MonthFragment extends Fragment {
 
                 if (i >= NUMBER_OF_DISPLAY_EVENTS) {
                     String x_more = String.format(getString(R.string.x_more), entry.getEvents().size() - NUMBER_OF_DISPLAY_EVENTS);
-                    layout.addView(getTextView(x_more, DEFAULT_TEXT_SIZE, Color.BLACK, Typeface.BOLD));
+                    layout.addView(ViewUtils.getTextView(x_more, MONTH_NUMBER_TEXT_SIZE, Color.BLACK, Typeface.BOLD, false, mContext));
                     break;
                 }
 
@@ -250,17 +265,6 @@ public class MonthFragment extends Fragment {
         });
 
         return resultView;
-    }
-
-    private TextView getTextView(String content, int size, int color, int style) {
-        TextView textView = new TextView(mContext);
-
-        textView.setText(content);
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, size);
-        textView.setTextColor(color);
-        textView.setTypeface(null, style);
-
-        return textView;
     }
 
     private TableRow getRow(int index) {

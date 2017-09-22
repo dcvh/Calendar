@@ -6,6 +6,7 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.TypedValue;
@@ -88,6 +89,17 @@ public class ViewUtils {
 
         eventLayout.setPadding(DP_AS_PX_8 * 2, DP_AS_PX_8, DP_AS_PX_8 * 2, DP_AS_PX_8);
         return eventLayout;
+    }
+
+    public static int getDateColor(long millis, Context context) {
+        int comparison = TimeUtils.compareDay(millis, Calendar.getInstance().getTimeInMillis());
+        if (comparison == 0) {
+            return ContextCompat.getColor(context, R.color.colorAccent);
+        } else if (comparison < 0) {
+            return Color.GRAY;
+        } else {
+            return Color.BLACK;
+        }
     }
 
     public static TextView getSimpleTileView(Event event, Context context) {

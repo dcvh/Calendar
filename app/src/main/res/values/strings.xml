@@ -17,13 +17,14 @@
     <string name="refresh">Refresh</string>
     <string name="title_activity_settings">Settings</string>
 
-    <!--content v-->
+    <!--content views-->
     <string name="no_calendar_events_error">No event found!</string>
     <string name="no_title">(No title)</string>
     <string name="wait_load_events_message">Please wait while system loads events</string>
     <string name="x_more" tools:ignore="PluralsCandidate">%d more</string>
     <string name="show_less">Show less</string>
     <string name="no_event">Nothing planned. Tap to create.</string>
+    <string name="week_x">Week %d</string>
 
     <!--event details-->
     <string name="edit">Edit</string>

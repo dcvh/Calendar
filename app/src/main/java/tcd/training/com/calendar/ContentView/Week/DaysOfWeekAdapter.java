@@ -33,12 +33,16 @@ public class DaysOfWeekAdapter extends BaseAdapter {
 
     private static final String TAG = DaysOfWeekAdapter.class.getSimpleName();
 
+    private static int WEEK_NUMBER_TEXT_SIZE;
+
     private ArrayList<Entry> mEntries;
     private Context mContext;
 
     public DaysOfWeekAdapter(ArrayList<Entry> entries, Context context) {
         this.mEntries = entries;
         this.mContext = context;
+
+        WEEK_NUMBER_TEXT_SIZE = ViewUtils.pixelToSp(context.getResources().getDimension(R.dimen.week_number_text_size));
     }
 
     @Override
@@ -65,7 +69,7 @@ public class DaysOfWeekAdapter extends BaseAdapter {
 
             int hour = position / 8;
             String hourString = hour <= 12 ? String.valueOf(hour) + " AM" : String.valueOf(hour % 12) + " PM";
-            TextView timeTextView = ViewUtils.getTextView(hourString, 12, Color.GRAY, Typeface.NORMAL, true, mContext);
+            TextView timeTextView = ViewUtils.getTextView(hourString, WEEK_NUMBER_TEXT_SIZE, Color.GRAY, Typeface.NORMAL, true, mContext);
             timeTextView.setGravity(Gravity.CENTER);
             timeTextView.setLayoutParams(params);
 

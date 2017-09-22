@@ -10,7 +10,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.format.DateUtils;
-import android.view.Gravity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,6 +48,7 @@ public class WeekFragment extends Fragment {
     private Context mContext;
     private ArrayList<Entry> mEntries;
     private String mAlternateCalendar;
+    private boolean mShowWeekNumber;
 
     public static WeekFragment newInstance(Calendar date) {
         Bundle args = new Bundle();
@@ -68,9 +69,9 @@ public class WeekFragment extends Fragment {
         DAY_OF_WEEK_TEXT_SIZE = ViewUtils.pixelToSp(getResources().getDimension(R.dimen.day_of_week_text_size));
         ALTERNATE_DATE_TEXT_SIZE = ViewUtils.pixelToSp(getResources().getDimension(R.dimen.alternate_date_text_size));
 
-
         mContext = getContext();
         mAlternateCalendar = PreferenceUtils.getAlternateCalendar(mContext);
+        mShowWeekNumber = PreferenceUtils.isShowNumberOfWeekChecked(mContext);
     }
 
     @Nullable
@@ -108,11 +109,19 @@ public class WeekFragment extends Fragment {
 
     private void createHeader(View view) {
         LinearLayout header = view.findViewById(R.id.ll_week);
+
+        // week number
+        if (mShowWeekNumber) {
+            String weekNumber = String.valueOf(TimeUtils.getField(mEntries.get(0).getTime(), Calendar.WEEK_OF_YEAR));
+            ((TextView)view.findViewById(R.id.tv_week_number)).setText(weekNumber);
+        }
+
+        // days of week
         for (int i = 0; i < 7; i++) {
 
             // the date
             final Entry entry = mEntries.get(i);
-            int color = DateUtils.isToday(entry.getTime()) ? ContextCompat.getColor(mContext, R.color.colorAccent) : Color.BLACK;
+            int color = ViewUtils.getDateColor(entry.getTime(), mContext);
             TextView dayOfMonth = ViewUtils.getTextView(String.valueOf(TimeUtils.getField(entry.getTime(), Calendar.DAY_OF_MONTH)),
                     DAY_OF_MONTH_TEXT_SIZE, color, Typeface.NORMAL, true, mContext);
             TextView dayOfWeek = ViewUtils.getTextView(

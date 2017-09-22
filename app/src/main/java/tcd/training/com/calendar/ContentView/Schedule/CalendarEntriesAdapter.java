@@ -42,12 +42,14 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
     private ArrayList<Entry> mEntries;
     private Context mContext;
     private String mAlternateCalendar;
+    private boolean mShowNumberOfWeek;
 
     public CalendarEntriesAdapter(Context context, ArrayList<Entry> mEntries) {
         this.mContext = context;
         this.mEntries = mEntries;
 
         mAlternateCalendar = PreferenceUtils.getAlternateCalendar(mContext);
+        mShowNumberOfWeek = PreferenceUtils.isShowNumberOfWeekChecked(mContext);
     }
 
     @Override
@@ -154,8 +156,14 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
                 Calendar week = Calendar.getInstance();
                 week.setTimeInMillis(entry.getTime());
+                String dateString = "";
 
-                String dateString = DateUtils.formatDateRange(mContext,
+                // week number
+                if (mShowNumberOfWeek) {
+                    dateString = String.format(mContext.getString(R.string.week_x) + ", ", week.get(Calendar.WEEK_OF_YEAR));
+                }
+
+                dateString += DateUtils.formatDateRange(mContext,
                         week.getTimeInMillis(),
                         week.getTimeInMillis() + TimeUnit.DAYS.toMillis(6),
                         DateUtils.FORMAT_ABBREV_ALL);
@@ -186,16 +194,15 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         holder.mDayOfMonthTextView.setText(String.valueOf(TimeUtils.getField(entry.getTime(), Calendar.DAY_OF_MONTH)));
         holder.mDayOfWeekTextView.setText(
                 DateUtils.formatDateTime(mContext, entry.getTime(), DateUtils.FORMAT_SHOW_WEEKDAY | DateUtils.FORMAT_ABBREV_WEEKDAY));
-        if (TimeUtils.compareDay(entry.getTime(), Calendar.getInstance().getTimeInMillis()) > 0) {
-            int blackColor = Color.rgb(40, 40, 40);
-            holder.mDayOfMonthTextView.setTextColor(blackColor);
-            holder.mDayOfWeekTextView.setTextColor(blackColor);
-        }
+        int color = ViewUtils.getDateColor(entry.getTime(), mContext);
+        holder.mDayOfMonthTextView.setTextColor(color);
+        holder.mDayOfWeekTextView.setTextColor(color);
 
         // lunar day
         if (mAlternateCalendar != null) {
             holder.mLunarDayTextView.setText(PreferenceUtils.getAlternateDate(entry.getTime(), mAlternateCalendar));
             holder.mLunarDayTextView.setVisibility(View.VISIBLE);
+            holder.mLunarDayTextView.setTextColor(color);
         }
 
         holder.mDayOfMonthTextView.setOnClickListener(new View.OnClickListener() {

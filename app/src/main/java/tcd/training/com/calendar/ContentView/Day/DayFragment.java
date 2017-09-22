@@ -94,16 +94,23 @@ public class DayFragment extends Fragment {
         params.setMargins(0, ViewUtils.dpToPixel(16), 0, 0);
         mHeaderLayout.setLayoutParams(params);
 
+        // date info
         dayOfMonthTextView.setText(String.valueOf(mCurDay.get(Calendar.DAY_OF_MONTH)));
         dayOfWeekTextView.setText(
                 DateUtils.formatDateTime(mContext, mCurDay.getTimeInMillis(), DateUtils.FORMAT_SHOW_WEEKDAY | DateUtils.FORMAT_ABBREV_WEEKDAY));
+        int color = ViewUtils.getDateColor(mCurDay.getTimeInMillis(), mContext);
+        dayOfMonthTextView.setTextColor(color);
+        dayOfWeekTextView.setTextColor(color);
 
+        // alternate calendar
         if (mAlternateCalendar != null) {
             TextView alternateTextView = mHeaderLayout.findViewById(R.id.tv_alternate_date);
             alternateTextView.setText(PreferenceUtils.getAlternateDate(mCurDay.getTimeInMillis(), mAlternateCalendar));
             alternateTextView.setVisibility(View.VISIBLE);
+            alternateTextView.setTextColor(color);
         }
 
+        // all-day events
         mEntry = DataUtils.getEntryIn(mCurDay.getTimeInMillis(), mContext);
         if (mEntry != null) {
 

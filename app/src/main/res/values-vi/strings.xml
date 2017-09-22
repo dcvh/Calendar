@@ -24,6 +24,7 @@
     <string name="x_more" tools:ignore="PluralsCandidate">còn %d</string>
     <string name="show_less">Ít hơn</string>
     <string name="no_event">Chưa có sự kiện nào. Nhấn để tạo.</string>
+    <string name="week_x">Tuần %d</string>
 
     <!--event details-->
     <string name="edit">Sửa</string>

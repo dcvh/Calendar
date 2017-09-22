@@ -289,7 +289,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             protected void onPostExecute(Void aVoid) {
-                mProgressBar.setVisibility(View.INVISIBLE);
+                mProgressBar.setVisibility(View.GONE);
 
                 showMonthShortcut(false);
 

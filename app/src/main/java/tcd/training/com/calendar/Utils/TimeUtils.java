@@ -71,7 +71,6 @@ public class TimeUtils {
     public static String getMonthString(long millis) {
         SimpleDateFormat formatter = new SimpleDateFormat("MMMM", Locale.getDefault());
         formatter.setTimeZone(TimeZone.getDefault());
-        Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(millis);
         return formatter.format(calendar.getTime());
     }
