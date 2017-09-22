@@ -4,9 +4,11 @@ import android.annotation.TargetApi;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ColorStateList;
+import android.content.res.Resources;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.preference.PreferenceManager;
@@ -53,9 +55,12 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import tcd.training.com.calendar.Entities.Account;
+import tcd.training.com.calendar.MainApplication;
+import tcd.training.com.calendar.Settings.LocaleHelper;
 import tcd.training.com.calendar.Utils.DataUtils;
 import tcd.training.com.calendar.Entities.Event;
 import tcd.training.com.calendar.Entities.Reminder;
+import tcd.training.com.calendar.Utils.PreferenceUtils;
 import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.EventDetailsActivity;
 import tcd.training.com.calendar.R;
@@ -122,6 +127,7 @@ public class AddEventActivity extends AppCompatActivity {
     private Event mEvent;
 
     private boolean mEndActivity = false;
+    private String mCurLanguage = PreferenceUtils.getLanguage(MainApplication.getContext());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -144,6 +150,15 @@ public class AddEventActivity extends AppCompatActivity {
         }
 
         changeActivityThemeColor();
+    }
+
+    @Override
+    public Resources getResources() {
+        if (mCurLanguage == null) {
+            return super.getResources();
+        }
+        Context context = LocaleHelper.getContext(this, mCurLanguage);
+        return context == null ? super.getResources() : context.getResources();
     }
 
     @Override

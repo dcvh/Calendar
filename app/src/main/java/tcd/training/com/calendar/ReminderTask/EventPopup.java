@@ -2,11 +2,16 @@ package tcd.training.com.calendar.ReminderTask;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 
+import tcd.training.com.calendar.MainApplication;
 import tcd.training.com.calendar.R;
+import tcd.training.com.calendar.Settings.LocaleHelper;
+import tcd.training.com.calendar.Utils.PreferenceUtils;
 
 /**
  * Created by cpu10661-local on 9/15/17.
@@ -16,6 +21,8 @@ public class EventPopup extends Activity {
 
     public static final String ARG_EVENT_TITLE = "eventTitle";
     public static final String ARG_EVENT_MESSAGE = "eventMessage";
+
+    private String mCurLanguage = PreferenceUtils.getLanguage(MainApplication.getContext());
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -35,5 +42,11 @@ public class EventPopup extends Activity {
             }
         });
         alertDialog.show();
+    }
+
+    @Override
+    public Resources getResources() {
+        Context context = LocaleHelper.getContext(this, mCurLanguage);
+        return context == null ? super.getResources() : context.getResources();
     }
 }

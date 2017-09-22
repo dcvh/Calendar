@@ -2,9 +2,11 @@ package tcd.training.com.calendar.Settings;
 
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -25,8 +27,11 @@ import android.view.View;
 import android.widget.ListView;
 
 import java.util.List;
+import java.util.Locale;
 
+import tcd.training.com.calendar.MainApplication;
 import tcd.training.com.calendar.R;
+import tcd.training.com.calendar.Utils.PreferenceUtils;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -42,6 +47,9 @@ import tcd.training.com.calendar.R;
 public class SettingsActivity extends AppCompatPreferenceActivity {
 
     private static final String TAG = SettingsActivity.class.getSimpleName();
+
+    private String mCurLanguage = PreferenceUtils.getLanguage(MainApplication.getContext());
+
     /**
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
@@ -128,6 +136,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
+    }
+
+    @Override
+    public Resources getResources() {
+        if (mCurLanguage == null) {
+            return super.getResources();
+        }
+        Context context = LocaleHelper.getContext(this, mCurLanguage);
+        return context == null ? super.getResources() : context.getResources();
     }
 
     /**

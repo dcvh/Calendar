@@ -131,7 +131,7 @@
     <string name="pref_header_general">General</string>
 
     <string name="pref_key_start_of_the_week" translatable="false">start_of_the_week</string>
-    <string name="pref_start_of_the_week_default" translatable="false">Monday</string>
+    <string name="pref_start_of_the_week_default" translatable="false">monday</string>
     <string name="pref_title_start_of_the_week">Start of the week</string>
     <string name="saturday">Saturday</string>
     <string name="sunday">Sunday</string>

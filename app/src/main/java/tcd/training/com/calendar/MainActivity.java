@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -35,9 +36,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
 
@@ -45,6 +48,7 @@ import tcd.training.com.calendar.AddEventTask.AddEventActivity;
 import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
 import tcd.training.com.calendar.ContentView.Shortcut.ShortcutViewFragment;
 import tcd.training.com.calendar.ContentView.Week.WeekViewFragment;
+import tcd.training.com.calendar.Settings.LocaleHelper;
 import tcd.training.com.calendar.Utils.DataUtils;
 import tcd.training.com.calendar.Utils.PreferenceUtils;
 import tcd.training.com.calendar.Utils.TimeUtils;
@@ -60,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private static final int RC_CALENDAR_PERMISSION = 1;
     private static final int RC_ADD_ACCOUNT = 2;
+    private static final int RC_SETTINGS = 3;
 
     public static final String ARG_ENTRIES_LIST = "entriesList";
     public static final String ARG_CONTENT_VIEW_TYPE = "contentViewType";
@@ -86,10 +91,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private BroadcastReceiver mUpdateEventReceiver;
     private BroadcastReceiver mScrollToReceiver;
 
-    private int mPrevFirstDayOfWeek;
-    private String mPrevAlternateCalendar;
-    private boolean mPrevShowNumberOfWeek;
-    private String mPrevLanguage;
+    private int mCurFirstDayOfWeek;
+    private String mCurAlternateCalendar;
+    private boolean mCurShowNumberOfWeek;
+    private String mCurLanguage = PreferenceUtils.getLanguage(MainApplication.getContext());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,12 +104,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         initializeBasicComponents();
         initializeUiComponents();
 
-        readCalendarEntries();
+        readCalendarEntries(false);
 
         ReminderUtils.clearAllNotifications(this);
 
         // TODO: 9/18/17 handle custom event
         // https://developer.android.com/reference/android/provider/CalendarContract.html#ACTION_HANDLE_CUSTOM_EVENT
+    }
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(LocaleHelper.onAttach(base));
     }
 
     private void initializeBasicComponents() {
@@ -241,53 +251,52 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mFragmentManager.beginTransaction().replace(R.id.fl_month_shortcut, mShortcutFragment).commit();
     }
 
-    private void readCalendarEntries() {
+    private void readCalendarEntries(final boolean forceLoad) {
         if (!requestWriteCalendarPermission()) {
             return;
         }
 
         new AsyncTask<Void, Void, Void>() {
-            private ProgressDialog mDialog;
+            private ProgressBar mProgressBar;
 
             @Override
             protected void onPreExecute() {
-                mDialog = new ProgressDialog(MainActivity.this);
-                mDialog.setMessage(getString(R.string.wait_load_events_message));
-                mDialog.setCancelable(false);
-                mDialog.setInverseBackgroundForced(false);
-                mDialog.show();
+                mProgressBar = (ProgressBar) findViewById(R.id.pb_load_progress);
+                mProgressBar.setVisibility(View.VISIBLE);
             }
 
             @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
             @Override
             protected Void doInBackground(Void... voids) {
-                DataUtils.readCalendarEventsInfo(MainActivity.this);
-                if (DataUtils.getAllEntries().size() == 0) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(MainActivity.this, R.string.no_calendar_events_error, Toast.LENGTH_LONG).show();
-                        }
-                    });
-                    Intent addAccountIntent = new Intent(android.provider.Settings.ACTION_ADD_ACCOUNT)
-                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    addAccountIntent.putExtra(Settings.EXTRA_ACCOUNT_TYPES, new String[] {"com.google"});
-                    startActivityForResult(addAccountIntent, RC_ADD_ACCOUNT);
+                ArrayList allEntries = DataUtils.getAllEntries();
+                if (forceLoad || allEntries == null || allEntries.size() == 0) {
+                    DataUtils.readCalendarEventsInfo(MainActivity.this);
+                    if (DataUtils.getAllEntries().size() == 0) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(MainActivity.this, R.string.no_calendar_events_error, Toast.LENGTH_LONG).show();
+                            }
+                        });
+                        Intent addAccountIntent = new Intent(Settings.ACTION_ADD_ACCOUNT)
+                                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        addAccountIntent.putExtra(Settings.EXTRA_ACCOUNT_TYPES, new String[]{"com.google"});
+                        startActivityForResult(addAccountIntent, RC_ADD_ACCOUNT);
+                    }
                 }
                 return null;
             }
 
             @Override
             protected void onPostExecute(Void aVoid) {
-                mDialog.dismiss();
-                mDialog = null;
+                mProgressBar.setVisibility(View.INVISIBLE);
 
                 showMonthShortcut(false);
 
                 selectItemNavigation(R.id.nav_schedule);
             }
 
-        }.execute();
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     private void replaceFragment(Class fragmentClass) {
@@ -380,7 +389,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 return true;
             case R.id.action_refresh:
-                readCalendarEntries();
+                readCalendarEntries(true);
                 return true;
         }
 
@@ -388,51 +397,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
+    public Resources getResources() {
+        Context context = LocaleHelper.getContext(this, mCurLanguage);
+        return context == null ? super.getResources() : context.getResources();
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
-
-        detectSettingChanges();
 
         LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateContentViewReceiver, new IntentFilter(UPDATE_CONTENT_VIEW_ACTION));
         LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateMonthReceiver, new IntentFilter(UPDATE_MONTH_ACTION));
         LocalBroadcastManager.getInstance(this).registerReceiver(mUpdateEventReceiver, new IntentFilter(UPDATE_EVENT_CHANGE_ACTION));
         LocalBroadcastManager.getInstance(this).registerReceiver(mScrollToReceiver, new IntentFilter(SCROLL_TO_ACTION));
-    }
-
-    private void detectSettingChanges() {
-        // first day of week
-        int curFirstDayOfWeek = PreferenceUtils.getFirstDayOfWeek(this);
-        if (curFirstDayOfWeek != mPrevFirstDayOfWeek) {
-            mPrevFirstDayOfWeek = curFirstDayOfWeek;
-            if (mCurrentFragment instanceof MonthViewFragment) {
-                replaceFragment(MonthViewFragment.class);
-            }
-        }
-
-        if (mCurrentFragment != null) {
-            // show number of week
-            if (PreferenceUtils.isShowNumberOfWeekChecked(this) != mPrevShowNumberOfWeek) {
-                mPrevShowNumberOfWeek = !mPrevShowNumberOfWeek;
-                replaceFragment(mCurrentFragment.getClass());
-            }
-
-            // alternate calendar
-            String curAlternate = PreferenceUtils.getAlternateCalendar(this);
-            if ((curAlternate == null && mPrevAlternateCalendar != null) || (curAlternate != null && !curAlternate.equals(mPrevAlternateCalendar))) {
-                mPrevAlternateCalendar = curAlternate;
-                replaceFragment(mCurrentFragment.getClass());
-            }
-        }
-
-        // language
-        String curLanguage = PreferenceUtils.getLanguage(this);
-        if (!curLanguage.equals(mPrevLanguage)) {
-            mPrevLanguage = curLanguage;
-
-            Configuration config = new Configuration();
-            Locale.setDefault(new Locale(curLanguage));
-            getResources().updateConfiguration(config, null);
-        }
     }
 
     @Override
@@ -446,22 +423,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case RC_CALENDAR_PERMISSION: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    readCalendarEntries();
-                } else {
-                    requestWriteCalendarPermission();
-                }
-                return;
-            }
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
-    @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         switch (id) {
@@ -471,7 +432,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_month: replaceFragment(MonthViewFragment.class); break;
             case R.id.nav_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);
-                startActivity(intent);
+                startActivityForResult(intent, RC_SETTINGS);
                 break;
             case R.id.nav_help_feedback:
                 break;
@@ -495,8 +456,60 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     finish();
                 }
                 break;
+            case RC_SETTINGS:
+                detectSettingChanges();
+                break;
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    private void detectSettingChanges() {
+        // first day of week
+        int newFirstDayOfWeek = PreferenceUtils.getFirstDayOfWeek(this);
+        if (newFirstDayOfWeek != mCurFirstDayOfWeek) {
+            mCurFirstDayOfWeek = newFirstDayOfWeek;
+            if (mCurrentFragment instanceof MonthViewFragment) {
+                replaceFragment(MonthViewFragment.class);
+            }
+        }
+
+        if (mCurrentFragment != null) {
+            // show number of week
+            if (PreferenceUtils.isShowNumberOfWeekChecked(this) != mCurShowNumberOfWeek) {
+                mCurShowNumberOfWeek = !mCurShowNumberOfWeek;
+                replaceFragment(mCurrentFragment.getClass());
+            }
+
+            // alternate calendar
+            String newAlternate = PreferenceUtils.getAlternateCalendar(this);
+            if ((newAlternate == null && mCurAlternateCalendar != null) || (newAlternate != null && !newAlternate.equals(mCurAlternateCalendar))) {
+                mCurAlternateCalendar = newAlternate;
+                replaceFragment(mCurrentFragment.getClass());
+            }
+        }
+
+        // language
+        String newLang = PreferenceUtils.getLanguage(this);
+        if (!newLang.equals(mCurLanguage)) {
+            mCurLanguage = newLang;
+            recreate();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case RC_CALENDAR_PERMISSION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    readCalendarEntries(false);
+                } else {
+                    requestWriteCalendarPermission();
+                }
+                return;
+            }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 }

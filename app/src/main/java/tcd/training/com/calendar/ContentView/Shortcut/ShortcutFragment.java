@@ -70,6 +70,9 @@ public class ShortcutFragment extends Fragment {
         }
 
         mContext = getContext();
+
+        generateDisplayDays();
+
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... voids) {
@@ -90,8 +93,6 @@ public class ShortcutFragment extends Fragment {
         View view = inflater.inflate(R.layout.content_shortcut, container, false);
 
         mLayout = view.findViewById(R.id.ll_month_shortcut);
-
-        generateDisplayDays();
 
         createHeader();
         createCalendar();

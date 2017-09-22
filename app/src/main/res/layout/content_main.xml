@@ -4,11 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!--<fragment android:name="tcd.training.com.calendar.ContentView.Shortcut.ShortcutViewFragment"-->
-        <!--android:id="@+id/fl_month_shortcut"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_marginTop="?attr/actionBarSize"/>-->
+    <ProgressBar
+        android:id="@+id/pb_load_progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:visibility="invisible"/>
 
     <FrameLayout
         android:id="@+id/fl_content"

@@ -30,6 +30,8 @@ import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.Utils.ViewUtils;
 
+import static android.content.res.Configuration.ORIENTATION_PORTRAIT;
+
 /**
  * Created by cpu10661-local on 8/31/17.
  */
@@ -38,7 +40,7 @@ public class MonthFragment extends Fragment {
 
     private static final String TAG = MonthFragment.class.getSimpleName();
     private static final int DEFAULT_TEXT_SIZE = 10;
-    private static final int NUMBER_OF_DISPLAY_EVENTS = 3;
+    private static int NUMBER_OF_DISPLAY_EVENTS = 3;
 
     public final static String ARG_DISPLAY_MONTH = "ARG_DISPLAY_MONTH";
 
@@ -75,6 +77,8 @@ public class MonthFragment extends Fragment {
 
         mContext = getContext();
         mAlternateCalendar = PreferenceUtils.getAlternateCalendar(mContext);
+
+        NUMBER_OF_DISPLAY_EVENTS = getResources().getConfiguration().orientation == ORIENTATION_PORTRAIT ? 3 : 0;
     }
 
     @Nullable
