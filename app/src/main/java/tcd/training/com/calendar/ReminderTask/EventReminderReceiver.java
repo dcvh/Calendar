@@ -16,7 +16,6 @@ import android.util.Log;
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
 import tcd.training.com.calendar.Utils.DataUtils;
 import tcd.training.com.calendar.Entities.Event;
-import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.R;
 
 import static android.content.Context.VIBRATOR_SERVICE;

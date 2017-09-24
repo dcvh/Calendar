@@ -7,10 +7,8 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.format.DateUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,7 +37,7 @@ public class WeekFragment extends Fragment {
 
     private static final String TAG = WeekFragment.class.getSimpleName();
 
-    public final static String ARG_DISPLAY_DAY = "ARG_DISPLAY_DAY";
+    public final static String ARG_DATE_IN_MILLIS = "ARG_DATE_IN_MILLIS";
     private static final int NUMBER_OF_DISPLAY_EVENTS = 2;
 
     private static int DAY_OF_MONTH_TEXT_SIZE, DAY_OF_WEEK_TEXT_SIZE, ALTERNATE_DATE_TEXT_SIZE;
@@ -50,9 +48,9 @@ public class WeekFragment extends Fragment {
     private String mAlternateCalendar;
     private boolean mShowWeekNumber;
 
-    public static WeekFragment newInstance(Calendar date) {
+    public static WeekFragment newInstance(long date) {
         Bundle args = new Bundle();
-        args.putSerializable(ARG_DISPLAY_DAY, date);
+        args.putLong(ARG_DATE_IN_MILLIS, date);
         WeekFragment fragment = new WeekFragment();
         fragment.setArguments(args);
         return fragment;
@@ -62,7 +60,9 @@ public class WeekFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mFirstWeekDay = (Calendar) getArguments().getSerializable(ARG_DISPLAY_DAY);
+            long millis = getArguments().getLong(ARG_DATE_IN_MILLIS);
+            mFirstWeekDay = Calendar.getInstance();
+            mFirstWeekDay.setTimeInMillis(millis);
         }
 
         DAY_OF_MONTH_TEXT_SIZE = ViewUtils.pixelToSp(getResources().getDimension(R.dimen.day_of_month_text_size));
@@ -112,7 +112,9 @@ public class WeekFragment extends Fragment {
 
         // week number
         if (mShowWeekNumber) {
-            String weekNumber = String.valueOf(TimeUtils.getField(mEntries.get(0).getTime(), Calendar.WEEK_OF_YEAR));
+            Calendar cal = (Calendar) mFirstWeekDay.clone();
+            cal.setFirstDayOfWeek(mFirstWeekDay.get(Calendar.DAY_OF_WEEK));
+            String weekNumber = String.valueOf(cal.get(Calendar.WEEK_OF_YEAR));
             ((TextView)view.findViewById(R.id.tv_week_number)).setText(weekNumber);
         }
 

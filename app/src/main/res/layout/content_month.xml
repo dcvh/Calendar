@@ -1,55 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:stretchColumns="*"
-    android:divider="?android:attr/dividerHorizontal"
-    android:showDividers="middle"
+    android:orientation="vertical"
+    android:paddingLeft="16dp"
+    android:paddingRight="0dp"
     tools:context="tcd.training.com.calendar.MainActivity">
 
-    <TableRow android:id="@+id/tr_header"
+    <LinearLayout android:id="@+id/ll_row_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginBottom="8dp"/>
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"/>
 
-    <TableRow android:id="@+id/tr_1"
+    <LinearLayout android:id="@+id/ll_row_1"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="match_parent"
         android:layout_weight="1"
-        android:layout_marginLeft="16dp"/>
+        android:orientation="horizontal"/>
 
-    <TableRow android:id="@+id/tr_2"
+    <LinearLayout android:id="@+id/ll_row_2"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="match_parent"
         android:layout_weight="1"
-        android:layout_marginLeft="16dp"/>
+        android:orientation="horizontal" />
 
-    <TableRow android:id="@+id/tr_3"
+    <LinearLayout android:id="@+id/ll_row_3"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="match_parent"
         android:layout_weight="1"
-        android:layout_marginLeft="16dp"/>
+        android:orientation="horizontal" />
 
-    <TableRow android:id="@+id/tr_4"
+    <LinearLayout android:id="@+id/ll_row_4"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="match_parent"
         android:layout_weight="1"
-        android:layout_marginLeft="16dp"/>
+        android:orientation="horizontal" />
 
-    <TableRow android:id="@+id/tr_5"
+    <LinearLayout android:id="@+id/ll_row_5"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="match_parent"
         android:layout_weight="1"
-        android:layout_marginLeft="16dp"/>
+        android:orientation="horizontal" />
 
-    <TableRow android:id="@+id/tr_6"
+    <LinearLayout android:id="@+id/ll_row_6"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="match_parent"
         android:layout_weight="1"
-        android:layout_marginLeft="16dp"/>
+        android:orientation="horizontal" />
 
-</TableLayout>
+</LinearLayout>

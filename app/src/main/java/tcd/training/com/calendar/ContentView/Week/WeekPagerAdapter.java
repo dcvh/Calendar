@@ -5,7 +5,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 
 /**
  * Created by cpu10661-local on 9/1/17.
@@ -13,9 +12,9 @@ import java.util.Calendar;
 
 public class WeekPagerAdapter extends FragmentStatePagerAdapter {
 
-    private ArrayList<Calendar> mWeeks;
+    private ArrayList<Long> mWeeks;
 
-    public WeekPagerAdapter(FragmentManager fm, ArrayList<Calendar> days) {
+    public WeekPagerAdapter(FragmentManager fm, ArrayList<Long> days) {
         super(fm);
         mWeeks = days;
     }

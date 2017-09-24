@@ -31,7 +31,7 @@ public class DayFragment extends Fragment {
 
     private static final String TAG = DayFragment.class.getSimpleName();
 
-    public final static String ARG_DISPLAY_DAY = "ARG_DISPLAY_DAY";
+    public final static String ARG_DISPLAY_DAY = "ARG_DATE_IN_MILLIS";
     private static final int NUMBER_OF_SHOWN_EVENTS  = 2;
 
     private Calendar mCurDay;

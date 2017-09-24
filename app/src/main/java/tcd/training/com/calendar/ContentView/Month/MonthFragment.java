@@ -10,12 +10,10 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.format.DateUtils;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TableRow;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -52,13 +50,13 @@ public class MonthFragment extends Fragment {
     private String mAlternateCalendar;
     private boolean mShowNumberOfWeek;
 
-    private TableRow mTableHeader;
-    private TableRow mTableRow1;
-    private TableRow mTableRow2;
-    private TableRow mTableRow3;
-    private TableRow mTableRow4;
-    private TableRow mTableRow5;
-    private TableRow mTableRow6;
+    private LinearLayout mLayoutHeader;
+    private LinearLayout mLayoutRow1;
+    private LinearLayout mLayoutRow2;
+    private LinearLayout mLayoutRow3;
+    private LinearLayout mLayoutRow4;
+    private LinearLayout mLayoutRow5;
+    private LinearLayout mLayoutRow6;
 
     public static MonthFragment newInstance(Calendar date) {
         Bundle args = new Bundle();
@@ -92,7 +90,7 @@ public class MonthFragment extends Fragment {
         mEntries = DataUtils.getEntriesBetween(mContext, mStartDate.getTimeInMillis(), mEndDate.getTimeInMillis());
 
         initializeUiComponents(view);
-        createNumberOfWeek();
+        createWeekNumber();
         createCalendarHeader();
         createCalendarDates();
 
@@ -100,13 +98,13 @@ public class MonthFragment extends Fragment {
     }
 
     private void initializeUiComponents(View view) {
-        mTableHeader = view.findViewById(R.id.tr_header);
-        mTableRow1 = view.findViewById(R.id.tr_1);
-        mTableRow2 = view.findViewById(R.id.tr_2);
-        mTableRow3 = view.findViewById(R.id.tr_3);
-        mTableRow4 = view.findViewById(R.id.tr_4);
-        mTableRow5 = view.findViewById(R.id.tr_5);
-        mTableRow6 = view.findViewById(R.id.tr_6);
+        mLayoutHeader = view.findViewById(R.id.ll_row_header);
+        mLayoutRow1 = view.findViewById(R.id.ll_row_1);
+        mLayoutRow2 = view.findViewById(R.id.ll_row_2);
+        mLayoutRow3 = view.findViewById(R.id.ll_row_3);
+        mLayoutRow4 = view.findViewById(R.id.ll_row_4);
+        mLayoutRow5 = view.findViewById(R.id.ll_row_5);
+        mLayoutRow6 = view.findViewById(R.id.ll_row_6);
     }
 
     private void generateDisplayDays() {
@@ -142,17 +140,14 @@ public class MonthFragment extends Fragment {
 
     private void createCalendarHeader() {
 
-        TableRow.LayoutParams layoutParams =
-                new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT, 1f);
+        LinearLayout.LayoutParams layoutParams =
+                new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
 
         for (String dayOfWeek : mDayOrder) {
-            TextView dayTextView = new TextView(mContext);
-            dayTextView.setText(dayOfWeek);
+            TextView dayTextView = ViewUtils.getTextView(dayOfWeek, MONTH_NUMBER_TEXT_SIZE + 2, Color.GRAY, Typeface.BOLD, true, mContext);
             dayTextView.setLayoutParams(layoutParams);
-            dayTextView.setTextColor(Color.BLACK);
-            dayTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, MONTH_NUMBER_TEXT_SIZE);
 
-            mTableHeader.addView(dayTextView);
+            mLayoutHeader.addView(dayTextView);
         }
     }
 
@@ -161,15 +156,28 @@ public class MonthFragment extends Fragment {
         return PreferenceUtils.getDayOfWeekOrder(mFirstDayOfWeek, mContext);
     }
 
-    private void createNumberOfWeek() {
+    private void createWeekNumber() {
         if (mShowNumberOfWeek) {
-            mTableHeader.addView(ViewUtils.getTextView("  ", MONTH_NUMBER_TEXT_SIZE, Color.GRAY, Typeface.NORMAL, true, mContext));
 
-            Calendar firstWeekNumber = (Calendar) mCurMonth.clone();
-            firstWeekNumber.set(Calendar.DAY_OF_MONTH, 1);
-            int weekNumber = firstWeekNumber.get(Calendar.WEEK_OF_YEAR);
+            LinearLayout.LayoutParams params =
+                    new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            params.setMargins(0, 0, ViewUtils.dpToPixel(8), 0);
+            TextView weekNumberTextView;
+
+            weekNumberTextView = ViewUtils.getTextView("00", MONTH_NUMBER_TEXT_SIZE, Color.TRANSPARENT, Typeface.NORMAL, true, mContext);
+            weekNumberTextView.setLayoutParams(params);
+            mLayoutHeader.addView(weekNumberTextView);
+
+            Calendar lastWeekDay = (Calendar) mStartDate.clone();
+            lastWeekDay.add(Calendar.DAY_OF_MONTH, 6);
+            lastWeekDay.setFirstDayOfWeek(mFirstDayOfWeek);
             for (int i = 0; i < 6; i++) {
-                getRow(i).addView(ViewUtils.getTextView(String.valueOf(weekNumber + i), MONTH_NUMBER_TEXT_SIZE, Color.GRAY, Typeface.NORMAL, true, mContext));
+                String weekNumber = String.valueOf(lastWeekDay.get(Calendar.WEEK_OF_YEAR));
+                weekNumberTextView =ViewUtils.getTextView(weekNumber, MONTH_NUMBER_TEXT_SIZE, Color.GRAY, Typeface.NORMAL, true, mContext);
+                weekNumberTextView.setLayoutParams(params);
+                getRow(i).addView(weekNumberTextView);
+
+                lastWeekDay.add(Calendar.DAY_OF_MONTH, 7);
             }
         }
     }
@@ -180,8 +188,10 @@ public class MonthFragment extends Fragment {
         int index = 0;
 
         // days of previous month
-        int previousMonth = mCurMonth.get(Calendar.MONTH) - 1;
-        while ((int)curDate.get(Calendar.MONTH) == previousMonth) {
+        Calendar prevMonthCal = (Calendar) mCurMonth.clone();
+        prevMonthCal.add(Calendar.MONTH, -1);
+        int prevMonth = prevMonthCal.get(Calendar.MONTH);
+        while (curDate.get(Calendar.MONTH) == prevMonth) {
             getRow(0).addView(createDateView(curDate, Color.GRAY));
             curDate.add(Calendar.DAY_OF_MONTH, 1);
             index++;
@@ -190,14 +200,14 @@ public class MonthFragment extends Fragment {
         // days of current month
         int curMonth = mCurMonth.get(Calendar.MONTH);
         while (curDate.get(Calendar.MONTH) == curMonth) {
-            TableRow row = getRow(index++ / 7);
+            LinearLayout row = getRow(index++ / 7);
             row.addView(createDateView(curDate, Color.BLACK));
             curDate.add(Calendar.DAY_OF_MONTH, 1);
         }
 
         // days of the next month
         while (index < 42) {
-            TableRow row = getRow(index++ / 7);
+            LinearLayout row = getRow(index++ / 7);
             row.addView(createDateView(curDate, Color.GRAY));
             curDate.add(Calendar.DAY_OF_MONTH, 1);
         }
@@ -210,51 +220,43 @@ public class MonthFragment extends Fragment {
 
     private View createDateView(final Calendar calendar, int dateColor) {
 
-        // prepare date and alternate
-        String dateString = String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
-        if (mAlternateCalendar != null) {
-            dateString += "\n" + PreferenceUtils.getAlternateDate(calendar.getTimeInMillis(), mAlternateCalendar);
-        }
-        final TextView dateTextView = ViewUtils.getTextView(dateString, MONTH_NUMBER_TEXT_SIZE, dateColor, Typeface.NORMAL, false, mContext);
+        LinearLayout dateLayout = new LinearLayout(mContext);
+        dateLayout.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f));
+        dateLayout.setOrientation(LinearLayout.VERTICAL);
 
-        // tint today
-        if (DateUtils.isToday(calendar.getTimeInMillis())) {
-            dateTextView.setTextColor(ContextCompat.getColor(mContext, R.color.colorAccent));
+        int color = DateUtils.isToday(calendar.getTimeInMillis()) ? ContextCompat.getColor(mContext, R.color.colorAccent) : dateColor;
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        // original date
+        String dateString = String.valueOf(calendar.get(Calendar.DAY_OF_MONTH));
+        TextView dateTextView = ViewUtils.getTextView(dateString, MONTH_NUMBER_TEXT_SIZE, color, Typeface.NORMAL, true, mContext);
+        dateTextView.setLayoutParams(params);
+        dateLayout.addView(dateTextView);
+        // alternate date
+        if (mAlternateCalendar != null) {
+            dateString = PreferenceUtils.getAlternateDate(calendar.getTimeInMillis(), mAlternateCalendar);
+            TextView alternateTextView = ViewUtils.getTextView(dateString, MONTH_NUMBER_TEXT_SIZE, color, Typeface.NORMAL, true, mContext);
+            alternateTextView.setLayoutParams(params);
+            dateLayout.addView(alternateTextView);
         }
 
         Entry entry = DataUtils.findEntryWithDate(mEntries, calendar.getTimeInMillis());
-
-        View resultView;
-        if (entry == null) {
-            dateTextView.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT, 1f));
-            resultView = dateTextView;
-        } else {
-            dateTextView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
-            LinearLayout layout = new LinearLayout(mContext);
-            layout.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.MATCH_PARENT, 1f));
-            layout.setOrientation(LinearLayout.VERTICAL);
-
-            layout.addView(dateTextView);
-
+        if (entry != null) {
             for (int i = 0; i < entry.getEvents().size(); i++) {
-
                 Event event = entry.getEvents().get(i);
 
                 if (i >= NUMBER_OF_DISPLAY_EVENTS) {
                     String x_more = String.format(getString(R.string.x_more), entry.getEvents().size() - NUMBER_OF_DISPLAY_EVENTS);
-                    layout.addView(ViewUtils.getTextView(x_more, MONTH_NUMBER_TEXT_SIZE, Color.BLACK, Typeface.BOLD, false, mContext));
+                    dateLayout.addView(ViewUtils.getTextView(x_more, MONTH_NUMBER_TEXT_SIZE, Color.BLACK, Typeface.BOLD, false, mContext));
                     break;
                 }
 
-                layout.addView(ViewUtils.getSimpleTileView(event, mContext));
+                dateLayout.addView(ViewUtils.getSimpleTileView(event, mContext));
             }
 
-            resultView = layout;
         }
 
         final long timeInMillis = calendar.getTimeInMillis();
-        resultView.setOnClickListener(new View.OnClickListener() {
+        dateLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.UPDATE_CONTENT_VIEW_ACTION);
@@ -264,17 +266,17 @@ public class MonthFragment extends Fragment {
             }
         });
 
-        return resultView;
+        return dateLayout;
     }
 
-    private TableRow getRow(int index) {
+    private LinearLayout getRow(int index) {
         switch (index) {
-            case 0: return mTableRow1;
-            case 1: return mTableRow2;
-            case 2: return mTableRow3;
-            case 3: return mTableRow4;
-            case 4: return mTableRow5;
-            case 5: return mTableRow6;
+            case 0: return mLayoutRow1;
+            case 1: return mLayoutRow2;
+            case 2: return mLayoutRow3;
+            case 3: return mLayoutRow4;
+            case 4: return mLayoutRow5;
+            case 5: return mLayoutRow6;
             default:
                 throw new UnsupportedOperationException("Unknown index");
         }

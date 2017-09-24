@@ -31,6 +31,7 @@ public class ViewUtils {
     private static final float DENSITY = Resources.getSystem().getDisplayMetrics().density;
     private static final float SCALED_DENSITY = Resources.getSystem().getDisplayMetrics().scaledDensity;
     private static final int DP_AS_PX_8 = (int) (8 * SCALED_DENSITY + 0.5f);
+    private static final int TILE_TEXT_SIZE = 14;
 
     public static int dpToPixel(int dp) {
         return (int) (dp * DENSITY + 0.5f);
@@ -55,25 +56,18 @@ public class ViewUtils {
         drawable.setColor(event.getDisplayColor());
 
         // title
-        String title = event.getTitle() != null && event.getTitle().length() > 0  ?
+        String title = event.getTitle() != null && event.getTitle().length() > 0 ?
                 event.getTitle() : context.getString(R.string.no_title);
-        TextView titleTextView = getStandardTextView(title, context);
+        TextView titleTextView = getTextView(title, TILE_TEXT_SIZE, Color.WHITE, Typeface.BOLD, true, context);
         eventLayout.addView(titleTextView);
 
         // duration
         if (!event.isAllDay()) {
-            String duration;
-            if (TimeUtils.isSameDay(event.getStartDate(), event.getEndDate())) {
-                duration = DateUtils.formatDateRange(context, event.getStartDate(), event.getEndDate(), DateUtils.FORMAT_SHOW_TIME);
-            } else {
-                int flags = DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_ABBREV_ALL;
-                duration = DateUtils.formatDateTime(context, event.getStartDate(), flags) + " \u2014\n"
-                        + DateUtils.formatDateTime(context, event.getEndDate(), flags);
-            }
+            String duration = DateUtils.formatDateRange(context, event.getStartDate(), event.getEndDate(),
+                    DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_ABBREV_ALL);
 
-            TextView durationTextView = getStandardTextView(duration, context);
+            TextView durationTextView = getTextView(duration, TILE_TEXT_SIZE, Color.WHITE, Typeface.NORMAL, true, context);
             durationTextView.setPadding(0, DP_AS_PX_8 / 2, 0, 0);
-
             eventLayout.addView(durationTextView);
         }
 
@@ -104,9 +98,9 @@ public class ViewUtils {
 
     public static TextView getSimpleTileView(Event event, Context context) {
 
-        String title = event.getTitle() != null && event.getTitle().length() > 0  ?
+        String title = event.getTitle() != null && event.getTitle().length() > 0 ?
                 event.getTitle() : context.getString(R.string.no_title);
-        TextView eventTextView = ViewUtils.getStandardTextView(title, context);
+        TextView eventTextView = ViewUtils.getTextView(title, 10, Color.WHITE, Typeface.BOLD, true, context);
         eventTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
 
         eventTextView.setBackgroundResource(R.drawable.layout_round_corner);
@@ -136,28 +130,36 @@ public class ViewUtils {
         return textView;
     }
 
-    public static TextView getStandardTextView(String content, Context context) {
-        return getTextView(content, 14, Color.WHITE, Typeface.BOLD, true, context);
-    }
-
     public static int getMonthImageResourceId(long millis) {
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(millis);
 
         switch (calendar.get(Calendar.MONTH)) {
-            case 0: return R.drawable.bkg_01_january ;
-            case 1: return R.drawable.bkg_02_february ;
-            case 2: return R.drawable.bkg_03_march ;
-            case 3: return R.drawable.bkg_04_april ;
-            case 4: return R.drawable.bkg_05_may ;
-            case 5: return R.drawable.bkg_06_june ;
-            case 6: return R.drawable.bkg_07_july ;
-            case 7: return R.drawable.bkg_08_august ;
-            case 8: return R.drawable.bkg_09_september ;
-            case 9: return R.drawable.bkg_10_october ;
-            case 10: return R.drawable.bkg_11_november ;
-            case 11: return R.drawable.bkg_12_december ;
+            case 0:
+                return R.drawable.bkg_01_january;
+            case 1:
+                return R.drawable.bkg_02_february;
+            case 2:
+                return R.drawable.bkg_03_march;
+            case 3:
+                return R.drawable.bkg_04_april;
+            case 4:
+                return R.drawable.bkg_05_may;
+            case 5:
+                return R.drawable.bkg_06_june;
+            case 6:
+                return R.drawable.bkg_07_july;
+            case 7:
+                return R.drawable.bkg_08_august;
+            case 8:
+                return R.drawable.bkg_09_september;
+            case 9:
+                return R.drawable.bkg_10_october;
+            case 10:
+                return R.drawable.bkg_11_november;
+            case 11:
+                return R.drawable.bkg_12_december;
             default:
                 throw new UnsupportedOperationException("Unknown month");
         }

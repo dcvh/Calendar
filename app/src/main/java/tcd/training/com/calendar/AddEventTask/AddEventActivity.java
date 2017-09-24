@@ -1,6 +1,5 @@
 package tcd.training.com.calendar.AddEventTask;
 
-import android.annotation.TargetApi;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
@@ -64,7 +63,6 @@ import tcd.training.com.calendar.Utils.PreferenceUtils;
 import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.EventDetailsActivity;
 import tcd.training.com.calendar.R;
-import tcd.training.com.calendar.ReminderTask.ReminderUtils;
 import tcd.training.com.calendar.Utils.ViewUtils;
 
 public class AddEventActivity extends AppCompatActivity {

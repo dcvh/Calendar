@@ -4,12 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.GradientDrawable;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
-import android.util.TypedValue;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -63,14 +59,14 @@ public class DaysOfWeekAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View view, ViewGroup viewGroup) {
 
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, ViewUtils.dpToPixel(40));
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, ViewUtils.dpToPixel(40));
 
         if (position % 8 == 0) {
 
             int hour = position / 8;
             String hourString = hour <= 12 ? String.valueOf(hour) + " AM" : String.valueOf(hour % 12) + " PM";
             TextView timeTextView = ViewUtils.getTextView(hourString, WEEK_NUMBER_TEXT_SIZE, Color.GRAY, Typeface.NORMAL, true, mContext);
-            timeTextView.setGravity(Gravity.CENTER);
+            timeTextView.setGravity(Gravity.CENTER_VERTICAL);
             timeTextView.setLayoutParams(params);
 
             view = timeTextView;

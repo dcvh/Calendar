@@ -13,14 +13,13 @@ import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 
 import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
-import tcd.training.com.calendar.Utils.DataUtils;
 import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
-
-import static tcd.training.com.calendar.MainActivity.ARG_ENTRIES_LIST;
 
 /**
  * Created by cpu10661-local on 8/31/17.
@@ -36,12 +35,8 @@ public class MonthViewFragment extends Fragment implements ContentViewBehaviors{
     private ViewPager mMonthViewPager;
     private MonthPagerAdapter mAdapter;
 
-    public MonthViewFragment() {
-    }
-
     public static MonthViewFragment newInstance() {
         Bundle args = new Bundle();
-        args.putSerializable(ARG_ENTRIES_LIST, DataUtils.getAllEntries());
         MonthViewFragment fragment = new MonthViewFragment();
         fragment.setArguments(args);
         return fragment;
@@ -50,13 +45,14 @@ public class MonthViewFragment extends Fragment implements ContentViewBehaviors{
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        if (getArguments() != null) {
-//            mEntriesList = (ArrayList<Entry>) getArguments().getSerializable(ARG_ENTRIES_LIST);
-//            getArguments().remove(ARG_ENTRIES_LIST);
-//        } else {
-//            mEntriesList = new ArrayList<>();
-//        }
+
         mMonths = new ArrayList<>();
+        Calendar curYearMonths = Calendar.getInstance();
+        curYearMonths.set(Calendar.getInstance().get(Calendar.YEAR), 0, 0, 0, 0);
+        for (int i = 0; i < 12; i++) {
+            mMonths.add((Calendar) curYearMonths.clone());
+            curYearMonths.add(Calendar.MONTH, 1);
+        }
     }
 
     @Nullable
@@ -64,16 +60,6 @@ public class MonthViewFragment extends Fragment implements ContentViewBehaviors{
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.content_month_view, container, false);
         mContext = view.getContext();
-
-        Calendar startDate = Calendar.getInstance();
-        startDate.set(2010, 0, 1);
-        Calendar endDate = Calendar.getInstance();
-        endDate.set(Calendar.MONTH, 11);
-        endDate.set(Calendar.DAY_OF_MONTH, 31);
-        while (startDate.compareTo(endDate) < 0) {
-            mMonths.add((Calendar) startDate.clone());
-            startDate.add(Calendar.MONTH, 1);
-        }
 
         initializeUiComponents(view);
 
@@ -96,12 +82,11 @@ public class MonthViewFragment extends Fragment implements ContentViewBehaviors{
             @Override
             public void onPageSelected(int position) {
                 if (position == mMonths.size() - 1) {
-                    addOneMoreYear(mMonths.get(mMonths.size() - 1).get(Calendar.YEAR) + 1, false);
-                    mAdapter.notifyDataSetChanged();
+                    addOneMoreYear(false);
                 } else if (position == 0) {
-                    addOneMoreYear(mMonths.get(0).get(Calendar.YEAR) - 1, true);
-                    mAdapter.notifyDataSetChanged();
-                    mMonthViewPager.setCurrentItem(12, false);
+                    addOneMoreYear(true);
+                    position = 12;
+                    mMonthViewPager.setCurrentItem(position, false);
                 }
                 sendUpdateMonthAction(position);
             }
@@ -113,25 +98,21 @@ public class MonthViewFragment extends Fragment implements ContentViewBehaviors{
         });
     }
 
-    private void addOneMoreYear(int year, boolean toTop) {
-
-        Calendar startDate = Calendar.getInstance();
-        startDate.set(year, 0, 1);
-        Calendar endDate = Calendar.getInstance();
-        endDate.set(year, 11, 31);
-
+    private void addOneMoreYear(boolean toTop) {
         if (toTop) {
-            while (endDate.compareTo(startDate) > 0) {
-                mMonths.add(0, (Calendar)endDate.clone());
-                endDate.add(Calendar.MONTH, -1);
+            Calendar prev = (Calendar) mMonths.get(0).clone();
+            for (int i = 0; i < 12; i++) {
+                prev.add(Calendar.MONTH, -1);
+                mMonths.add(0, (Calendar) prev.clone());
             }
-
         } else {
-            while (startDate.compareTo(endDate) < 0) {
-                mMonths.add((Calendar) startDate.clone());
-                startDate.add(Calendar.MONTH, 1);
+            Calendar next = (Calendar) mMonths.get(mMonths.size() - 1).clone();
+            for (int i = 0; i < 12; i++) {
+                next.add(Calendar.MONTH, 1);
+                mMonths.add((Calendar) next.clone());
             }
         }
+        mAdapter.notifyDataSetChanged();
     }
 
     private void sendUpdateMonthAction(int position) {
@@ -147,20 +128,31 @@ public class MonthViewFragment extends Fragment implements ContentViewBehaviors{
 
     @Override
     public void scrollTo(long millis) {
-        int low = 0;
-        int high = mMonths.size() - 1;
-        while (low <= high) {
-            int mid = low + (high - low) / 2;
-            int comparison = TimeUtils.compareMonth(millis, mMonths.get(mid).getTimeInMillis());
-            if (comparison < 0) {
-                high = mid - 1;
-            } else if (comparison > 0) {
-                low = mid + 1;
-            } else {
-                mMonthViewPager.setCurrentItem(mid);
-                sendUpdateMonthAction(mid);
-                return;
+
+        // in case it's out of range, add 12 more months (1 year)
+        Calendar destMonth = Calendar.getInstance();
+        destMonth.setTimeInMillis(millis);
+        if (destMonth.compareTo(mMonths.get(0)) < 0 || destMonth.compareTo(mMonths.get(mMonths.size() - 1)) > 0) {
+            while (destMonth.compareTo(mMonths.get(0)) < 0) {
+                addOneMoreYear(true);
             }
+            while (destMonth.compareTo(mMonths.get(mMonths.size() - 1)) > 0) {
+                addOneMoreYear(false);
+            }
+            mAdapter.notifyDataSetChanged();
+        }
+
+        // binary search
+        Comparator<Calendar> comparator = new Comparator<Calendar>() {
+            @Override
+            public int compare(Calendar calendar, Calendar t1) {
+                return TimeUtils.compareMonth(calendar.getTimeInMillis(), t1.getTimeInMillis());
+            }
+        };
+        int index = Collections.binarySearch(mMonths, destMonth, comparator);
+        if (index >= 0) {
+            mMonthViewPager.setCurrentItem(index);
+            sendUpdateMonthAction(index);
         }
     }
 

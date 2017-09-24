@@ -7,21 +7,21 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.concurrent.TimeUnit;
 
 import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
 import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
-import tcd.training.com.calendar.Utils.DataUtils;
+import tcd.training.com.calendar.Utils.PreferenceUtils;
 import tcd.training.com.calendar.Utils.TimeUtils;
-
-import static tcd.training.com.calendar.MainActivity.ARG_ENTRIES_LIST;
 
 /**
  * Created by cpu10661-local on 9/1/17.
@@ -32,27 +32,14 @@ public class WeekViewFragment extends Fragment implements ContentViewBehaviors {
     private static final String TAG = WeekViewFragment.class.getSimpleName();
     private static final String ARG_SPECIFIED_DATE = "specificDate";
 
-    private ArrayList<Calendar> mWeeks;
+    private ArrayList<Long> mWeeks;
     private Context mContext;
 
     private ViewPager mWeekViewPager;
     private WeekPagerAdapter mAdapter;
 
-    public WeekViewFragment() {
-    }
-
     public static WeekViewFragment newInstance() {
         Bundle args = new Bundle();
-        args.putSerializable(ARG_ENTRIES_LIST, DataUtils.getAllEntries());
-        WeekViewFragment fragment = new WeekViewFragment();
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    public static WeekViewFragment newInstance(long millis) {
-        Bundle args = new Bundle();
-        args.putSerializable(ARG_ENTRIES_LIST, DataUtils.getAllEntries());
-        args.putLong(ARG_SPECIFIED_DATE, millis);
         WeekViewFragment fragment = new WeekViewFragment();
         fragment.setArguments(args);
         return fragment;
@@ -61,18 +48,16 @@ public class WeekViewFragment extends Fragment implements ContentViewBehaviors {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-//            Bundle args = getArguments();
-//            mEntriesList = (ArrayList<Entry>) args.getSerializable(ARG_ENTRIES_LIST);
-//            mSpecifiedTime = args.getLong(ARG_SPECIFIED_DATE, -1);
-            getArguments().remove(ARG_ENTRIES_LIST);
-        } else {
-//            mEntriesList = new ArrayList<>();
-        }
 
         mContext = getContext();
         mWeeks = new ArrayList<>();
-        addOneMoreYear(Calendar.getInstance().get(Calendar.YEAR), false);
+
+        // initialize weeks
+        int firstDayOfWeek = PreferenceUtils.getFirstDayOfWeek(mContext);
+        Calendar cal = Calendar.getInstance();
+        mWeeks.add(cal.getTimeInMillis() + TimeUnit.DAYS.toMillis(firstDayOfWeek + 7 - cal.get(Calendar.DAY_OF_WEEK)));
+        addMoreWeeks(true);
+        addMoreWeeks(false);
     }
 
     @Nullable
@@ -101,16 +86,13 @@ public class WeekViewFragment extends Fragment implements ContentViewBehaviors {
             @Override
             public void onPageSelected(int position) {
                 if (position == mWeeks.size() - 1) {
-                    addOneMoreYear(mWeeks.get(mWeeks.size() - 1).get(Calendar.YEAR) + 1, false);
-                    mAdapter.notifyDataSetChanged();
+                    addMoreWeeks(false);
                 } else if (position == 0) {
-                    addOneMoreYear(mWeeks.get(0).get(Calendar.YEAR) - 1, true);
-                    mAdapter.notifyDataSetChanged();
-                    mWeekViewPager.setCurrentItem(52, false);
+                    addMoreWeeks(true);
+                    position = 52;
+                    mWeekViewPager.setCurrentItem(position, false);
 
                 }
-
-                // change month
                 sendUpdateMonthAction(position);
             }
 
@@ -121,48 +103,55 @@ public class WeekViewFragment extends Fragment implements ContentViewBehaviors {
         });
     }
 
-    private void addOneMoreYear(int year, boolean toHead) {
-        Calendar startDate = Calendar.getInstance();
-        startDate.set(year, 0, 1);
-        Calendar endDate = Calendar.getInstance();
-        endDate.set(year, 11, 31);
-
+    private void addMoreWeeks(boolean toHead) {
         if (toHead) {
-            while (endDate.compareTo(startDate) > 0) {
-                mWeeks.add(0, (Calendar) endDate.clone());
-                endDate.add(Calendar.DAY_OF_MONTH, -7);
+            long prevWeek = mWeeks.get(0);
+            for (int i = 1; i <= 10; i++) {
+                mWeeks.add(0, prevWeek - TimeUnit.DAYS.toMillis(i * 7));
             }
-
         } else {
-            while (startDate.compareTo(endDate) < 0) {
-                mWeeks.add((Calendar) startDate.clone());
-                startDate.add(Calendar.DAY_OF_MONTH, 7);
+            long nextWeek = mWeeks.get(mWeeks.size() - 1);
+            for (int i = 1; i <= 10; i++) {
+                mWeeks.add(nextWeek + TimeUnit.DAYS.toMillis(i * 7));
             }
+        }
+        if (mAdapter != null) {
+            mAdapter.notifyDataSetChanged();
         }
     }
 
     private void sendUpdateMonthAction(int position) {
         Intent intent = new Intent(MainActivity.UPDATE_MONTH_ACTION);
-        intent.putExtra(MainActivity.ARG_TIME_IN_MILLIS, mWeeks.get(position).getTimeInMillis());
+        intent.putExtra(MainActivity.ARG_TIME_IN_MILLIS, mWeeks.get(position));
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
     }
 
     @Override
     public void scrollTo(long millis) {
-        int low = 0;
-        int high = mWeeks.size() - 1;
-        while (low <= high) {
-            int mid = low + (high - low) / 2;
-            int comparison = TimeUtils.compareWeek(millis, mWeeks.get(mid).getTimeInMillis());
-            if (comparison < 0) {
-                high = mid - 1;
-            } else if (comparison > 0) {
-                low = mid + 1;
-            } else {
-                mWeekViewPager.setCurrentItem(mid);
-                sendUpdateMonthAction(mid);
-                return;
+
+        // in case it's out of range, add more weeks
+        if (millis < mWeeks.get(0) || millis > mWeeks.get(mWeeks.size() - 1)) {
+            while (millis < mWeeks.get(0)) {
+                addMoreWeeks(true);
             }
+            while (millis > mWeeks.get(mWeeks.size() - 1)) {
+                addMoreWeeks(false);
+            }
+            mAdapter.notifyDataSetChanged();
+        }
+
+        // binary search
+        final int firstDayOfWeek = PreferenceUtils.getFirstDayOfWeek(mContext);
+        Comparator<Long> comparator = new Comparator<Long>() {
+            @Override
+            public int compare(Long aLong, Long t1) {
+                return TimeUtils.compareWeek(aLong, t1, firstDayOfWeek);
+            }
+        };
+        int index = Collections.binarySearch(mWeeks, millis, comparator);
+        if (index >= 0) {
+            mWeekViewPager.setCurrentItem(index);
+            sendUpdateMonthAction(index);
         }
     }
 

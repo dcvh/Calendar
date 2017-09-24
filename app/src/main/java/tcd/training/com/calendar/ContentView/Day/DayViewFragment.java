@@ -13,15 +13,13 @@ import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 
 import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
-import tcd.training.com.calendar.Utils.DataUtils;
-import tcd.training.com.calendar.Entities.Entry;
 import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
-
-import static tcd.training.com.calendar.MainActivity.ARG_ENTRIES_LIST;
 
 /**
  * Created by cpu10661-local on 9/1/17.
@@ -32,7 +30,6 @@ public class DayViewFragment extends Fragment implements ContentViewBehaviors {
     private static final String TAG = DayViewFragment.class.getSimpleName();
     private static final String ARG_SPECIFIED_DATE = "specificDate";
 
-    private ArrayList<Entry> mEntriesList;
     private ArrayList<Calendar> mDays;
     private long mSpecifiedTime;
     private Context mContext;
@@ -45,7 +42,6 @@ public class DayViewFragment extends Fragment implements ContentViewBehaviors {
 
     public static DayViewFragment newInstance() {
         Bundle args = new Bundle();
-        args.putSerializable(ARG_ENTRIES_LIST, DataUtils.getAllEntries());
         DayViewFragment fragment = new DayViewFragment();
         fragment.setArguments(args);
         return fragment;
@@ -53,7 +49,6 @@ public class DayViewFragment extends Fragment implements ContentViewBehaviors {
 
     public static DayViewFragment newInstance(long millis) {
         Bundle args = new Bundle();
-        args.putSerializable(ARG_ENTRIES_LIST, DataUtils.getAllEntries());
         args.putLong(ARG_SPECIFIED_DATE, millis);
         DayViewFragment fragment = new DayViewFragment();
         fragment.setArguments(args);
@@ -65,31 +60,29 @@ public class DayViewFragment extends Fragment implements ContentViewBehaviors {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             Bundle args = getArguments();
-            mEntriesList = (ArrayList<Entry>) args.getSerializable(ARG_ENTRIES_LIST);
-            mSpecifiedTime = args.getLong(ARG_SPECIFIED_DATE, -1);
-            getArguments().remove(ARG_ENTRIES_LIST);
-        } else {
-            mEntriesList = new ArrayList<>();
+            mSpecifiedTime = args.getLong(ARG_SPECIFIED_DATE, 0);
         }
+
+        mContext = getContext();
 
         // determine the year to be showed
         mDays = new ArrayList<>();
-        Calendar year = Calendar.getInstance();
+        Calendar firstDate = Calendar.getInstance();
         if (mSpecifiedTime > 0) {
-            year.setTimeInMillis(mSpecifiedTime);
+            firstDate.setTimeInMillis(mSpecifiedTime);
         }
-        addOneMoreYear(year.get(Calendar.YEAR), false);
+        mDays.add(firstDate);
+        addMoreDays(true);
+        addMoreDays(false);
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.content_day_view, container, false);
-        mContext = view.getContext();
 
         initializeUiComponents(view);
 
-        // scroll to specified day (if any), otherwise scroll to today
         if (mSpecifiedTime > 0) {
             scrollTo(mSpecifiedTime);
         } else {
@@ -113,12 +106,10 @@ public class DayViewFragment extends Fragment implements ContentViewBehaviors {
             @Override
             public void onPageSelected(int position) {
                 if (position == mDays.size() - 1) {
-                    addOneMoreYear(mDays.get(mDays.size() - 1).get(Calendar.YEAR) + 1, false);
-                    mAdapter.notifyDataSetChanged();
+                    addMoreDays(false);
                 } else if (position == 0) {
-                    int daysOfYear = addOneMoreYear(mDays.get(0).get(Calendar.YEAR) - 1, true);
-                    mAdapter.notifyDataSetChanged();
-                    mDayViewPager.setCurrentItem(daysOfYear - 1, false);
+                    position = addMoreDays(true);
+                    mDayViewPager.setCurrentItem(position, false);
                 }
                 // change month
                 int dayOfMonth = mDays.get(position).get(Calendar.DAY_OF_MONTH);
@@ -134,26 +125,26 @@ public class DayViewFragment extends Fragment implements ContentViewBehaviors {
         });
     }
 
-    private int addOneMoreYear(int year, boolean toHead) {
-        Calendar startDate = Calendar.getInstance();
-        startDate.set(year, 0, 1);
-        Calendar endDate = Calendar.getInstance();
-        endDate.set(year, 11, 31);
-
+    private int addMoreDays(boolean toHead) {
+        final int numberOfAddedDays = 10;
         if (toHead) {
-            while (endDate.compareTo(startDate) > 0) {
-                mDays.add(0, (Calendar) endDate.clone());
-                endDate.add(Calendar.DAY_OF_MONTH, -1);
+            Calendar prev = (Calendar) mDays.get(0).clone();
+            for (int i = 0; i < numberOfAddedDays; i++) {
+                prev.add(Calendar.DAY_OF_MONTH, -1);
+                mDays.add(0, (Calendar) prev.clone());
             }
-            return startDate.getActualMaximum(Calendar.DAY_OF_YEAR);
-
         } else {
-            while (startDate.compareTo(endDate) < 0) {
-                mDays.add((Calendar) startDate.clone());
-                startDate.add(Calendar.DAY_OF_MONTH, 1);
+            Calendar next = (Calendar) mDays.get(mDays.size() - 1).clone();
+            for (int i = 0; i < numberOfAddedDays; i++) {
+                next.add(Calendar.DAY_OF_MONTH, 1);
+                mDays.add((Calendar) next.clone());
             }
-            return endDate.getActualMaximum(Calendar.DAY_OF_YEAR);
         }
+
+        if (mAdapter != null) {
+            mAdapter.notifyDataSetChanged();
+        }
+        return numberOfAddedDays;
     }
 
     private void sendUpdateMonthAction(int position) {
@@ -168,22 +159,28 @@ public class DayViewFragment extends Fragment implements ContentViewBehaviors {
     }
 
     public void scrollTo(long millis, boolean smoothScroll) {
-        if (mDays != null) {
-            int low = 0;
-            int high = mDays.size() - 1;
-            while (low <= high) {
-                int mid = low + (high - low) / 2;
-                int comparison = TimeUtils.compareDay(millis, mDays.get(mid).getTimeInMillis());
-                if (comparison < 0) {
-                    high = mid - 1;
-                } else if (comparison > 0) {
-                    low = mid + 1;
-                } else {
-                    mDayViewPager.setCurrentItem(mid, smoothScroll);
-                    sendUpdateMonthAction(mid);
-                    return;
-                }
+
+        // in case it's out of range, reinitialize entire days with the new one
+        Calendar destDay = Calendar.getInstance();
+        destDay.setTimeInMillis(millis);
+        if (destDay.compareTo(mDays.get(0)) < 0 || destDay.compareTo(mDays.get(mDays.size() - 1)) > 0) {
+            mDays.clear();
+            mDays.add(destDay);
+            addMoreDays(true);
+            addMoreDays(false);
+        }
+
+        // binary search
+        Comparator<Calendar> comparator = new Comparator<Calendar>() {
+            @Override
+            public int compare(Calendar calendar, Calendar t1) {
+                return TimeUtils.compareDay(calendar.getTimeInMillis(), t1.getTimeInMillis());
             }
+        };
+        int index = Collections.binarySearch(mDays, destDay, comparator);
+        if (index >= 0) {
+            mDayViewPager.setCurrentItem(index, smoothScroll);
+            sendUpdateMonthAction(index);
         }
     }
 

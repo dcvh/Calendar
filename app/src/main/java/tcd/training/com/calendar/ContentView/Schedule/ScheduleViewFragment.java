@@ -2,10 +2,8 @@ package tcd.training.com.calendar.ContentView.Schedule;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
@@ -13,7 +11,6 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.LinearSmoothScroller;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,8 +28,6 @@ import tcd.training.com.calendar.Entities.Event;
 import tcd.training.com.calendar.Utils.PreferenceUtils;
 import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.R;
-
-import static tcd.training.com.calendar.MainActivity.ARG_ENTRIES_LIST;
 
 /**
  * Created by cpu10661-local on 8/31/17.
@@ -56,12 +51,8 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
     private LinearLayoutManager mLayoutManager;
     private CalendarEntriesAdapter mAdapter;
 
-    public ScheduleViewFragment() {
-    }
-
     public static ScheduleViewFragment newInstance() {
         Bundle args = new Bundle();
-        args.putSerializable(ARG_ENTRIES_LIST, DataUtils.getAllEntries());
         ScheduleViewFragment fragment = new ScheduleViewFragment();
         fragment.setArguments(args);
         return fragment;
@@ -75,7 +66,7 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
         mCurMonth = Calendar.getInstance().get(Calendar.MONTH);
 
         breakUpIntoWeekPeriods();
-        // determine start and end periods of current year
+        // determine the start and end periods of current year
         int curYear = Calendar.getInstance().get(Calendar.YEAR);
         for (int i = 0; i < mWeekPeriods.size(); i++) {
             if (TimeUtils.getField(mWeekPeriods.get(i), Calendar.YEAR) == curYear) {
@@ -90,6 +81,7 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
             }
         }
 
+        // get all entries between start and end date
         mEntries = DataUtils.getEntriesBetween(mContext, mWeekPeriods.get(mStartWeekIndex), mWeekPeriods.get(mEndWeekIndex));
         if (mEntries != null) {
             // insert today (if it doesn't exist)
@@ -97,7 +89,6 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
 
             mEntries = insertMonthsAndWeeks(mEntries, mWeekPeriods.get(mStartWeekIndex), mWeekPeriods.get(mEndWeekIndex));
             insertToday(mEntries);
-
         } else {
             mEntries = new ArrayList<>();
         }
@@ -259,12 +250,25 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
             }
         };
 
+        if (millis < mEntries.get(0).getTime() || millis > mEntries.get(mEntries.size() - 1).getTime()) {
+            while (millis < mEntries.get(0).getTime()) {
+                addMoreEventWhenScrollToTop();
+            }
+            while (millis > mEntries.get(mEntries.size() - 1).getTime()) {
+                addMoreEventWhenScrollToBottom();
+            }
+            mAdapter.notifyDataSetChanged();
+        }
+
         // TODO: 9/19/17 this is temporary, must be fixed in the future for better performance
         for (int i = 0; i < mEntries.size(); i++) {
             int comparison = TimeUtils.compareDay(mEntries.get(i).getTime(), millis);
             if (comparison >= 0) {
                 if (comparison > 0) {
                     i--;
+                }
+                if (i < 0 || i >= mEntries.size()) {
+                    return;
                 }
                 if (Math.abs(mCurrentPosition - i) > 50) {
                     mLayoutManager.scrollToPositionWithOffset(i, 0);

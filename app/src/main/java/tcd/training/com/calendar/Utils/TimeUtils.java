@@ -1,11 +1,9 @@
 package tcd.training.com.calendar.Utils;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-import java.util.TimeZone;
 
 import tcd.training.com.calendar.Entities.LunarDay;
 
@@ -31,18 +29,21 @@ public class TimeUtils {
         return compareTo(dayInMillis1, dayInMillis2, TYPE_DAY);
     }
 
-    public static int compareWeek(long weekInMillis1, long weekInMillis2) {
+    public static int compareWeek(long weekInMillis1, long weekInMillis2, int firstDayOfWeek) {
 
         Calendar week1 = Calendar.getInstance();
         week1.setTimeInMillis(weekInMillis1);
+        week1.setFirstDayOfWeek(firstDayOfWeek);
         Calendar week2 = Calendar.getInstance();
         week2.setTimeInMillis(weekInMillis2);
+        week2.setFirstDayOfWeek(firstDayOfWeek);
 
         int compareYear = week1.get(Calendar.YEAR) - week2.get(Calendar.YEAR);
         if (compareYear != 0) {
             return compareYear;
         } else {
-            return week1.get(Calendar.WEEK_OF_YEAR) - week2.get(Calendar.WEEK_OF_YEAR);
+            return week1.get(Calendar.WEEK_OF_YEAR) == week2.get(Calendar.WEEK_OF_YEAR) ? 0 :
+                    week1.get(Calendar.DAY_OF_YEAR) - week2.get(Calendar.DAY_OF_YEAR);
         }
     }
 
@@ -53,9 +54,15 @@ public class TimeUtils {
     private static int compareTo(long millis1, long millis2, int type) {
         String pattern;
         switch (type) {
-            case TYPE_DAY: pattern = "yyyyMMdd"; break;
-            case TYPE_MONTH: pattern = "yyyyMM"; break;
-            case TYPE_YEAR: pattern = "yyyy"; break;
+            case TYPE_DAY:
+                pattern = "yyyyMMdd";
+                break;
+            case TYPE_MONTH:
+                pattern = "yyyyMM";
+                break;
+            case TYPE_YEAR:
+                pattern = "yyyy";
+                break;
             default:
                 throw new UnsupportedOperationException("TimeUtils - compare: Unknown comparison type");
         }
@@ -68,20 +75,13 @@ public class TimeUtils {
         return calendar.get(field);
     }
 
-    public static String getMonthString(long millis) {
-        SimpleDateFormat formatter = new SimpleDateFormat("MMMM", Locale.getDefault());
-        formatter.setTimeZone(TimeZone.getDefault());
-        calendar.setTimeInMillis(millis);
-        return formatter.format(calendar.getTime());
-    }
-
     public static String getLunarString(long millis) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(millis);
         return getLunarString(calendar);
     }
 
-    public static String getLunarString(Calendar calendar){
+    public static String getLunarString(Calendar calendar) {
 
         LunarDay lunarDay = new LunarDay(calendar);
 

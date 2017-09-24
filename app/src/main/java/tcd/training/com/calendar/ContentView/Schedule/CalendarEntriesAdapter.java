@@ -2,7 +2,6 @@ package tcd.training.com.calendar.ContentView.Schedule;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
@@ -180,8 +179,7 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 int resId = ViewUtils.getMonthImageResourceId(entry.getTime());
                 monthHolder.mMonthImageView.setImageResource(resId);
 
-                String month = TimeUtils.getMonthString(entry.getTime());
-                month = month.substring(0, 1).toUpperCase() + month.substring(1);
+                String month = DateUtils.formatDateTime(mContext, entry.getTime(), DateUtils.FORMAT_NO_MONTH_DAY);
                 monthHolder.mMonthTextView.setText(month);
 
                 break;

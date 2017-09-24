@@ -2,18 +2,15 @@ package tcd.training.com.calendar.ContentView.Shortcut;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.format.DateUtils;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -22,7 +19,6 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.nio.channels.InterruptedByTimeoutException;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -31,7 +27,6 @@ import tcd.training.com.calendar.MainActivity;
 import tcd.training.com.calendar.R;
 import tcd.training.com.calendar.Utils.DataUtils;
 import tcd.training.com.calendar.Utils.PreferenceUtils;
-import tcd.training.com.calendar.Utils.TimeUtils;
 import tcd.training.com.calendar.Utils.ViewUtils;
 
 /**
@@ -181,13 +176,13 @@ public class ShortcutFragment extends Fragment {
             dateTextView.setTextColor(ContextCompat.getColor(mContext, R.color.colorAccent));
         }
 
+        // date color will be matched with first event
         Entry entry = DataUtils.findEntryWithDate(mEntries, calendar.getTimeInMillis());
-        if (entry != null) {
-        }
         if (entry != null && entry.getEvents().size() > 0) {
             dateTextView.setTextColor(entry.getEvents().get(0).getDisplayColor());
         }
 
+        // call scrollTo on current fragment
         final long timeInMillis = calendar.getTimeInMillis();
         dateTextView.setOnClickListener(new View.OnClickListener() {
             @Override

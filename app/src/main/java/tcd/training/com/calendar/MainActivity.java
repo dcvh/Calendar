@@ -2,18 +2,16 @@ package tcd.training.com.calendar;
 
 import android.Manifest;
 import android.annotation.TargetApi;
-import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -24,7 +22,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
+import android.text.format.DateUtils;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -42,7 +40,6 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Locale;
 
 import tcd.training.com.calendar.AddEventTask.AddEventActivity;
 import tcd.training.com.calendar.ContentView.ContentViewBehaviors;
@@ -128,23 +125,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 selectItemNavigation(navMenuId);
 
                 if (mCurrentFragment instanceof DayViewFragment) {
-                    new AsyncTask<Void, Void, Void>() {
+                    final Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
                         @Override
-                        protected Void doInBackground(Void... voids) {
-                            try {
-                                Thread.sleep(50);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            return null;
-                        }
-
-                        @Override
-                        protected void onPostExecute(Void aVoid) {
+                        public void run() {
                             ((DayViewFragment)mCurrentFragment).scrollTo(timeInMillis, false);
-                            super.onPostExecute(aVoid);
                         }
-                    }.execute();
+                    }, 100);
                 }
             }
         };
@@ -154,8 +141,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onReceive(Context context, Intent intent) {
                 long millis = intent.getLongExtra(ARG_TIME_IN_MILLIS, Calendar.getInstance().getTimeInMillis());
-                String month = TimeUtils.getMonthString(millis);
-                month = month.substring(0, 1).toUpperCase() + month.substring(1);
+                int flags = TimeUtils.getField(millis, Calendar.YEAR) == (int)Calendar.getInstance().get(Calendar.YEAR) ?
+                        DateUtils.FORMAT_NO_MONTH_DAY : DateUtils.FORMAT_NO_MONTH_DAY | DateUtils.FORMAT_ABBREV_MONTH;
+                String month = DateUtils.formatDateTime(MainActivity.this, millis, flags);
                 mToolbarTitle.setText(month);
             }
         };
