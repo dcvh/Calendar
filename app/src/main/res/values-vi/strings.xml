@@ -30,56 +30,22 @@
     <string name="edit">Sửa</string>
     <string name="delete">Xóa</string>
 
-    <!--list events-->
-    <string-array name="first_day_saturday">
-        <item>B</item>
-        <item>C</item>
-        <item>H</item>
-        <item>B</item>
-        <item>T</item>
-        <item>N</item>
-        <item>S</item>
-    </string-array>
-    <string-array name="first_day_sunday">
-        <item>C</item>
-        <item>H</item>
-        <item>B</item>
-        <item>T</item>
-        <item>N</item>
-        <item>S</item>
-        <item>B</item>
-    </string-array>
-    <string-array name="first_day_monday">
-        <item>H</item>
-        <item>B</item>
-        <item>T</item>
-        <item>N</item>
-        <item>S</item>
-        <item>B</item>
-        <item>C</item>
-    </string-array>
-
     <!--display event details activity-->
     <string name="minute">Phút</string>
     <string name="hour">Giờ</string>
     <plurals name="x_week">
-        <item quantity="one">%d tuần</item>
         <item quantity="other">%d tuần</item>
     </plurals>
     <plurals name="x_day">
-        <item quantity="one">%d ngày</item>
         <item quantity="other">%d ngày</item>
     </plurals>
     <plurals name="x_hour">
-        <item quantity="one">%d giờ</item>
         <item quantity="other">%d giờ</item>
     </plurals>
     <plurals name="x_minute">
-        <item quantity="one">%d phút</item>
         <item quantity="other">%d phút</item>
     </plurals>
     <plurals name="x_guest">
-        <item quantity="one">%d khách</item>
         <item quantity="other">%d khách</item>
     </plurals>
     <string name="guest_email">\n &#8226; %s</string>

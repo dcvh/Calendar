@@ -36,7 +36,12 @@ public class MonthViewFragment extends Fragment implements ContentViewBehaviors{
     private MonthPagerAdapter mAdapter;
 
     public static MonthViewFragment newInstance() {
+        return new MonthViewFragment();
+    }
+
+    public static MonthViewFragment newInstance(long millis) {
         Bundle args = new Bundle();
+        args.putLong(MainActivity.ARG_TIME_IN_MILLIS, millis);
         MonthViewFragment fragment = new MonthViewFragment();
         fragment.setArguments(args);
         return fragment;
@@ -46,9 +51,9 @@ public class MonthViewFragment extends Fragment implements ContentViewBehaviors{
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mMonths = new ArrayList<>();
         Calendar curYearMonths = Calendar.getInstance();
         curYearMonths.set(Calendar.getInstance().get(Calendar.YEAR), 0, 0, 0, 0);
+        mMonths = new ArrayList<>();
         for (int i = 0; i < 12; i++) {
             mMonths.add((Calendar) curYearMonths.clone());
             curYearMonths.add(Calendar.MONTH, 1);

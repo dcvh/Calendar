@@ -30,35 +30,6 @@
     <string name="edit">Edit</string>
     <string name="delete">Delete</string>
 
-    <!--list events-->
-    <string-array name="first_day_saturday">
-        <item>S</item>
-        <item>S</item>
-        <item>M</item>
-        <item>T</item>
-        <item>W</item>
-        <item>T</item>
-        <item>F</item>
-    </string-array>
-    <string-array name="first_day_sunday">
-        <item>S</item>
-        <item>M</item>
-        <item>T</item>
-        <item>W</item>
-        <item>T</item>
-        <item>F</item>
-        <item>S</item>
-    </string-array>
-    <string-array name="first_day_monday">
-        <item>M</item>
-        <item>T</item>
-        <item>W</item>
-        <item>T</item>
-        <item>F</item>
-        <item>S</item>
-        <item>S</item>
-    </string-array>
-
     <!--display event details activity-->
     <string name="minute">Minute</string>
     <string name="hour">Hour</string>
@@ -176,50 +147,4 @@
     <string name="pref_ringtone_silent">Silent</string>
     <string name="pref_title_vibrate">Vibrate</string>
 
-
-    <string-array name="pref_start_of_the_week_list_titles">
-        <item>@string/saturday</item>
-        <item>@string/sunday</item>
-        <item>@string/monday</item>
-    </string-array>
-    <string-array name="pref_start_of_the_week_list_values">
-        <item>saturday</item>
-        <item>sunday</item>
-        <item>monday</item>
-    </string-array>
-
-    <string-array name="pref_default_event_duration_titles">
-        <item>@string/no_alternate_calendar</item>
-        <item>@string/minutes_15</item>
-        <item>@string/minutes_30</item>
-        <item>@string/minutes_60</item>
-        <item>@string/minutes_90</item>
-        <item>@string/minutes_120</item>
-    </string-array>
-    <string-array name="pref_default_event_duration_values">
-        <item>-1</item>
-        <item>15</item>
-        <item>30</item>
-        <item>60</item>
-        <item>90</item>
-        <item>120</item>
-    </string-array>
-
-    <string-array name="pref_alternate_calendar_list_titles">
-        <item>@string/no_alternate_calendar</item>
-        <item>@string/chinese_simplified</item>
-    </string-array>
-    <string-array name="pref_alternate_calendar_list_values">
-        <item>no</item>
-        <item>chinese</item>
-    </string-array>
-
-    <string-array name="pref_language_list_titles">
-        <item>@string/english</item>
-        <item>@string/vietnamese</item>
-    </string-array>
-    <string-array name="pref_language_list_values">
-        <item>en</item>
-        <item>vi</item>
-    </string-array>
 </resources>

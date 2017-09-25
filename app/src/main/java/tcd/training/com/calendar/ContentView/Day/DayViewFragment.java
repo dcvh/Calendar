@@ -28,7 +28,6 @@ import tcd.training.com.calendar.R;
 public class DayViewFragment extends Fragment implements ContentViewBehaviors {
 
     private static final String TAG = DayViewFragment.class.getSimpleName();
-    private static final String ARG_SPECIFIED_DATE = "specificDate";
 
     private ArrayList<Calendar> mDays;
     private long mSpecifiedTime;
@@ -41,15 +40,12 @@ public class DayViewFragment extends Fragment implements ContentViewBehaviors {
     }
 
     public static DayViewFragment newInstance() {
-        Bundle args = new Bundle();
-        DayViewFragment fragment = new DayViewFragment();
-        fragment.setArguments(args);
-        return fragment;
+        return new DayViewFragment();
     }
 
     public static DayViewFragment newInstance(long millis) {
         Bundle args = new Bundle();
-        args.putLong(ARG_SPECIFIED_DATE, millis);
+        args.putLong(MainActivity.ARG_TIME_IN_MILLIS, millis);
         DayViewFragment fragment = new DayViewFragment();
         fragment.setArguments(args);
         return fragment;
@@ -60,18 +56,19 @@ public class DayViewFragment extends Fragment implements ContentViewBehaviors {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             Bundle args = getArguments();
-            mSpecifiedTime = args.getLong(ARG_SPECIFIED_DATE, 0);
+            mSpecifiedTime = args.getLong(MainActivity.ARG_TIME_IN_MILLIS, 0);
         }
 
         mContext = getContext();
 
         // determine the year to be showed
-        mDays = new ArrayList<>();
         Calendar firstDate = Calendar.getInstance();
         if (mSpecifiedTime > 0) {
             firstDate.setTimeInMillis(mSpecifiedTime);
+        } else {
+            mSpecifiedTime = firstDate.getTimeInMillis();
         }
-        mDays.add(firstDate);
+        mDays = new ArrayList<>(Collections.singletonList(firstDate));
         addMoreDays(true);
         addMoreDays(false);
     }
@@ -83,11 +80,7 @@ public class DayViewFragment extends Fragment implements ContentViewBehaviors {
 
         initializeUiComponents(view);
 
-        if (mSpecifiedTime > 0) {
-            scrollTo(mSpecifiedTime);
-        } else {
-            scrollToToday();
-        }
+        scrollTo(mSpecifiedTime);
 
         return view;
     }

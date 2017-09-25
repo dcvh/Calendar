@@ -11,7 +11,6 @@ import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -81,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private FragmentManager mFragmentManager;
     private Fragment mCurrentFragment;
+    private Fragment mPrevFragment = null;
     private Fragment mShortcutFragment;
 
     private BroadcastReceiver mUpdateContentViewReceiver;
@@ -121,17 +121,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onReceive(Context context, Intent intent) {
                 int navMenuId = intent.getIntExtra(ARG_CONTENT_VIEW_TYPE, R.id.nav_schedule);
-                final long timeInMillis = intent.getLongExtra(ARG_TIME_IN_MILLIS, Calendar.getInstance().getTimeInMillis());
-                selectItemNavigation(navMenuId);
-
-                if (mCurrentFragment instanceof DayViewFragment) {
-                    final Handler handler = new Handler();
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            ((DayViewFragment)mCurrentFragment).scrollTo(timeInMillis, false);
-                        }
-                    }, 100);
+                if (navMenuId != getContentViewId(mCurrentFragment)) {
+                    long timeInMillis = intent.getLongExtra(ARG_TIME_IN_MILLIS, Calendar.getInstance().getTimeInMillis());
+                    mPrevFragment = mCurrentFragment;
+                    replaceFragment(navMenuId, timeInMillis, true);
                 }
             }
         };
@@ -281,25 +274,45 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 showMonthShortcut(false);
 
-                selectItemNavigation(R.id.nav_schedule);
+                replaceFragment(R.id.nav_schedule);
             }
 
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
-    private void replaceFragment(Class fragmentClass) {
-        try {
-            assert fragmentClass != null;
-            mCurrentFragment = (Fragment) fragmentClass.newInstance();
-            mFragmentManager.beginTransaction()
-                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-                    .replace(R.id.fl_content, mCurrentFragment)
-                    .commitAllowingStateLoss();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
+    private void replaceFragment(int id) {
+        replaceFragment(id, Calendar.getInstance().getTimeInMillis(), false);
+    }
+
+    private void replaceFragment(int id, long millis, boolean addToBackStack) {
+
+        // create new fragment
+        switch (id) {
+            case R.id.nav_schedule:
+                mCurrentFragment = ScheduleViewFragment.newInstance(millis);
+                break;
+            case R.id.nav_day:
+                mCurrentFragment = DayViewFragment.newInstance(millis);
+                break;
+            case R.id.nav_week:
+                mCurrentFragment = WeekViewFragment.newInstance(millis);
+                break;
+            case R.id.nav_month:
+                mCurrentFragment = MonthViewFragment.newInstance(millis);
+                break;
         }
+
+        // highlight new selection
+        mNavigationView.setCheckedItem(id);
+
+        // replace fragment
+        FragmentTransaction transaction = mFragmentManager.beginTransaction()
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                .replace(R.id.fl_content, mCurrentFragment);
+        if (addToBackStack) {
+            transaction.addToBackStack(null);
+        }
+        transaction.commitAllowingStateLoss();
     }
 
     private void showMonthShortcut(boolean showShortcut) {
@@ -315,11 +328,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             mToolbarTitle.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_arrow_down_black_24dp, 0);
         }
         transaction.commit();
-    }
-
-    private void selectItemNavigation(int id) {
-        mNavigationView.setCheckedItem(id);
-        mNavigationView.getMenu().performIdentifierAction(id, 0);
     }
 
     private boolean requestWriteCalendarPermission() {
@@ -351,8 +359,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onBackPressed() {
         if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
             mDrawerLayout.closeDrawer(GravityCompat.START);
-        } else if (mFragmentManager.getBackStackEntryCount() > 0) {
+        } else if (mFragmentManager.getBackStackEntryCount() > 0 && mPrevFragment != null) {
             mFragmentManager.popBackStack();
+            mCurrentFragment = mPrevFragment;
+            mPrevFragment = null;
         } else {
             super.onBackPressed();
         }
@@ -414,10 +424,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         switch (id) {
-            case R.id.nav_schedule: replaceFragment(ScheduleViewFragment.class); break;
-            case R.id.nav_day: replaceFragment(DayViewFragment.class); break;
-            case R.id.nav_week: replaceFragment(WeekViewFragment.class); break;
-            case R.id.nav_month: replaceFragment(MonthViewFragment.class); break;
+            case R.id.nav_schedule:
+            case R.id.nav_day:
+            case R.id.nav_week:
+            case R.id.nav_month:
+                replaceFragment(id);
+                break;
             case R.id.nav_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivityForResult(intent, RC_SETTINGS);
@@ -457,23 +469,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int newFirstDayOfWeek = PreferenceUtils.getFirstDayOfWeek(this);
         if (newFirstDayOfWeek != mCurFirstDayOfWeek) {
             mCurFirstDayOfWeek = newFirstDayOfWeek;
-            if (mCurrentFragment instanceof MonthViewFragment) {
-                replaceFragment(MonthViewFragment.class);
-            }
+            replaceFragment(getContentViewId(mCurrentFragment));
         }
 
         if (mCurrentFragment != null) {
             // show number of week
             if (PreferenceUtils.isShowNumberOfWeekChecked(this) != mCurShowNumberOfWeek) {
                 mCurShowNumberOfWeek = !mCurShowNumberOfWeek;
-                replaceFragment(mCurrentFragment.getClass());
+                replaceFragment(getContentViewId(mCurrentFragment));
             }
 
             // alternate calendar
             String newAlternate = PreferenceUtils.getAlternateCalendar(this);
             if ((newAlternate == null && mCurAlternateCalendar != null) || (newAlternate != null && !newAlternate.equals(mCurAlternateCalendar))) {
                 mCurAlternateCalendar = newAlternate;
-                replaceFragment(mCurrentFragment.getClass());
+                replaceFragment(getContentViewId(mCurrentFragment));
             }
         }
 
@@ -483,6 +493,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             mCurLanguage = newLang;
             recreate();
         }
+    }
+
+    private int getContentViewId(Fragment fragment) {
+        if (fragment instanceof ScheduleViewFragment) {
+            return R.id.nav_schedule;
+        } else if (fragment instanceof DayViewFragment) {
+            return R.id.nav_day;
+        } else if (fragment instanceof WeekViewFragment) {
+            return R.id.nav_week;
+        } else if (fragment instanceof MonthViewFragment) {
+            return R.id.nav_month;
+        }
+        throw new UnsupportedOperationException("Unknown fragment type");
     }
 
     @Override

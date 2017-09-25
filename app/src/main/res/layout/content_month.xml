@@ -5,50 +5,65 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:paddingLeft="16dp"
-    android:paddingRight="0dp"
     tools:context="tcd.training.com.calendar.MainActivity">
 
     <LinearLayout android:id="@+id/ll_row_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:layout_marginLeft="16dp"
         android:layout_marginTop="8dp"/>
 
     <LinearLayout android:id="@+id/ll_row_1"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:orientation="horizontal"/>
+        android:orientation="horizontal"
+        android:layout_marginLeft="16dp" />
+
+    <include layout="@layout/line_separator" />
 
     <LinearLayout android:id="@+id/ll_row_2"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:orientation="horizontal" />
+        android:orientation="horizontal"
+        android:layout_marginLeft="16dp" />
+
+    <include layout="@layout/line_separator" />
 
     <LinearLayout android:id="@+id/ll_row_3"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:orientation="horizontal" />
+        android:orientation="horizontal"
+        android:layout_marginLeft="16dp" />
+
+    <include layout="@layout/line_separator" />
 
     <LinearLayout android:id="@+id/ll_row_4"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:orientation="horizontal" />
+        android:orientation="horizontal"
+        android:layout_marginLeft="16dp" />
+
+    <include layout="@layout/line_separator" />
 
     <LinearLayout android:id="@+id/ll_row_5"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:orientation="horizontal" />
+        android:orientation="horizontal"
+        android:layout_marginLeft="16dp" />
+
+    <include layout="@layout/line_separator" />
 
     <LinearLayout android:id="@+id/ll_row_6"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:orientation="horizontal" />
+        android:orientation="horizontal"
+        android:layout_marginLeft="16dp" />
 
 </LinearLayout>

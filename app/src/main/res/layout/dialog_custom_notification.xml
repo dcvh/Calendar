@@ -24,7 +24,7 @@
         android:layout_marginLeft="8dp"
         android:layout_marginRight="24dp"/>
 
-    <include layout="@layout/line_separator" />
+    <include layout="@layout/line_separator_add_event" />
 
     <ListView
         android:id="@+id/lv_priority"

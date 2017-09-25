@@ -5,7 +5,10 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import tcd.training.com.calendar.R;
 
@@ -36,16 +39,19 @@ public class PreferenceUtils {
     }
 
     public static String[] getDayOfWeekOrder(int firstDayOfWeek, Context context) {
-        switch (firstDayOfWeek) {
-            case Calendar.SATURDAY:
-                return context.getResources().getStringArray(R.array.first_day_saturday);
-            case Calendar.SUNDAY:
-                return context.getResources().getStringArray(R.array.first_day_sunday);
-            case Calendar.MONDAY:
-                return context.getResources().getStringArray(R.array.first_day_monday);
-            default:
-                throw new UnsupportedOperationException("Unknown first day of week");
+
+        String[] dayOfWeekOrder = new String[7];
+        SimpleDateFormat formatter = new SimpleDateFormat("EEEEE", Locale.getDefault());
+        formatter.setTimeZone(TimeZone.getDefault());
+
+        Calendar dayOfWeek = Calendar.getInstance();
+        dayOfWeek.set(Calendar.DAY_OF_WEEK, firstDayOfWeek);
+        for (int i = 0; i < 7; i++) {
+            dayOfWeekOrder[i] = formatter.format(dayOfWeek.getTime());
+            dayOfWeek.add(Calendar.DAY_OF_YEAR, 1);
         }
+
+        return dayOfWeekOrder;
     }
 
     public static String getAlternateCalendar(Context context) {

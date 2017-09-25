@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--settings-->
+    <string-array name="pref_start_of_the_week_list_titles">
+        <item>@string/saturday</item>
+        <item>@string/sunday</item>
+        <item>@string/monday</item>
+    </string-array>
+    <string-array name="pref_start_of_the_week_list_values">
+        <item>saturday</item>
+        <item>sunday</item>
+        <item>monday</item>
+    </string-array>
+
+    <string-array name="pref_default_event_duration_titles">
+        <item>@string/no_alternate_calendar</item>
+        <item>@string/minutes_15</item>
+        <item>@string/minutes_30</item>
+        <item>@string/minutes_60</item>
+        <item>@string/minutes_90</item>
+        <item>@string/minutes_120</item>
+    </string-array>
+    <string-array name="pref_default_event_duration_values">
+        <item>-1</item>
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
+        <item>90</item>
+        <item>120</item>
+    </string-array>
+
+    <string-array name="pref_alternate_calendar_list_titles">
+        <item>@string/no_alternate_calendar</item>
+        <item>@string/chinese_simplified</item>
+    </string-array>
+    <string-array name="pref_alternate_calendar_list_values">
+        <item>no</item>
+        <item>chinese</item>
+    </string-array>
+
+    <string-array name="pref_language_list_titles">
+        <item>@string/english</item>
+        <item>@string/vietnamese</item>
+    </string-array>
+    <string-array name="pref_language_list_values">
+        <item>en</item>
+        <item>vi</item>
+    </string-array>
+</resources>

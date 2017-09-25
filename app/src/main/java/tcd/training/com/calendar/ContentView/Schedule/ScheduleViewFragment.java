@@ -52,7 +52,12 @@ public class ScheduleViewFragment extends Fragment implements ContentViewBehavio
     private CalendarEntriesAdapter mAdapter;
 
     public static ScheduleViewFragment newInstance() {
+        return new ScheduleViewFragment();
+    }
+
+    public static ScheduleViewFragment newInstance(long millis) {
         Bundle args = new Bundle();
+        args.putLong(MainActivity.ARG_TIME_IN_MILLIS, millis);
         ScheduleViewFragment fragment = new ScheduleViewFragment();
         fragment.setArguments(args);
         return fragment;

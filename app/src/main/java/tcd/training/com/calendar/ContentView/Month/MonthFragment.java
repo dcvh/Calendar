@@ -141,7 +141,7 @@ public class MonthFragment extends Fragment {
     private void createCalendarHeader() {
 
         LinearLayout.LayoutParams layoutParams =
-                new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+                new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
 
         for (String dayOfWeek : mDayOrder) {
             TextView dayTextView = ViewUtils.getTextView(dayOfWeek, MONTH_NUMBER_TEXT_SIZE + 2, Color.GRAY, Typeface.BOLD, true, mContext);
@@ -211,11 +211,6 @@ public class MonthFragment extends Fragment {
             row.addView(createDateView(curDate, Color.GRAY));
             curDate.add(Calendar.DAY_OF_MONTH, 1);
         }
-
-//        TextView textView = new TextView(mContext);
-//        textView.setTextColor(Color.BLACK);
-//        textView.setText(curMonth.getField(Calendar.MONTH) + "/" + curMonth.getField(Calendar.YEAR));
-//        mCalendarTable.addView(textView);
     }
 
     private View createDateView(final Calendar calendar, int dateColor) {
@@ -239,6 +234,7 @@ public class MonthFragment extends Fragment {
             dateLayout.addView(alternateTextView);
         }
 
+        // events
         Entry entry = DataUtils.findEntryWithDate(mEntries, calendar.getTimeInMillis());
         if (entry != null) {
             for (int i = 0; i < entry.getEvents().size(); i++) {
@@ -255,6 +251,7 @@ public class MonthFragment extends Fragment {
 
         }
 
+        // open DayView click listener
         final long timeInMillis = calendar.getTimeInMillis();
         dateLayout.setOnClickListener(new View.OnClickListener() {
             @Override

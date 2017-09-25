@@ -30,7 +30,6 @@ import tcd.training.com.calendar.Utils.TimeUtils;
 public class WeekViewFragment extends Fragment implements ContentViewBehaviors {
 
     private static final String TAG = WeekViewFragment.class.getSimpleName();
-    private static final String ARG_SPECIFIED_DATE = "specificDate";
 
     private ArrayList<Long> mWeeks;
     private Context mContext;
@@ -39,7 +38,12 @@ public class WeekViewFragment extends Fragment implements ContentViewBehaviors {
     private WeekPagerAdapter mAdapter;
 
     public static WeekViewFragment newInstance() {
+        return new WeekViewFragment();
+    }
+
+    public static WeekViewFragment newInstance(long millis) {
         Bundle args = new Bundle();
+        args.putLong(MainActivity.ARG_TIME_IN_MILLIS, millis);
         WeekViewFragment fragment = new WeekViewFragment();
         fragment.setArguments(args);
         return fragment;
