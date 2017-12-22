@@ -25,6 +25,7 @@
     <string name="show_less">Show less</string>
     <string name="no_event">Nothing planned. Tap to create.</string>
     <string name="week_x">Week %d</string>
+    <string name="entry_transition_name" translatable="false">entryTransitionName</string>
 
     <!--event details-->
     <string name="edit">Edit</string>

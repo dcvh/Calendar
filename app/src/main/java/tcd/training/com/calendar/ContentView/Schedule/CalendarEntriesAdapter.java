@@ -3,6 +3,7 @@ package tcd.training.com.calendar.ContentView.Schedule;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
@@ -206,6 +207,9 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         holder.mDayOfMonthTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // prepare for shared element transition
+
+                // send command to the activity
                 Intent intent = new Intent(MainActivity.UPDATE_CONTENT_VIEW_ACTION);
                 intent.putExtra(MainActivity.ARG_CONTENT_VIEW_TYPE, R.id.nav_day);
                 intent.putExtra(MainActivity.ARG_TIME_IN_MILLIS, entry.getTime());
@@ -217,10 +221,10 @@ public class CalendarEntriesAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
     class EntryViewHolder extends RecyclerView.ViewHolder {
 
-        protected TextView mDayOfMonthTextView;
-        protected TextView mDayOfWeekTextView;
-        protected TextView mLunarDayTextView;
-        protected LinearLayout mEventsLinearLayout;
+        TextView mDayOfMonthTextView;
+        TextView mDayOfWeekTextView;
+        TextView mLunarDayTextView;
+        LinearLayout mEventsLinearLayout;
 
         EntryViewHolder(View itemView) {
             super(itemView);

@@ -1,5 +1,7 @@
 package tcd.training.com.calendar.AddEventTask;
 
+import android.animation.Animator;
+import android.animation.ValueAnimator;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
@@ -12,17 +14,21 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.provider.CalendarContract;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.Snackbar;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.text.format.DateFormat;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewAnimationUtils;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
@@ -443,6 +449,13 @@ public class AddEventActivity extends AppCompatActivity {
             return;
         }
 
+        // toolbar
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+
         mTitleEditText = (EditText) findViewById(R.id.edt_event_title);
 
         initializeAccountsOption();
@@ -471,7 +484,26 @@ public class AddEventActivity extends AppCompatActivity {
             window.setStatusBarColor(ViewUtils.getDarkerColor(mColorValues.get(mColorIndex)));
         }
 
-        mTitleEditText.setBackgroundColor(mColorValues.get(mColorIndex));
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP
+                && ViewCompat.isAttachedToWindow(mTitleEditText)) {
+
+            Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+            // get the center for the clipping circle
+            int cx = toolbar.getWidth() / 2;
+            int cy = toolbar.getHeight() / 2;
+            // get the final radius for the clipping circle
+            float finalRadius = (float) Math.hypot(cx, cy);
+            // create the animator for this view (the start radius is zero)
+            Animator anim = ViewAnimationUtils.createCircularReveal(
+                    toolbar, cx, cy, 0, finalRadius);
+            // make the view visible and start the animation
+            toolbar.setBackgroundColor(mColorValues.get(mColorIndex));
+            anim.start();
+            Window window = getWindow();
+            window.setStatusBarColor(ViewUtils.getDarkerColor(mColorValues.get(mColorIndex)));
+//            toolbar.setContentScrimColor(colorPrimary);
+
+        }
 
         // circle color icon
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -762,16 +794,16 @@ public class AddEventActivity extends AppCompatActivity {
         final ArrayAdapter adapter;
         switch (type) {
             case STATUS_DIALOG_TYPE:
-                adapter = new DialogListAdapter(AddEventActivity.this, R.layout.list_item_dialog, mAvailabilityTitles, mAvailabilityIndex);
+                adapter = new DialogListAdapter(this, R.layout.list_item_dialog, mAvailabilityTitles, mAvailabilityIndex);
                 break;
             case REPEAT_DIALOG_TYPE:
-                adapter = new DialogListAdapter(AddEventActivity.this, R.layout.list_item_dialog, mRepeatChoiceTitles, mRepeatIndex);
+                adapter = new DialogListAdapter(this, R.layout.list_item_dialog, mRepeatChoiceTitles, mRepeatIndex);
                 break;
             case TIME_ZONE_DIALOG_TYPE:
-                adapter = new DialogListAdapter(AddEventActivity.this, R.layout.list_item_dialog, mTimeZoneTitles, mTimeZoneIndex);
+                adapter = new DialogListAdapter(this, R.layout.list_item_dialog, mTimeZoneTitles, mTimeZoneIndex);
                 break;
             case NOTIFICATION_DIALOG_TYPE:
-                adapter = new DialogListAdapter(AddEventActivity.this, R.layout.list_item_dialog, mNotificationTitles, mNotificationIndex);
+                adapter = new DialogListAdapter(this, R.layout.list_item_dialog, mNotificationTitles, mNotificationIndex);
                 break;
             case COLOR_DIALOG_TYPE:
                 adapter = new ColorAdapter(this, mColorNames, mColorValues, mColorIndex);
